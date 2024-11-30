@@ -17,7 +17,8 @@ object JsonUtil {
         mapper.setDefaultPrettyPrinter(object : DefaultPrettyPrinter() {
             override fun createInstance(): DefaultPrettyPrinter {
                 this._arrayIndenter = DefaultIndenter()
-                this._objectFieldValueSeparatorWithSpaces = _separators.objectFieldValueSeparator + " "
+                this._objectFieldValueSeparatorWithSpaces =
+                    _separators.objectFieldValueSeparator + " "
                 this._arrayEmptySeparator = ""
                 this._objectEmptySeparator = ""
                 return this
@@ -43,13 +44,27 @@ object JsonUtil {
 
     fun toJson(any: Any): String = mapper.writeValueAsString(any)
 
-    fun toPrettyJson(any: Any): String = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(any)
+    fun toPrettyJson(any: Any): String =
+        mapper.writerWithDefaultPrettyPrinter().writeValueAsString(any)
 
-    fun writeToFile(any: Any, file: File) = writeToFile(toPrettyJson(any), file)
+    fun writeToFile(
+        any: Any,
+        file: File,
+        onSuccess: () -> Unit = { },
+        onFailure: (String) -> Unit = { }
+    ) {
+        writeToFile(toPrettyJson(any), file, onSuccess, onFailure)
+    }
 
-    fun writeToFile(json: String, file: File) {
-        file.parentFile?.mkdirs()
-        file.writeText(json)
-        Log.d("Write_Json_File", "Write Json to file: ${file.absolutePath}")
+    fun writeToFile(json: String, file: File, onSuccess: () -> Unit, onFailure: (String) -> Unit) {
+        runCatching {
+            file.parentFile?.mkdirs()
+            file.writeText(json)
+        }.onSuccess {
+            onSuccess()
+            Log.d("Write_Json_File", "Write Json to file: ${file.absolutePath}")
+        }.onFailure {
+            onFailure(it.message.toString())
+        }
     }
 }

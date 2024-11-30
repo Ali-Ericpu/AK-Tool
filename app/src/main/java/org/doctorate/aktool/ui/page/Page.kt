@@ -1,13 +1,10 @@
 package org.doctorate.aktool.ui.page
 
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountBox
 import androidx.compose.material.icons.filled.Build
@@ -32,6 +29,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import org.doctorate.aktool.ui.page.character.CharacterPage
+import org.doctorate.aktool.ui.page.setting.Setting
 
 enum class Page(val route: String, val desc: String, val icon: ImageVector) {
     HOME("home", "主页", Icons.Default.Home),
@@ -55,53 +54,49 @@ fun RoutePage() {
     val currentPage = Page.getRoute(backStackEntry.value?.destination?.route)
     Surface {
         Column(modifier = Modifier.fillMaxSize()) {
-            Box(
+            NavHost(
+                navController = navController,
+                startDestination = Page.HOME.route,
+//                enterTransition = {
+//                    fadeIn(
+//                        initialAlpha = 0.1f,
+//                        animationSpec = tween(400)
+//                    )
+//                },
+//                exitTransition = {
+//                    fadeOut(
+//                        targetAlpha = 0f,
+//                        animationSpec = tween(400)
+//                    )
+//                },
+//                popEnterTransition = {
+//                    fadeIn(
+//                        initialAlpha = 0.1f,
+//                        animationSpec = tween(400)
+//                    )
+//                },
+//                popExitTransition = {
+//                    fadeOut(
+//                        targetAlpha = 0f,
+//                        animationSpec = tween(400)
+//                    )
+//                },
                 modifier = Modifier
-                    .fillMaxWidth()
                     .weight(9f)
-                    .padding(top = 24.dp)
-                    .padding(8.dp)
+                    .padding(12.dp)
+                    .statusBarsPadding()
             ) {
-                NavHost(
-                    navController = navController,
-                    startDestination = Page.HOME.route,
-                    enterTransition = {
-                        fadeIn(
-                            initialAlpha = 0.1f,
-                            animationSpec = tween(400)
-                        )
-                    },
-                    exitTransition = {
-                        fadeOut(
-                            targetAlpha = 0f,
-                            animationSpec = tween(400)
-                        )
-                    },
-                    popEnterTransition = {
-                        fadeIn(
-                            initialAlpha = 0.1f,
-                            animationSpec = tween(400)
-                        )
-                    },
-                    popExitTransition = {
-                        fadeOut(
-                            targetAlpha = 0f,
-                            animationSpec = tween(400)
-                        )
-                    }
-                ) {
-                    composable(route = Page.HOME.route) {
-                        Text("HOME")
-                    }
-                    composable(route = Page.CHARACTER.route) {
-                        Text("CHARACTER")
-                    }
-                    composable(route = Page.EXTRA.route) {
-                        Text("EXTRA")
-                    }
-                    composable(route = Page.SETTING.route) {
-                        Text("SETTING")
-                    }
+                composable(route = Page.HOME.route) {
+                    HomePage()
+                }
+                composable(route = Page.CHARACTER.route) {
+                    CharacterPage()
+                }
+                composable(route = Page.EXTRA.route) {
+                    Text("EXTRA")
+                }
+                composable(route = Page.SETTING.route) {
+                    Setting()
                 }
             }
             NavigationBar {

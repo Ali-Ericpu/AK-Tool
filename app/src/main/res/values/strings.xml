@@ -1,3 +1,13 @@
 <resources>
     <string name="app_name">AK Tool</string>
+    <string name="save">保存</string>
+    <string name="save_success">保存成功</string>
+    <string name="cancel">取消</string>
+    <string name="dark_mode">暗黑模式</string>
+    <string name="dynamic_color">动态取色</string>
+    <string name="uid">UID</string>
+    <string name="admin_key">Admin Key</string>
+    <string name="server_uri">服务器链接</string>
+    <string name="lv">LV</string>
+    <string name="file_not_exist">资源文件不存在</string>
 </resources>
