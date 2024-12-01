@@ -1,7 +1,10 @@
 package org.doctorate.aktool.ui.page.setting
 
+import android.content.Intent
 import android.util.Log
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -13,8 +16,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.BasicAlertDialog
@@ -37,6 +42,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -61,46 +67,63 @@ fun Setting() {
     val viewModel: SettingViewModel = viewModel()
     val isUpdateExcel by viewModel.isUpdateExcel.collectAsState()
     val coroutineScope = rememberCoroutineScope()
-    Column {
-        EditText(
-            value = config.serverUri,
-            label = stringResource(R.string.server_uri),
-            onValueSave = {
-                onConfigChange(config.copy(serverUri = it))
-                Network.createRetrofit(it)
+    val singleLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument(),
+        onResult = { uri ->
+            uri?.let {
+                context.contentResolver.takePersistableUriPermission(
+                    uri, Intent.FLAG_GRANT_READ_URI_PERMISSION
+                )
+                onConfigChange(config.copy(bgPicUri = uri.toString()))
             }
-        )
-        EditText(
-            value = config.uid,
-            label = stringResource(R.string.uid),
-            onValueSave = { onConfigChange(config.copy(uid = it)) }
-        )
-        EditText(
-            value = config.adminKey,
-            label = stringResource(R.string.admin_key),
-            onValueSave = { onConfigChange(config.copy(adminKey = it)) }
-        )
-        EditSwitch(
-            label = stringResource(R.string.dark_mode),
-            state = config.darkMode,
-            onCheckedChange = { onConfigChange(config.copy(darkMode = it)) }
-        )
-        EditSwitch(
-            label = stringResource(R.string.dynamic_color),
-            state = config.dynamicColor,
-            onCheckedChange = { onConfigChange(config.copy(dynamicColor = it)) }
-        )
-        ProgressButton(
-            label = "更新资源",
-            isUpdate = isUpdateExcel,
-            onClick = {
-                if (config.serverUri.isEmpty()) {
-                    Toast.makeText(context, "链接配置错误", Toast.LENGTH_SHORT).show()
-                } else {
-                    coroutineScope.launch { viewModel.updateExcel(context, config.serverUri) }
+        }
+    )
+    LazyColumn(modifier = Modifier.alpha(0.9f)) {
+        item {
+            EditText(
+                value = config.serverUri,
+                label = stringResource(R.string.server_uri),
+                onValueSave = {
+                    onConfigChange(config.copy(serverUri = it))
+                    Network.createRetrofit(it)
                 }
+            )
+            EditText(
+                value = config.uid,
+                label = stringResource(R.string.uid),
+                onValueSave = { onConfigChange(config.copy(uid = it)) }
+            )
+            EditText(
+                value = config.adminKey,
+                label = stringResource(R.string.admin_key),
+                onValueSave = { onConfigChange(config.copy(adminKey = it)) }
+            )
+            EditSwitch(
+                label = stringResource(R.string.dark_mode),
+                state = config.darkMode,
+                onCheckedChange = { onConfigChange(config.copy(darkMode = it)) }
+            )
+            EditSwitch(
+                label = stringResource(R.string.dynamic_color),
+                state = config.dynamicColor,
+                onCheckedChange = { onConfigChange(config.copy(dynamicColor = it)) }
+            )
+            ProgressButton(
+                label = stringResource(R.string.update_excel),
+                isUpdate = isUpdateExcel,
+                onClick = {
+                    if (config.serverUri.isEmpty()) {
+                        Toast.makeText(context, R.string.error_uri, Toast.LENGTH_SHORT).show()
+                    } else {
+                        coroutineScope.launch { viewModel.updateExcel(context, config.serverUri) }
+                    }
+                }
+            )
+            TextButton(label = stringResource(R.string.choose_bg)) {
+                singleLauncher.launch(arrayOf("image/*"))
             }
-        )
+
+        }
     }
 }
 
@@ -257,6 +280,36 @@ fun EditSwitch(
 
 @Preview
 @Composable
+fun TextButton(
+    label: String = "Test",
+    onClick: () -> Unit = { },
+) {
+    Row(
+        modifier = Modifier
+            .padding(8.dp)
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .background(color = Color.LightGray)
+            .padding(8.dp)
+            .height(40.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(
+            text = label, color = Color.Black, modifier = Modifier
+                .padding(8.dp)
+                .fillMaxHeight()
+        )
+        IconButton(
+            onClick = { onClick() }
+        ) {
+            Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, null)
+        }
+    }
+}
+
+@Preview
+@Composable
 fun ProgressButton(
     label: String = "Test",
     isUpdate: Boolean = true,
@@ -281,7 +334,11 @@ fun ProgressButton(
                 .padding(8.dp)
                 .fillMaxHeight()
         )
-        Box(Modifier.size(32.dp)) {
+        Box(
+            Modifier
+                .padding(end = 4.dp)
+                .size(40.dp)
+        ) {
             if (isUpdate) {
                 CircularProgressIndicator()
             } else {

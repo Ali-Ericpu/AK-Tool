@@ -61,4 +61,29 @@ object Table {
         return SKIN_TABLE.get<Map<String, Map<String, Any>>>("charSkins")!![skinId]?.get<String>("portraitId") ?: ""
     }
 
+    fun getMaxCharEvoLevel(charId: String): Int {
+        return getCharacterData(charId).get<List<Map<String, Any>>>("phases")!!.size - 1
+    }
+
+    fun getMaxCharLevel(charId: String, evoPhase: Int): Int {
+        val phases = getCharacterData(charId).get<List<Map<String, Any>>>("phases")!!
+        val phase = phases.getOrNull(evoPhase) ?: phases.first()
+        return phase["maxLevel"] as Int
+    }
+
+    fun getRealFavPoint(percent: Int): Int {
+        val favorFrames = FAVOR_TABLE.get<List<Map<String, Any>>>("favorFrames")!!
+        return favorFrames[percent]["level"] as Int
+    }
+
+    fun getFavPointPercent(favPoint: Int): Int {
+        val favorFrames = FAVOR_TABLE.get<List<Map<String, Any>>>("favorFrames")!!
+        favorFrames.forEach {
+            if (it["level"] as Int >= favPoint) {
+                return it.get<Map<String, Int>>("data")!!["percent"]!!
+            }
+        }
+        return 0
+    }
+
 }

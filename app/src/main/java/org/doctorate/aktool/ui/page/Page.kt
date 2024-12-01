@@ -1,5 +1,8 @@
 package org.doctorate.aktool.ui.page
 
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -15,14 +18,16 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemColors
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -30,6 +35,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import org.doctorate.aktool.ui.page.character.CharacterPage
+import org.doctorate.aktool.ui.page.characterdetail.CharacterDetail
+import org.doctorate.aktool.ui.page.extra.ExtraPage
 import org.doctorate.aktool.ui.page.setting.Setting
 
 enum class Page(val route: String, val desc: String, val icon: ImageVector) {
@@ -41,7 +48,7 @@ enum class Page(val route: String, val desc: String, val icon: ImageVector) {
     companion object {
         fun getRoute(route: String?): Page {
             if (route == null) return HOME
-            return entries.find { it.route == route } ?: HOME
+            return entries.find { route.startsWith(it.route) } ?: HOME
         }
     }
 }
@@ -52,83 +59,97 @@ fun RoutePage() {
     val navController = rememberNavController()
     val backStackEntry = navController.currentBackStackEntryAsState()
     val currentPage = Page.getRoute(backStackEntry.value?.destination?.route)
-    Surface {
-        Column(modifier = Modifier.fillMaxSize()) {
-            NavHost(
-                navController = navController,
-                startDestination = Page.HOME.route,
-//                enterTransition = {
-//                    fadeIn(
-//                        initialAlpha = 0.1f,
-//                        animationSpec = tween(400)
-//                    )
-//                },
-//                exitTransition = {
-//                    fadeOut(
-//                        targetAlpha = 0f,
-//                        animationSpec = tween(400)
-//                    )
-//                },
-//                popEnterTransition = {
-//                    fadeIn(
-//                        initialAlpha = 0.1f,
-//                        animationSpec = tween(400)
-//                    )
-//                },
-//                popExitTransition = {
-//                    fadeOut(
-//                        targetAlpha = 0f,
-//                        animationSpec = tween(400)
-//                    )
-//                },
-                modifier = Modifier
-                    .weight(9f)
-                    .padding(12.dp)
-                    .statusBarsPadding()
-            ) {
-                composable(route = Page.HOME.route) {
-                    HomePage()
+    Column(modifier = Modifier.fillMaxSize()) {
+        NavHost(
+            navController = navController,
+            startDestination = Page.HOME.route,
+            enterTransition = {
+                fadeIn(
+                    initialAlpha = 0.1f,
+                    animationSpec = tween(400)
+                )
+            },
+            exitTransition = {
+                fadeOut(
+                    targetAlpha = 0f,
+                    animationSpec = tween(400)
+                )
+            },
+            popEnterTransition = {
+                fadeIn(
+                    initialAlpha = 0.1f,
+                    animationSpec = tween(400)
+                )
+            },
+            popExitTransition = {
+                fadeOut(
+                    targetAlpha = 0f,
+                    animationSpec = tween(400)
+                )
+            },
+            modifier = Modifier
+                .weight(9f)
+                .padding(12.dp)
+                .statusBarsPadding()
+        ) {
+            composable(route = "character_detail/{char_inst_id}") {
+                val parentEntry = remember(it) {
+                    navController.getBackStackEntry(Page.CHARACTER.route)
                 }
-                composable(route = Page.CHARACTER.route) {
-                    CharacterPage()
-                }
-                composable(route = Page.EXTRA.route) {
-                    Text("EXTRA")
-                }
-                composable(route = Page.SETTING.route) {
-                    Setting()
+                CharacterDetail(
+                    charViewModel = viewModel(parentEntry),
+                    onCharSave = navController::popBackStack
+                )
+            }
+            composable(route = Page.HOME.route) {
+                Text("HOME")
+            }
+            composable(route = Page.CHARACTER.route) {
+                CharacterPage {
+                    navController.navigate("character_detail/$it")
                 }
             }
-            NavigationBar {
-                Page.entries.map {
-                    val color =
-                        if (it == currentPage) MaterialTheme.colorScheme.primary else Color.Gray
-                    NavigationBarItem(
-                        modifier = Modifier.fillMaxWidth(),
-                        icon = {
-                            Icon(
-                                imageVector = it.icon,
-                                contentDescription = it.name,
-                                tint = color,
-                            )
-                        },
-                        label = { Text(text = it.desc, color = color) },
-                        selected = it == currentPage,
-                        onClick = { navController.navigateSingleTopTo(it.route) },
-                        colors = NavigationBarItemColors(
-                            selectedIconColor = color,
-                            selectedTextColor = color,
-                            selectedIndicatorColor = color.copy(alpha = 0F),
-                            unselectedIconColor = Color.LightGray,
-                            unselectedTextColor = Color.LightGray,
-                            disabledIconColor = Color.Gray,
-                            disabledTextColor = Color.Gray
+            composable(route = Page.EXTRA.route) {
+                ExtraPage()
+            }
+            composable(route = Page.SETTING.route) {
+                Setting()
+            }
+        }
+        NavigationBar(modifier = Modifier.alpha(0.9f)) {
+            Page.entries.map {
+                val color =
+                    if (it == currentPage) MaterialTheme.colorScheme.primary else Color.Gray
+                NavigationBarItem(
+                    modifier = Modifier.fillMaxWidth(),
+                    icon = {
+                        Icon(
+                            imageVector = it.icon,
+                            contentDescription = it.name,
+                            tint = color,
                         )
+                    },
+                    label = { Text(text = it.desc, color = color) },
+                    selected = it == currentPage,
+                    onClick = {
+                        if (it != currentPage) {
+                            navController.navigateSingleTopTo(it.route)
+                        }
+                    },
+                    colors = NavigationBarItemColors(
+                        selectedIconColor = color,
+                        selectedTextColor = color,
+                        selectedIndicatorColor = color.copy(alpha = 0F),
+                        unselectedIconColor = Color.LightGray,
+                        unselectedTextColor = Color.LightGray,
+                        disabledIconColor = Color.Gray,
+                        disabledTextColor = Color.Gray
                     )
-                }
+                )
             }
         }
     }
+
 }
 
 fun NavHostController.navigateSingleTopTo(route: String) = navigate(route) {

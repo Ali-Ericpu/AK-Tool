@@ -6,15 +6,21 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ContentScale
 import coil3.ImageLoader
 import coil3.PlatformContext
 import coil3.SingletonImageLoader
+import coil3.compose.rememberAsyncImagePainter
 import coil3.disk.DiskCache
 import coil3.memory.MemoryCache
 import coil3.network.okhttp.OkHttpNetworkFetcherFactory
@@ -64,8 +70,18 @@ class MainActivity : ComponentActivity(), SingletonImageLoader.Factory {
                     darkTheme = config.darkMode,
                     dynamicColor = config.dynamicColor
                 ) {
-                    RoutePage()
-                    SplashPage()
+                    Surface {
+                        if (config.bgPicUri.isNotEmpty()) {
+                            Image(
+                                painter = rememberAsyncImagePainter(config.bgPicUri),
+                                contentDescription = null,
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier.fillMaxHeight()
+                            )
+                        }
+                        RoutePage()
+                        SplashPage()
+                    }
                 }
             }
         }

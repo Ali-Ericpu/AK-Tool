@@ -1,5 +1,8 @@
 package org.doctorate.aktool.pojo.entity
 
+import org.doctorate.aktool.R
+import java.io.Serializable
+
 data class Character(
     val instId: Int,
     val charId: String,
@@ -22,7 +25,7 @@ data class Character(
     var starMark: Int,
     var currentTmpl: String? = null,
     var tmpl: MutableMap<String, TmplChar>? = null
-) : Comparable<Character> {
+) : Comparable<Character>, Serializable {
     override fun compareTo(other: Character): Int =
         when {
             this.starMark != other.starMark -> other.starMark.compareTo(starMark)
@@ -33,6 +36,54 @@ data class Character(
             this.name != other.name -> other.name!!.compareTo(name!!)
             else -> 0
         }
+
+    companion object {
+        fun char() = Character(
+            1,
+            "char_4080_lin",
+            "林",
+            "CASTER",
+            6,
+            25570,
+            5,
+            7,
+            "char_4080_lin#2",
+            90,
+            0,
+            2,
+            2,
+            1700000000L,
+            listOf(
+                Skill(
+                    state = 0,
+                    skillId = "skchr_lin_1",
+                    unlock = 1,
+                    specializeLevel = 3,
+                    completeUpgradeTime = -1
+                ),
+                Skill(
+                    state = 0,
+                    skillId = "skchr_lin_2",
+                    unlock = 1,
+                    specializeLevel = 3,
+                    completeUpgradeTime = -1
+                ),
+                Skill(
+                    state = 0,
+                    skillId = "skchr_lin_3",
+                    unlock = 1,
+                    specializeLevel = 3,
+                    completeUpgradeTime = -1
+                ),
+            ),
+            "JP",
+            null,
+            mutableMapOf(),
+            1,
+            null,
+            null
+        )
+    }
 }
 
 data class Skill(
@@ -41,13 +92,19 @@ data class Skill(
     var state: Int,
     var specializeLevel: Int,
     var completeUpgradeTime: Long,
-)
+) : Serializable
 
 data class Equip(
     var hide: Int,
     var level: Int,
     var locked: Int
-) {
+) : Serializable {
+    fun lock() {
+        hide = 1
+        level = 1
+        locked = 1
+    }
+
     fun unlock() {
         hide = 0
         level = 1
@@ -61,4 +118,15 @@ data class TmplChar(
     var skills: List<Skill>,
     var currentEquip: String?,
     var equip: MutableMap<String, Equip>
-)
+) : Serializable
+
+enum class Profession(val icon: Int) {
+    SNIPER(R.drawable.character_profession_sniper),
+    WARRIOR(R.drawable.character_profession_warrior),
+    TANK(R.drawable.character_profession_tank),
+    PIONEER(R.drawable.character_profession_pioneer),
+    CASTER(R.drawable.character_profession_caster),
+    MEDIC(R.drawable.character_profession_medic),
+    SUPPORT(R.drawable.character_profession_support),
+    SPECIAL(R.drawable.character_profession_special),
+}

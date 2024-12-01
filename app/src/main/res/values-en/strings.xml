@@ -1,2 +1,28 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources></resources>
+<resources>
+    <string name="app_name">AK Tool</string>
+    <string name="save">Save</string>
+    <string name="confirm">confirm</string>
+    <string name="save_success">Success</string>
+    <string name="save_failed">Failed</string>
+    <string name="cancel">Cancel</string>
+    <string name="dark_mode">Dark Mode</string>
+    <string name="dynamic_color">Dynamic Color</string>
+    <string name="uid">UID</string>
+    <string name="admin_key">Admin Key</string>
+    <string name="server_uri">Server URI</string>
+    <string name="lv">LV</string>
+    <string name="file_not_exist">Resources Not Exist</string>
+    <string name="potential_rank">Potential</string>
+    <string name="fav_pt">FavorPoint</string>
+    <string name="evp_phase">EvoPhase</string>
+    <string name="level">Level</string>
+    <string name="skill_level">SkillLevel</string>
+    <string name="star_mark">Star Mark</string>
+    <string name="update_excel">Update Resources</string>
+    <string name="choose_bg">Choose Background</string>
+    <string name="error_uri">Error URI</string>
+    <string name="home">Home</string>
+    <string name="character">Character</string>
+    <string name="extra">Extra</string>
+    <string name="setting">Setting</string>
+</resources>

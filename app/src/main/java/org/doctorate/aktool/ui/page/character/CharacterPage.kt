@@ -1,32 +1,45 @@
 package org.doctorate.aktool.ui.page.character
 
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.material3.Button
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
@@ -47,101 +60,165 @@ import kotlinx.coroutines.launch
 import org.doctorate.aktool.R
 import org.doctorate.aktool.config.Table
 import org.doctorate.aktool.pojo.entity.Character
-import org.doctorate.aktool.pojo.entity.Skill
+import org.doctorate.aktool.pojo.entity.Profession
+import org.doctorate.aktool.ui.page.splash.CircleIconButton
 import java.net.URLEncoder
 import kotlin.math.roundToInt
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CharacterPage(
-    viewModel: CharacterViewModel = viewModel()
-) {
+fun CharacterPage(navToCharacterDetail: (Int) -> Unit = {}) {
+    val viewModel: CharacterViewModel = viewModel()
     val context = LocalContext.current
     val charList = viewModel.charList()
     val splash by viewModel.splash.collectAsState()
+    val showLoadAnimate by viewModel.loadAnimate.collectAsState()
+    val currentProfession by viewModel.profession.collectAsState()
+    val selectProfession by viewModel.isSelect.collectAsState()
+    val professions = Profession.entries.toList()
     val coroutineScope = rememberCoroutineScope()
-    LazyVerticalGrid(
-        GridCells.FixedSize(108.dp),
-        verticalArrangement = Arrangement.SpaceAround,
-        horizontalArrangement = Arrangement.SpaceAround
+    val professionOffsetX by animateFloatAsState(if (selectProfession) 0f else 1.2f, label = "")
+    val menuOffsetX by animateFloatAsState(if (!selectProfession) 0f else 1.5f, label = "")
+    val refresh: () -> Unit = { viewModel.initCharData(context) }
+    PullToRefreshBox(
+        isRefreshing = showLoadAnimate,
+        onRefresh = { refresh() },
+        modifier = Modifier.fillMaxSize()
     ) {
-        items(charList) { char ->
-            CharacterCard(char)
+        if (!showLoadAnimate) {
+            LazyVerticalGrid(
+                GridCells.FixedSize(108.dp),
+                verticalArrangement = Arrangement.SpaceAround,
+                horizontalArrangement = Arrangement.SpaceAround,
+            ) {
+                items(charList) { char ->
+                    CharacterCard(char) {
+                        navToCharacterDetail(it)
+                    }
+                }
+            }
         }
-    }
-    LaunchedEffect(Unit) {
-    }
-    if (splash) {
         Box(
             modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background),
-            contentAlignment = Alignment.Center
+                .width(48.dp)
+                .fillMaxHeight()
+                .padding(top = 48.dp)
+                .align(Alignment.TopEnd)
         ) {
-            Button(
-                onClick = {
-                    coroutineScope.launch {
-                        if (Table.initData(context)) {
-                            viewModel.initCharData()
+            LazyColumn(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(4.dp))
+                    .offsetPercent(offsetPercentX = professionOffsetX)
+            ) {
+                item {
+                    IconButton(
+                        onClick = {
+                            if (currentProfession == "ALL") {
+                                viewModel.changeSelectState(false)
+                            } else {
+                                viewModel.selectProfession("ALL")
+                            }
+                        },
+                        modifier = Modifier
+                            .height(48.dp)
+                            .fillMaxWidth()
+                            .background(Color.Black.copy(alpha = 0.7f))
+                            .align(alignment = Alignment.Center)
+                    ) {
+                        Text(
+                            text = if (currentProfession == "ALL") "BACK" else "ALL",
+                            textAlign = TextAlign.Center,
+                            style = TextStyle(color = MaterialTheme.colorScheme.primary)
+                        )
+                    }
+                }
+                items(professions) {
+                    Box {
+                        Image(
+                            painter = painterResource(it.icon),
+                            contentDescription = it.name,
+                            modifier = Modifier
+                                .alpha(0.7f)
+                                .clickable(onClick = { viewModel.selectProfession(it.name) })
+                        )
+                        if (currentProfession == it.name) {
+                            Image(
+                                painter = painterResource(R.drawable.profession_select),
+                                contentDescription = "select",
+                                alignment = Alignment.CenterEnd,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(48.dp)
+                            )
                         }
                     }
-                }) {
-                Text("GET")
+                }
+            }
+            if (!showLoadAnimate && !splash) {
+                Column(modifier = Modifier.offsetPercent(offsetPercentX = menuOffsetX)) {
+                    CircleIconButton(
+                        icon = Icons.Default.Menu,
+                        onClick = { viewModel.changeSelectState(true) }
+                    )
+                    CircleIconButton(
+                        icon = Icons.Default.Add,
+                        onClick = { /*viewModel.changeGainCharState()*/ }
+                    )
+                    CircleIconButton(
+                        icon = Icons.Default.Refresh,
+                        onClick = {
+                            coroutineScope.launch {
+                                try {
+                                    refresh()
+                                } catch (_: Exception) {
+                                    viewModel.closeAnimate()
+                                }
+                            }
+                        }
+                    )
+                }
+            }
+        }
+        if (splash && !showLoadAnimate) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                IconButton(
+                    onClick = {
+                        coroutineScope.launch {
+                            if (Table.initData(context)) {
+                                refresh()
+                            }
+                        }
+                    },
+                    modifier = Modifier
+                        .padding(4.dp)
+                        .size(80.dp)
+                ) {
+                    Icon(
+                        painter = painterResource(R.drawable.baseline_start),
+                        contentDescription = null,
+                        modifier = Modifier
+                            .clip(CircleShape)
+                            .fillMaxSize()
+                            .background(MaterialTheme.colorScheme.primary)
+                            .padding(16.dp)
+                    )
+                }
             }
         }
     }
+
 }
 
 @Preview
 @Composable
 fun CharacterCard(
-    char: Character = Character(
-        1,
-        "char_4080_lin",
-        "林",
-        "CASTER",
-        6,
-        25570,
-        5,
-        7,
-        "char_4080_lin#2",
-        90,
-        0,
-        2,
-        2,
-        1700000000L,
-        listOf(
-            Skill(
-                state = 0,
-                skillId = "skchr_lin_1",
-                unlock = 1,
-                specializeLevel = 3,
-                completeUpgradeTime = -1
-            ),
-            Skill(
-                state = 0,
-                skillId = "skchr_lin_2",
-                unlock = 1,
-                specializeLevel = 3,
-                completeUpgradeTime = -1
-            ),
-            Skill(
-                state = 0,
-                skillId = "skchr_lin_3",
-                unlock = 1,
-                specializeLevel = 3,
-                completeUpgradeTime = -1
-            ),
-        ),
-        "JP",
-        null,
-        mutableMapOf(),
-        0,
-        null,
-        null
-    ),
-    onCharChange: (char: Character) -> Unit = { }
+    char: Character = Character.char(),
+    modifier: Modifier = Modifier,
+    onCharSelect: (Int) -> Unit = { }
 ) {
-    var showDetail by remember { mutableStateOf(false) }
     val evolvePhasePainter = when (char.evolvePhase) {
         0 -> R.drawable.character_elite_0
         1 -> R.drawable.character_elite_1
@@ -202,13 +279,14 @@ fun CharacterCard(
         }
     }
     Box(
-        modifier = Modifier
-            .height(224.dp)
+        modifier = modifier
+            .height(228.dp)
             .width(108.dp)
+            .clickable { (onCharSelect(char.instId)) }
     ) {
         ConstraintLayout(modifier = Modifier.fillMaxSize()) {
-            val (charBgRef, portraitRef, topHubRef, bottomHubRef, charNameRef, starMarkRef, rarityLightRef, professionRef) = remember { createRefs() }
-            val (potentialBgRef, starRef, evoRef, evoBgRef, levelRef, lvRef, levelBgRef, skillRef, potentialRef) = remember { createRefs() }
+            val (charBgRef, portraitRef, topHubRef, bottomHubRef, charNameRef, rarityLightRef, professionRef) = remember { createRefs() }
+            val (potentialBgRef, starRef, evoRef, evoBgRef, levelRef, lvRef, levelBgRef, skillRef, potentialRef, starMarkRef) = remember { createRefs() }
             //char bg
             Image(
                 painter = painterResource(charBgPainter),
@@ -223,7 +301,7 @@ fun CharacterCard(
             )
             //char skin
             val portraitId = URLEncoder.encode(Table.getSkinPortraitId(char.skin), "UTF-8")
-//            val portraitId = "23123"
+//            val portraitId = "114514"      //预览用的
             val link = "https://torappu.prts.wiki/assets/char_portrait/$portraitId.png"
             Image(
                 painter = rememberAsyncImagePainter(link),
@@ -234,7 +312,6 @@ fun CharacterCard(
                     .fillMaxWidth()
                     .constrainAs(portraitRef) {
                         top.linkTo(topHubRef.top)
-//                        bottom.linkTo(charBgRef.bottom)
                     }
             )
             //rarity light
@@ -305,7 +382,7 @@ fun CharacterCard(
                     .height(24.dp)
                     .constrainAs(starMarkRef) {
                         start.linkTo(parent.start, 4.dp)
-                        bottom.linkTo(charNameRef.bottom)
+                        bottom.linkTo(parent.bottom, 4.dp)
                     }
             )
             //lower hub
@@ -336,7 +413,7 @@ fun CharacterCard(
                     .size(46.dp)
                     .constrainAs(levelBgRef) {
                         start.linkTo(parent.start, 2.dp)
-                        bottom.linkTo(starMarkRef.top, (-8).dp)
+                        bottom.linkTo(charNameRef.top, (-4).dp)
                     }
             )
             Text(
@@ -433,12 +510,6 @@ fun CharacterCard(
             }
         }
 
-    }
-    if (showDetail) {
-        CharacterDetail(char.copy()) {
-            showDetail = false
-            it?.let { onCharChange(it) }
-        }
     }
 }
 
