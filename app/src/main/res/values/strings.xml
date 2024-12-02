@@ -25,4 +25,6 @@
     <string name="character">干员</string>
     <string name="extra">更多</string>
     <string name="setting">设置</string>
+    <string name="error_data">数据异常</string>
+    <string name="char_id">干员ID</string>
 </resources>

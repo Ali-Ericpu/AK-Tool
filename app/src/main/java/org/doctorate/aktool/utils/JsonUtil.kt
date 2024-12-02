@@ -3,6 +3,7 @@ package org.doctorate.aktool.utils
 import android.util.Log
 import com.fasterxml.jackson.core.util.DefaultIndenter
 import com.fasterxml.jackson.core.util.DefaultPrettyPrinter
+import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
@@ -24,6 +25,7 @@ object JsonUtil {
                 return this
             }
         })
+        mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
     }
 
     fun transToMap(file: File): Map<String, Any> {

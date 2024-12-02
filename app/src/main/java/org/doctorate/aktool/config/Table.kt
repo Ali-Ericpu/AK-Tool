@@ -6,13 +6,15 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.doctorate.aktool.R
 import org.doctorate.aktool.utils.JsonUtil
+import org.doctorate.aktool.utils.ListMap
+import org.doctorate.aktool.utils.NestingMap
 import org.doctorate.aktool.utils.get
 import java.io.File
 import java.net.URI
 
 object Table {
     private val jsonList = listOf("character_table.json", "skin_table.json", "favor_table.json")
-    var CHARACTER_TABLE: Map<String, Map<String, Any>> = mapOf()
+    var CHARACTER_TABLE: NestingMap = mapOf()
         private set
     var SKIN_TABLE: Map<String, Any> = mapOf()
         private set
@@ -41,9 +43,7 @@ object Table {
             val file = File(dir, "data/excel/$fileName")
             val uri = URI("$uri/assetbundle/excel/$fileName").toURL()
             when (index) {
-                0 -> CHARACTER_TABLE =
-                    JsonUtil.fromJson<Map<String, Map<String, Any>>>(uri).write(file)
-
+                0 -> CHARACTER_TABLE = JsonUtil.fromJson<NestingMap>(uri).write(file)
                 1 -> SKIN_TABLE = JsonUtil.fromJson<Map<String, Any>>(uri).write(file)
                 2 -> FAVOR_TABLE = JsonUtil.fromJson<Map<String, Any>>(uri).write(file)
             }
@@ -58,26 +58,26 @@ object Table {
     }
 
     fun getSkinPortraitId(skinId: String): String {
-        return SKIN_TABLE.get<Map<String, Map<String, Any>>>("charSkins")!![skinId]?.get<String>("portraitId") ?: ""
+        return SKIN_TABLE.get<NestingMap>("charSkins")!![skinId]?.get<String>("portraitId") ?: ""
     }
 
     fun getMaxCharEvoLevel(charId: String): Int {
-        return getCharacterData(charId).get<List<Map<String, Any>>>("phases")!!.size - 1
+        return getCharacterData(charId).get<ListMap>("phases")!!.size - 1
     }
 
     fun getMaxCharLevel(charId: String, evoPhase: Int): Int {
-        val phases = getCharacterData(charId).get<List<Map<String, Any>>>("phases")!!
+        val phases = getCharacterData(charId).get<ListMap>("phases")!!
         val phase = phases.getOrNull(evoPhase) ?: phases.first()
         return phase["maxLevel"] as Int
     }
 
     fun getRealFavPoint(percent: Int): Int {
-        val favorFrames = FAVOR_TABLE.get<List<Map<String, Any>>>("favorFrames")!!
+        val favorFrames = FAVOR_TABLE.get<ListMap>("favorFrames")!!
         return favorFrames[percent]["level"] as Int
     }
 
     fun getFavPointPercent(favPoint: Int): Int {
-        val favorFrames = FAVOR_TABLE.get<List<Map<String, Any>>>("favorFrames")!!
+        val favorFrames = FAVOR_TABLE.get<ListMap>("favorFrames")!!
         favorFrames.forEach {
             if (it["level"] as Int >= favPoint) {
                 return it.get<Map<String, Int>>("data")!!["percent"]!!

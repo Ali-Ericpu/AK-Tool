@@ -3,6 +3,7 @@ package org.doctorate.aktool.network.retrofit
 import org.doctorate.aktool.network.Network
 import org.doctorate.aktool.pojo.entity.Character
 import org.doctorate.aktool.pojo.entity.Result
+import org.doctorate.aktool.pojo.request.GainItemRequest
 import org.doctorate.aktool.pojo.request.SaveCharRequest
 import retrofit2.http.Body
 import retrofit2.http.GET
@@ -22,6 +23,13 @@ interface CharacterService {
         @Header("adminKey") adminKey: String,
         @Header("uid") uid: String,
         @Body body: SaveCharRequest
+    ): Result<String?>
+
+    @POST("admin/gainItem")
+    suspend fun gainItem(
+        @Header("adminKey") adminKey: String,
+        @Header("uid") uid: String,
+        @Body body: GainItemRequest
     ): Result<String?>
 
     companion object {

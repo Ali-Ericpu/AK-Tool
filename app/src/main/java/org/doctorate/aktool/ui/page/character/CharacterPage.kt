@@ -1,5 +1,6 @@
 package org.doctorate.aktool.ui.page.character
 
+import android.widget.Toast
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -61,6 +62,7 @@ import org.doctorate.aktool.R
 import org.doctorate.aktool.config.Table
 import org.doctorate.aktool.pojo.entity.Character
 import org.doctorate.aktool.pojo.entity.Profession
+import org.doctorate.aktool.ui.page.setting.EditTextDialog
 import org.doctorate.aktool.ui.page.splash.CircleIconButton
 import java.net.URLEncoder
 import kotlin.math.roundToInt
@@ -73,6 +75,7 @@ fun CharacterPage(navToCharacterDetail: (Int) -> Unit = {}) {
     val charList = viewModel.charList()
     val splash by viewModel.splash.collectAsState()
     val showLoadAnimate by viewModel.loadAnimate.collectAsState()
+    val showGainCharDialog by viewModel.gainChar.collectAsState()
     val currentProfession by viewModel.profession.collectAsState()
     val selectProfession by viewModel.isSelect.collectAsState()
     val professions = Profession.entries.toList()
@@ -162,7 +165,7 @@ fun CharacterPage(navToCharacterDetail: (Int) -> Unit = {}) {
                     )
                     CircleIconButton(
                         icon = Icons.Default.Add,
-                        onClick = { /*viewModel.changeGainCharState()*/ }
+                        onClick = { viewModel.changeGainCharState() }
                     )
                     CircleIconButton(
                         icon = Icons.Default.Refresh,
@@ -209,6 +212,28 @@ fun CharacterPage(navToCharacterDetail: (Int) -> Unit = {}) {
             }
         }
     }
+    if (showGainCharDialog) {
+        EditTextDialog(
+            label = stringResource(R.string.char_id),
+            error = { !it.startsWith("char_") || Table.CHARACTER_TABLE[it] == null },
+            onValueSave = {
+                it?.let { charId ->
+                    coroutineScope.launch {
+                        runCatching {
+                            viewModel.gainChar(charId)
+                        }.onSuccess {
+                            Toast.makeText(context, R.string.save_success, Toast.LENGTH_SHORT).show()
+                            refresh()
+                        }.onFailure {
+                            Toast.makeText(context, it.message, Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                }
+                viewModel.changeGainCharState()
+            }
+        )
+    }
+
 
 }
 

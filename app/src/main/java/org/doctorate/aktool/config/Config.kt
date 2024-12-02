@@ -13,7 +13,7 @@ data class AppConfig(
     val dynamicColor: Boolean = true,
     val uid: String = "",
     val adminKey: String = "",
-    val bgPicUri: String = "",
+    val bgPath: String = "",
 ) {
     companion object {
         var config = AppConfig()

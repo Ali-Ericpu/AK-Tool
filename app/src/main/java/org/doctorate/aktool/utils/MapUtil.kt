@@ -1,7 +1,5 @@
 package org.doctorate.aktool.utils
 
-import ognl.Ognl
-
 /**
  * ClassName: MapUtil
  * Package: com.doctorate.ui.util
@@ -11,6 +9,8 @@ import ognl.Ognl
  * @Version 1.0
  */
 
-inline fun <reified T> Map<String, Any>.get(key: String) = get(key) as? T
+typealias NestingMap = Map<String, Map<String, Any>>
 
-inline fun <reified T> Map<String, Any>.getValue(path: String) = Ognl.getValue(path, this) as? T
+typealias ListMap = List<Map<String, Any>>
+
+inline fun <reified T> Map<String, Any>.get(key: String) = get(key) as? T

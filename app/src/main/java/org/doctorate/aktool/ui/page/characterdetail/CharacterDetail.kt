@@ -33,10 +33,12 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
@@ -48,8 +50,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import kotlinx.coroutines.launch
 import org.doctorate.aktool.R
 import org.doctorate.aktool.config.Table
+import org.doctorate.aktool.pojo.entity.Character
 import org.doctorate.aktool.pojo.entity.Skill
 import org.doctorate.aktool.ui.page.character.CharacterCard
 import org.doctorate.aktool.ui.page.character.CharacterViewModel
@@ -69,7 +73,11 @@ fun CharacterDetail(
 ) {
     val context = LocalContext.current
     val charInstId by vm.charInstId.collectAsState()
-    val character = charViewModel.characterData[charInstId]!!
+    val character = charViewModel.characterData[charInstId] ?: run {
+        Toast.makeText(context, R.string.error_data, Toast.LENGTH_SHORT).show()
+        onCharSave()
+        Character.char()
+    }
     var char by rememberSaveable {
         mutableStateOf(character.copy(
             favorPoint = Table.getFavPointPercent(character.favorPoint),
@@ -82,7 +90,8 @@ fun CharacterDetail(
     }
     var maxSkillLevel by remember { mutableIntStateOf(if (char.evolvePhase < 1) 4 else 7) }
     val maxEvoLevel by remember { mutableIntStateOf(Table.getMaxCharEvoLevel(character.charId)) }
-    LazyColumn(modifier = Modifier.fillMaxSize()) {
+    val coroutineScope = rememberCoroutineScope()
+    LazyColumn(modifier = Modifier.fillMaxSize().alpha(0.95f)) {
         item {
             Row(modifier = Modifier.padding(start = 4.dp)) {
                 CharacterCard(char)
@@ -211,13 +220,15 @@ fun CharacterDetail(
                     Text(stringResource(R.string.cancel))
                 }
                 Button(onClick = {
-                    if (char.evolvePhase == 2) {
-                        if (char.equip.isNotEmpty()) {
-                            val first = char.equip.keys.first()
-                            if (char.currentEquip == null) {
-                                char.currentEquip = first
+                    if (char.evolvePhase == 2 && char.equip.isNotEmpty()) {
+                        val first = char.equip.keys.first()
+                        if (char.currentEquip == null) {
+                            char.currentEquip = first
+                        }
+                        char.equip.values.forEach {
+                            if (it.locked == 1) {
+                                it.unlock()
                             }
-                            char.equip[first]!!.unlock()
                         }
                     } else if (char.evolvePhase < 2) {
                         char.currentTmpl = null
@@ -231,13 +242,16 @@ fun CharacterDetail(
                     }
                     char.favorPoint = Table.getRealFavPoint(char.favorPoint)
                     Log.d("CharData", "CharacterDetail: ${JsonUtil.toPrettyJson(char)}")
-                    runCatching {
-                        charViewModel.changeCharData(char)
-                    }.onSuccess {
-                        Toast.makeText(context, R.string.save_success, Toast.LENGTH_SHORT).show()
-                        onCharSave()
-                    }.onFailure {
-                        Toast.makeText(context, R.string.save_failed, Toast.LENGTH_SHORT).show()
+                    coroutineScope.launch {
+                        runCatching {
+                            charViewModel.changeCharData(char)
+                        }.onSuccess {
+                            Toast.makeText(context, R.string.save_success, Toast.LENGTH_SHORT)
+                                .show()
+                            onCharSave()
+                        }.onFailure {
+                            Toast.makeText(context, it.message, Toast.LENGTH_SHORT).show()
+                        }
                     }
                 }) {
                     Text(stringResource(R.string.save))
@@ -296,7 +310,7 @@ fun IntRangeSlider(
                 inactiveTickColor = Color.White.copy(alpha = 0f),
                 activeTickColor = Color.White.copy(alpha = 0f),
             ),
-            modifier = Modifier.padding(start = 16.dp, end = 16.dp)
+            modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 4.dp)
         )
     }
 }

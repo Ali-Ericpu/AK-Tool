@@ -55,13 +55,7 @@ class MainActivity : ComponentActivity(), SingletonImageLoader.Factory {
                     writeConfig(
                         newConfig = new,
                         context = context,
-                        onSuccess = {
-                            Toast.makeText(
-                                context,
-                                R.string.save_success,
-                                Toast.LENGTH_SHORT
-                            ).show()
-                        },
+                        onSuccess = { Toast.makeText(context, R.string.save_success, Toast.LENGTH_SHORT).show() },
                         onFailure = { Toast.makeText(context, it, Toast.LENGTH_SHORT).show() }
                     )
                 }
@@ -71,9 +65,9 @@ class MainActivity : ComponentActivity(), SingletonImageLoader.Factory {
                     dynamicColor = config.dynamicColor
                 ) {
                     Surface {
-                        if (config.bgPicUri.isNotEmpty()) {
+                        if (config.bgPath.isNotEmpty()) {
                             Image(
-                                painter = rememberAsyncImagePainter(config.bgPicUri),
+                                painter = rememberAsyncImagePainter(config.bgPath),
                                 contentDescription = null,
                                 contentScale = ContentScale.Crop,
                                 modifier = Modifier.fillMaxHeight()

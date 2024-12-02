@@ -1,7 +1,7 @@
 <resources>
     <string name="app_name">AK Tool</string>
     <string name="save">Save</string>
-    <string name="confirm">confirm</string>
+    <string name="confirm">Confirm</string>
     <string name="save_success">Success</string>
     <string name="save_failed">Failed</string>
     <string name="cancel">Cancel</string>
@@ -25,4 +25,6 @@
     <string name="character">Character</string>
     <string name="extra">Extra</string>
     <string name="setting">Setting</string>
+    <string name="error_data">Error Data</string>
+    <string name="char_id">Char ID</string>
 </resources>

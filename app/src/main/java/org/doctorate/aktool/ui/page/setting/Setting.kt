@@ -1,6 +1,5 @@
 package org.doctorate.aktool.ui.page.setting
 
-import android.content.Intent
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -56,6 +55,8 @@ import org.doctorate.aktool.R
 import org.doctorate.aktool.config.LocalAppConfig
 import org.doctorate.aktool.network.Network
 import org.doctorate.aktool.ui.page.splash.CircleIconButton
+import java.io.File
+import java.util.UUID
 
 
 @Preview
@@ -71,10 +72,18 @@ fun Setting() {
         contract = ActivityResultContracts.OpenDocument(),
         onResult = { uri ->
             uri?.let {
-                context.contentResolver.takePersistableUriPermission(
-                    uri, Intent.FLAG_GRANT_READ_URI_PERMISSION
-                )
-                onConfigChange(config.copy(bgPicUri = uri.toString()))
+                context.contentResolver.openInputStream(uri).use { input ->
+                    input?.let {
+                        val directory = File(context.filesDir, "data/background/")
+                        directory.deleteRecursively()
+                        directory.mkdirs()
+                        val file = File(directory, "${UUID.randomUUID()}.0")
+                        file.outputStream().use { output ->
+                            input.copyTo(output)
+                        }
+                        onConfigChange(config.copy(bgPath = file.absolutePath))
+                    }
+                }
             }
         }
     )
@@ -182,9 +191,12 @@ fun EditText(
 fun EditTextDialog(
     value: String = "",
     label: String = "Test",
+    error: (String) -> Boolean = { false },
     onValueSave: (String?) -> Unit = { }
 ) {
+    val context = LocalContext.current
     var value by remember { mutableStateOf(value) }
+    val error = error(value)
     BasicAlertDialog(
         onDismissRequest = { onValueSave(null) },
         modifier = Modifier
@@ -210,6 +222,7 @@ fun EditTextDialog(
             OutlinedTextField(
                 value = value,
                 maxLines = Int.MAX_VALUE,
+                isError = error,
                 onValueChange = { value = it },
             )
             Row(
@@ -226,20 +239,27 @@ fun EditTextDialog(
                     )
                 ) {
                     Text(
-                        text = "取消",
+                        text = stringResource(R.string.cancel),
                         color = Color.Black,
                         style = MaterialTheme.typography.bodyLarge,
                     )
                 }
                 Button(
-                    onClick = { onValueSave(value) },
+                    onClick = {
+                        if (error) {
+                            Toast.makeText(context, R.string.error_data, Toast.LENGTH_SHORT).show()
+                        } else {
+                            onValueSave(value)
+                        }
+                    },
                     colors = ButtonDefaults.buttonColors().copy(
-                        containerColor = Color.Black.copy(alpha = 0f)
+                        containerColor = Color.Black.copy(alpha = 0f),
+                        disabledContainerColor = Color.Black.copy(alpha = 0f)
                     )
                 ) {
                     Text(
-                        text = "确认",
-                        color = MaterialTheme.colorScheme.primary,
+                        text = stringResource(R.string.confirm),
+                        color = if (error) Color.Red else MaterialTheme.colorScheme.primary,
                         style = MaterialTheme.typography.bodyLarge,
                     )
                 }

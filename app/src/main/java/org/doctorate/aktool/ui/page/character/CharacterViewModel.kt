@@ -6,14 +6,18 @@ import android.widget.Toast
 import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.doctorate.aktool.config.AppConfig
 import org.doctorate.aktool.config.Table
 import org.doctorate.aktool.network.retrofit.CharacterService
 import org.doctorate.aktool.pojo.entity.Character
+import org.doctorate.aktool.pojo.entity.Item
+import org.doctorate.aktool.pojo.request.GainItemRequest
 import org.doctorate.aktool.pojo.request.SaveCharRequest
 
 class CharacterViewModel : ViewModel() {
@@ -46,7 +50,7 @@ class CharacterViewModel : ViewModel() {
                 val result =
                     service()?.syncCharacter(AppConfig.config.uid, AppConfig.config.adminKey)
                 if (result == null || result.data == null) {
-                    return@launch
+                    throw RuntimeException("数据异常")
                 }
                 characterData.clear()
                 result.data.forEach { instId, char ->
@@ -59,10 +63,10 @@ class CharacterViewModel : ViewModel() {
                 }
                 selectProfession(_profession.value)
                 delay(500)
-                closeAnimate()
             }.onFailure {
                 Toast.makeText(context, it.message, Toast.LENGTH_SHORT).show()
             }
+            closeAnimate()
         }
     }
 
@@ -81,7 +85,7 @@ class CharacterViewModel : ViewModel() {
         _isSelect.emit(state)
     }
 
-    fun changeCharData(char: Character) = viewModelScope.launch {
+    suspend fun changeCharData(char: Character) = withContext(Dispatchers.IO) {
         val config = AppConfig.config
         val result = service()?.saveCharacter(
             config.adminKey,
@@ -98,6 +102,19 @@ class CharacterViewModel : ViewModel() {
     fun closeAnimate() = viewModelScope.launch {
         _splash.emit(false)
         _loadAnimate.emit(false)
+    }
+
+    suspend fun gainChar(charId: String) = withContext(Dispatchers.IO) {
+        val request = GainItemRequest(listOf(Item(charId, "CHAR", 1)))
+        val config = AppConfig.config
+        val result = service()?.gainItem(config.adminKey, config.uid, request)
+        if (result?.status != 0) {
+            throw RuntimeException(result?.msg.toString())
+        }
+    }
+
+    fun changeGainCharState() = viewModelScope.launch {
+        _gainChar.emit(_gainChar.value.not())
     }
 
 
