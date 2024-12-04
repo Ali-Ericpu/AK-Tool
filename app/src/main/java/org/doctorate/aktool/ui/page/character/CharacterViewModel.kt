@@ -46,13 +46,13 @@ class CharacterViewModel : ViewModel() {
     fun initCharData(context: Context) = viewModelScope.launch {
         if (!loadAnimate.value) {
             _loadAnimate.emit(true)
+            characterData.clear()
             runCatching {
                 val result =
                     service()?.syncCharacter(AppConfig.config.uid, AppConfig.config.adminKey)
                 if (result == null || result.data == null) {
                     throw RuntimeException("数据异常")
                 }
-                characterData.clear()
                 result.data.forEach { instId, char ->
                     runCatching { Table.getCharacterData(char.charId) }.onSuccess {
                         char.name = it["name"] as String

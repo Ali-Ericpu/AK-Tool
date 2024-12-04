@@ -13,10 +13,8 @@ import java.io.File
 import java.net.URI
 
 object Table {
-    private val jsonList = listOf("character_table.json", "skin_table.json", "favor_table.json")
+    private val jsonList = listOf("character_table.json", "favor_table.json")
     var CHARACTER_TABLE: NestingMap = mapOf()
-        private set
-    var SKIN_TABLE: Map<String, Any> = mapOf()
         private set
     var FAVOR_TABLE: Map<String, Any> = mapOf()
         private set
@@ -32,7 +30,6 @@ object Table {
             }
         }
         CHARACTER_TABLE = JsonUtil.fromJson(fileList[0])
-        SKIN_TABLE = JsonUtil.fromJson(fileList[1])
         FAVOR_TABLE = JsonUtil.fromJson(fileList[2])
         return true
     }
@@ -44,8 +41,7 @@ object Table {
             val uri = URI("$uri/assetbundle/excel/$fileName").toURL()
             when (index) {
                 0 -> CHARACTER_TABLE = JsonUtil.fromJson<NestingMap>(uri).write(file)
-                1 -> SKIN_TABLE = JsonUtil.fromJson<Map<String, Any>>(uri).write(file)
-                2 -> FAVOR_TABLE = JsonUtil.fromJson<Map<String, Any>>(uri).write(file)
+                1 -> FAVOR_TABLE = JsonUtil.fromJson<Map<String, Any>>(uri).write(file)
             }
         }
     }
@@ -55,10 +51,6 @@ object Table {
 
     fun getCharacterData(charId: String): Map<String, Any> {
         return CHARACTER_TABLE[charId] ?: throw RuntimeException("$charId is not exists")
-    }
-
-    fun getSkinPortraitId(skinId: String): String {
-        return SKIN_TABLE.get<NestingMap>("charSkins")!![skinId]?.get<String>("portraitId") ?: ""
     }
 
     fun getMaxCharEvoLevel(charId: String): Int {

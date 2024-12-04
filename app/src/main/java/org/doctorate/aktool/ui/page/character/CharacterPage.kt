@@ -325,9 +325,10 @@ fun CharacterCard(
                     }
             )
             //char skin
-            val portraitId = URLEncoder.encode(Table.getSkinPortraitId(char.skin), "UTF-8")
+            val portraitId = URLEncoder.encode(char.skin, "UTF-8")
 //            val portraitId = "114514"      //预览用的
-            val link = "https://torappu.prts.wiki/assets/char_portrait/$portraitId.png"
+//            val link = "https://torappu.prts.wiki/assets/char_portrait/$portraitId.png"
+            val link = "https://web.hycdn.cn/arknights/game/assets/char_skin/portrait/$portraitId.png"
             Image(
                 painter = rememberAsyncImagePainter(link),
                 contentDescription = null,
@@ -551,8 +552,9 @@ fun Modifier.offsetPercent(offsetPercentX: Float = 0f, offsetPercentY: Float = 0
 @Composable
 fun skillPainter(skillId: String): Painter {
     val skillId = URLEncoder.encode(skillId, "UTF-8")
-    val imageUrl =
-        "https://raw.githubusercontent.com/yuanyan3060/ArknightsGameResource/refs/heads/main/skill/skill_icon_$skillId.png"
+    val imageUrl = "https://web.hycdn.cn/arknights/game/assets/char_skill/$skillId.png"
+//    val imageUrl =
+//        "https://raw.githubusercontent.com/yuanyan3060/ArknightsGameResource/refs/heads/main/skill/skill_icon_$skillId.png"
     return rememberAsyncImagePainter(
         model = imageUrl,
         placeholder = painterResource(R.drawable.character_default_skill_icon),
