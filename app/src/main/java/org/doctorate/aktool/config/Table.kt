@@ -30,7 +30,7 @@ object Table {
             }
         }
         CHARACTER_TABLE = JsonUtil.fromJson(fileList[0])
-        FAVOR_TABLE = JsonUtil.fromJson(fileList[2])
+        FAVOR_TABLE = JsonUtil.fromJson(fileList[1])
         return true
     }
 
