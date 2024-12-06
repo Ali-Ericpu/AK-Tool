@@ -12,9 +12,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import org.doctorate.aktool.config.AppConfig
 import org.doctorate.aktool.config.Table
-import org.doctorate.aktool.network.retrofit.CharacterService
+import org.doctorate.aktool.network.Network
 import org.doctorate.aktool.pojo.entity.Character
 import org.doctorate.aktool.pojo.entity.Item
 import org.doctorate.aktool.pojo.request.GainItemRequest
@@ -39,8 +38,6 @@ class CharacterViewModel : ViewModel() {
     private var _gainChar = MutableStateFlow(false)
     val gainChar = _gainChar.asStateFlow()
 
-    fun service() = CharacterService.instance()
-
     fun charList(): List<Character> = characterList.apply { sort() }
 
     fun initCharData(context: Context) = viewModelScope.launch {
@@ -48,9 +45,8 @@ class CharacterViewModel : ViewModel() {
             _loadAnimate.emit(true)
             characterData.clear()
             runCatching {
-                val result =
-                    service()?.syncCharacter(AppConfig.config.uid, AppConfig.config.adminKey)
-                if (result == null || result.data == null) {
+                val result = Network.syncCharacter()
+                if (result.data == null) {
                     throw RuntimeException("数据异常")
                 }
                 result.data.forEach { instId, char ->
@@ -86,14 +82,9 @@ class CharacterViewModel : ViewModel() {
     }
 
     suspend fun changeCharData(char: Character) = withContext(Dispatchers.IO) {
-        val config = AppConfig.config
-        val result = service()?.saveCharacter(
-            config.adminKey,
-            config.uid,
-            SaveCharRequest(char.instId, char)
-        )
-        if (result?.status != 0) {
-            throw RuntimeException(result?.msg.toString())
+        val result = Network.saveCharacter(SaveCharRequest(char.instId, char))
+        if (result.status != 0) {
+            throw RuntimeException(result.msg.toString())
         }
         characterData[char.instId.toString()] = char
         selectProfession(_profession.value)
@@ -106,10 +97,9 @@ class CharacterViewModel : ViewModel() {
 
     suspend fun gainChar(charId: String) = withContext(Dispatchers.IO) {
         val request = GainItemRequest(listOf(Item(charId, "CHAR", 1)))
-        val config = AppConfig.config
-        val result = service()?.gainItem(config.adminKey, config.uid, request)
-        if (result?.status != 0) {
-            throw RuntimeException(result?.msg.toString())
+        val result = Network.gainItem(request)
+        if (result.status != 0) {
+            throw RuntimeException(result.msg.toString())
         }
     }
 

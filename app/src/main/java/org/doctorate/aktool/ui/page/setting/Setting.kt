@@ -93,8 +93,11 @@ fun Setting() {
                 value = config.serverUri,
                 label = stringResource(R.string.server_uri),
                 onValueSave = {
-                    onConfigChange(config.copy(serverUri = it))
-                    Network.createRetrofit(it)
+                    if (Network.initService(it)) {
+                        onConfigChange(config.copy(serverUri = it))
+                    } else {
+                        Toast.makeText(context, R.string.error_uri, Toast.LENGTH_LONG).show()
+                    }
                 }
             )
             EditText(

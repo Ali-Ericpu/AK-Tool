@@ -197,7 +197,7 @@ fun CharacterPage(navToCharacterDetail: (Int) -> Unit = {}) {
                     },
                     modifier = Modifier
                         .padding(4.dp)
-                        .size(80.dp)
+                        .size(72.dp)
                 ) {
                     Icon(
                         painter = painterResource(R.drawable.baseline_start),
@@ -222,7 +222,8 @@ fun CharacterPage(navToCharacterDetail: (Int) -> Unit = {}) {
                         runCatching {
                             viewModel.gainChar(charId)
                         }.onSuccess {
-                            Toast.makeText(context, R.string.save_success, Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, R.string.save_success, Toast.LENGTH_SHORT)
+                                .show()
                             refresh()
                         }.onFailure {
                             Toast.makeText(context, it.message, Toast.LENGTH_SHORT).show()
@@ -325,12 +326,8 @@ fun CharacterCard(
                     }
             )
             //char skin
-            val portraitId = URLEncoder.encode(char.skin, "UTF-8")
-//            val portraitId = "114514"      //预览用的
-//            val link = "https://torappu.prts.wiki/assets/char_portrait/$portraitId.png"
-            val link = "https://web.hycdn.cn/arknights/game/assets/char_skin/portrait/$portraitId.png"
             Image(
-                painter = rememberAsyncImagePainter(link),
+                painter = portraitPainter(char.skin),
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
@@ -550,11 +547,16 @@ fun Modifier.offsetPercent(offsetPercentX: Float = 0f, offsetPercentY: Float = 0
     }
 
 @Composable
+fun portraitPainter(skinId: String): Painter {
+    val skinId = URLEncoder.encode(skinId, "UTF-8")
+    val imageUrl = "https://web.hycdn.cn/arknights/game/assets/char_skin/portrait/$skinId.png"
+    return rememberAsyncImagePainter(model = imageUrl)
+}
+
+@Composable
 fun skillPainter(skillId: String): Painter {
     val skillId = URLEncoder.encode(skillId, "UTF-8")
     val imageUrl = "https://web.hycdn.cn/arknights/game/assets/char_skill/$skillId.png"
-//    val imageUrl =
-//        "https://raw.githubusercontent.com/yuanyan3060/ArknightsGameResource/refs/heads/main/skill/skill_icon_$skillId.png"
     return rememberAsyncImagePainter(
         model = imageUrl,
         placeholder = painterResource(R.drawable.character_default_skill_icon),
