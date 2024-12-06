@@ -19,12 +19,13 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.shape.RoundedCornerShape
+//noinspection UsingMaterialAndMaterial3Libraries
+import androidx.compose.material.Slider
+//noinspection UsingMaterialAndMaterial3Libraries
+import androidx.compose.material.SliderDefaults
 import androidx.compose.material3.Button
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Slider
-import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -261,7 +262,6 @@ fun CharacterDetail(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Preview
 @Composable
 fun IntRangeSlider(
@@ -307,10 +307,12 @@ fun IntRangeSlider(
             valueRange = start.toFloat()..maxValue.toFloat(),
             steps = max(maxValue - start - 1, 0),
             colors = SliderDefaults.colors(
+                thumbColor = MaterialTheme.colorScheme.primary,
+                activeTrackColor = MaterialTheme.colorScheme.primary,
                 inactiveTickColor = Color.White.copy(alpha = 0f),
                 activeTickColor = Color.White.copy(alpha = 0f),
             ),
-            modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 4.dp)
+            modifier = Modifier.padding(start = 8.dp, end = 8.dp)
         )
     }
 }
