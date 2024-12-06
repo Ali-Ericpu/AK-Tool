@@ -27,4 +27,20 @@
     <string name="setting">设置</string>
     <string name="error_data">数据异常</string>
     <string name="char_id">干员ID</string>
+    <string name="nick_name">昵称</string>
+    <string name="nick_num">编号</string>
+    <string name="diamond">源石</string>
+    <string name="diamond_shard">合成玉</string>
+    <string name="ap">理智</string>
+    <string name="gold">龙门币</string>
+    <string name="hgg_shard">高级凭证</string>
+    <string name="lgg_shard">资质凭证</string>
+    <string name="gacha_tkt">寻访凭证</string>
+    <string name="ten_gacha_tkt">十连寻访凭证</string>
+    <string name="cls_gacha_tkt">中坚寻访凭证</string>
+    <string name="cls_ten_gacha_tkt">中坚十连寻访凭证</string>
+    <string name="cls_shard">通用凭证</string>
+    <string name="try_tkt">演习凭证</string>
+    <string name="rec_tkt">招募许可</string>
+    <string name="fni_tkt">加急许可</string>
 </resources>

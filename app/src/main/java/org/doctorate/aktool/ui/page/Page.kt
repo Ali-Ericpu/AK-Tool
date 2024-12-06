@@ -37,6 +37,7 @@ import androidx.navigation.compose.rememberNavController
 import org.doctorate.aktool.ui.page.character.CharacterPage
 import org.doctorate.aktool.ui.page.characterdetail.CharacterDetail
 import org.doctorate.aktool.ui.page.extra.ExtraPage
+import org.doctorate.aktool.ui.page.home.HomePage
 import org.doctorate.aktool.ui.page.setting.Setting
 
 enum class Page(val route: String, val desc: String, val icon: ImageVector) {
@@ -102,7 +103,7 @@ fun RoutePage() {
                 )
             }
             composable(route = Page.HOME.route) {
-                Text("HOME")
+                HomePage()
             }
             composable(route = Page.CHARACTER.route) {
                 CharacterPage {

@@ -2,8 +2,8 @@
     <string name="app_name">AK Tool</string>
     <string name="save">Save</string>
     <string name="confirm">Confirm</string>
-    <string name="save_success">Success</string>
-    <string name="save_failed">Failed</string>
+    <string name="save_success">Save Success</string>
+    <string name="save_failed">Save Failed</string>
     <string name="cancel">Cancel</string>
     <string name="dark_mode">Dark Mode</string>
     <string name="dynamic_color">Dynamic Color</string>
@@ -27,4 +27,20 @@
     <string name="setting">Setting</string>
     <string name="error_data">Error Data</string>
     <string name="char_id">Char ID</string>
+    <string name="nick_name">Nick Name</string>
+    <string name="nick_num">Nick Number</string>
+    <string name="diamond">Diamond</string>
+    <string name="diamond_shard">Diamond Shard</string>
+    <string name="ap">AP</string>
+    <string name="gold">Gold</string>
+    <string name="hgg_shard">HGG Shard</string>
+    <string name="lgg_shard">LGG Shard</string>
+    <string name="gacha_tkt">Gacha Ticket</string>
+    <string name="ten_gacha_tkt">Ten Gacha Ticket</string>
+    <string name="cls_gacha_tkt">Classic Ticket</string>
+    <string name="cls_ten_gacha_tkt">Ten Classic Ticket</string>
+    <string name="cls_shard">Classic Shard</string>
+    <string name="try_tkt">Try Ticket</string>
+    <string name="rec_tkt">Recruit Ticket</string>
+    <string name="fni_tkt">Finish Ticket</string>
 </resources>

@@ -43,7 +43,54 @@ data class Status(
     var classicShard: Int,
     var classicGachaTicket: Int,
     var classicTenGachaTicket: Int,
-)
+) {
+    companion object {
+        fun status() = Status(
+            nickName = "AK Tool",
+            nickNumber = "1145",
+            level = 120,
+            exp = 0,
+            socialPoint = 0,
+            gachaTicket = 114514,
+            tenGachaTicket = 114514,
+            instantFinishTicket = 114514,
+            hggShard = 114514,
+            lggShard = 114514,
+            recruitLicense = 114514,
+            progress = 0,
+            buyApRemainTimes = 0,
+            apLimitUpFlag = 0,
+            uid = "114514",
+            flags = mutableMapOf(),
+            ap = 84,
+            maxAp = 84,
+            androidDiamond = 114514,
+            iosDiamond = 114514,
+            diamondShard = 114514,
+            gold = 114514,
+            practiceTicket = 114514,
+            lastOnlineTs = -1,
+            lastRefreshTs = -1,
+            lastApAddTime = -1,
+            mainStageProgress = "",
+            registerTs = -1,
+            serverName = "TERRA",
+            avatarId = "",
+            resume = "",
+            friendNumLimit = 99,
+            monthlySubscriptionEndTime = -1,
+            monthlySubscriptionStartTime = -1,
+            secretary = "",
+            secretarySkinId = "",
+            tipMonthlyCardExpireTs = -1,
+            avatar = null,
+            globalVoiceLan = null,
+            classicShard = 114514,
+            classicGachaTicket = 114514,
+            classicTenGachaTicket = 114514
+        )
+    }
+}
 
 data class Avatar(
     var type: String?,
