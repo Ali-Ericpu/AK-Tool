@@ -65,7 +65,7 @@ class MainActivity : ComponentActivity(), SingletonImageLoader.Factory {
                     dynamicColor = config.dynamicColor
                 ) {
                     Surface {
-                        if (config.bgPath.isNotEmpty()) {
+                        if (config.customBg) {
                             Image(
                                 painter = rememberAsyncImagePainter(config.bgPath),
                                 contentDescription = null,

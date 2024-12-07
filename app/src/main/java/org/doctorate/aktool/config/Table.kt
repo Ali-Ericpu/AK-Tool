@@ -20,6 +20,9 @@ object Table {
         private set
 
     fun initData(context: Context): Boolean {
+        if (CHARACTER_TABLE.isNotEmpty() && FAVOR_TABLE.isNotEmpty()) {
+            return true
+        }
         val dir = context.filesDir
         val fileList = jsonList.map {
             File(dir, "data/excel/$it").also {

@@ -5,9 +5,11 @@ import org.doctorate.aktool.config.AppConfig
 import org.doctorate.aktool.pojo.entity.Character
 import org.doctorate.aktool.pojo.entity.Result
 import org.doctorate.aktool.pojo.entity.Status
+import org.doctorate.aktool.pojo.request.AddFlushMessageRequest
 import org.doctorate.aktool.pojo.request.GainItemRequest
 import org.doctorate.aktool.pojo.request.SaveCharRequest
 import org.doctorate.aktool.pojo.request.SaveStatusRequest
+import org.doctorate.aktool.pojo.request.UnlockAllCharRequest
 import org.doctorate.aktool.utils.JsonUtil
 import retrofit2.Retrofit
 import retrofit2.converter.jackson.JacksonConverterFactory
@@ -49,7 +51,7 @@ object Network {
         return service.saveCharacter(config.uid, config.adminKey, body)
     }
 
-    suspend fun gainItem(body: GainItemRequest): Result<String?> {
+    suspend fun gainItem(body: GainItemRequest): Result<Map<String, Any>?> {
         val config = AppConfig.config
         return service.gainItem(config.uid, config.adminKey, body)
     }
@@ -58,10 +60,28 @@ object Network {
         val config = AppConfig.config
         return service.syncStatus(config.uid, config.adminKey)
     }
-
     suspend fun saveStatus(saveStatusRequest: SaveStatusRequest): Result<Map<String, Any>?> {
         val config = AppConfig.config
         return service.saveStatus(config.uid, config.adminKey, saveStatusRequest)
+    }
+
+    suspend fun unlockAllChar(body: UnlockAllCharRequest): Result<Map<String, Any>?> {
+        val config = AppConfig.config
+        return service.unlockAllChar(config.uid, config.adminKey, body)
+    }
+
+    suspend fun unlockAllStages(): Result<Map<String, Any>?> {
+        val config = AppConfig.config
+        return service.unlockAllStages(config.uid, config.adminKey)
+    }
+
+    suspend fun unlockAllFlags(): Result<Map<String, Any>?> {
+        val config = AppConfig.config
+        return service.unlockAllFlags(config.uid, config.adminKey)
+    }
+
+    suspend fun addFlushMessage(body: AddFlushMessageRequest): Result<Map<String, Any>?> {
+        return service.addFlushMessage(AppConfig.config.adminKey, body)
     }
 
 }

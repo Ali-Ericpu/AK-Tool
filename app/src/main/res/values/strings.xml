@@ -43,4 +43,18 @@
     <string name="try_tkt">演习凭证</string>
     <string name="rec_tkt">招募许可</string>
     <string name="fni_tkt">加急许可</string>
+    <string name="sp_skill_lv">特殊技能等级</string>
+    <string name="equip_lv">模组等级</string>
+    <string name="custom_bg">使用自定义背景</string>
+    <string name="unlock_all_char">解锁所有干员</string>
+    <string name="unlock_all_stages">解锁所有关卡</string>
+    <string name="unlock_all_flags">解锁所有检查点</string>
+    <string name="add_flush_message">添加滚动消息</string>
+    <string name="gain_item">添加物品</string>
+    <string name="push_message">推送消息</string>
+    <string name="message">消息</string>
+    <string name="item_id">道具ID</string>
+    <string name="item_type">道具类型</string>
+    <string name="item">道具</string>
+    <string name="count">数量</string>
 </resources>

@@ -1,6 +1,5 @@
 package org.doctorate.aktool.ui.page.setting
 
-import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -28,8 +27,10 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -120,6 +121,14 @@ fun Setting() {
                 state = config.dynamicColor,
                 onCheckedChange = { onConfigChange(config.copy(dynamicColor = it)) }
             )
+            EditSwitch(
+                label = stringResource(R.string.custom_bg),
+                state = config.customBg,
+                onCheckedChange = { onConfigChange(config.copy(customBg = it)) }
+            )
+            TextButton(label = stringResource(R.string.choose_bg)) {
+                singleLauncher.launch(arrayOf("image/*"))
+            }
             ProgressButton(
                 label = stringResource(R.string.update_excel),
                 isUpdate = isUpdateExcel,
@@ -131,10 +140,6 @@ fun Setting() {
                     }
                 }
             )
-            TextButton(label = stringResource(R.string.choose_bg)) {
-                singleLauncher.launch(arrayOf("image/*"))
-            }
-
         }
     }
 }
@@ -161,6 +166,10 @@ fun EditText(
             singleLine = true,
             readOnly = true,
             value = value,
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedTextColor = Color.Black,
+                unfocusedTextColor = Color.Black
+            ),
             onValueChange = { },
             label = { Text(text = label, color = Color.Black) },
             modifier = Modifier
@@ -177,7 +186,6 @@ fun EditText(
     }
 
     if (dialogState) {
-        Log.d("EditTextDialog", "EditTextDialog")
         EditTextDialog(
             value = value,
             label = label,
@@ -324,7 +332,10 @@ fun TextButton(
                 .fillMaxHeight()
         )
         IconButton(
-            onClick = { onClick() }
+            onClick = { onClick() },
+            colors = IconButtonDefaults.iconButtonColors(
+                contentColor = MaterialTheme.colorScheme.primary
+            )
         ) {
             Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, null)
         }
@@ -365,7 +376,12 @@ fun ProgressButton(
             if (isUpdate) {
                 CircularProgressIndicator()
             } else {
-                IconButton(onClick = { onClick() }) {
+                IconButton(
+                    onClick = { onClick() },
+                    colors = IconButtonDefaults.iconButtonColors(
+                        contentColor = MaterialTheme.colorScheme.primary
+                    )
+                ) {
                     Icon(Icons.Default.PlayArrow, null)
                 }
             }

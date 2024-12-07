@@ -43,4 +43,18 @@
     <string name="try_tkt">Try Ticket</string>
     <string name="rec_tkt">Recruit Ticket</string>
     <string name="fni_tkt">Finish Ticket</string>
+    <string name="sp_skill_lv">Skill Sp Lv</string>
+    <string name="equip_lv">Equip Level</string>
+    <string name="custom_bg">Custom Background</string>
+    <string name="unlock_all_char">Unlock All Char</string>
+    <string name="unlock_all_stages">Unlock All Stage</string>
+    <string name="unlock_all_flags">Unlock All Flag</string>
+    <string name="add_flush_message">Add Flush Message</string>
+    <string name="gain_item">Gain Item</string>
+    <string name="push_message">PushMessage</string>
+    <string name="message">Message</string>
+    <string name="item_id">ITEM ID</string>
+    <string name="item_type">ITEM Type</string>
+    <string name="item">ITEM</string>
+    <string name="count">Count</string>
 </resources>

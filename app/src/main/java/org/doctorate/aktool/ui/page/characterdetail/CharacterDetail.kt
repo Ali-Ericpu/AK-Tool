@@ -269,6 +269,8 @@ fun IntRangeSlider(
     start: Int = 0,
     maxValue: Int = 99,
     description: String = "Test",
+    textColor: Color = Color.Black,
+    color: Color = Color.LightGray,
     modifier: Modifier = Modifier,
     onValueChange: (Float) -> Unit = { },
     onValueChangeFinished: (Int) -> Unit = { },
@@ -279,7 +281,7 @@ fun IntRangeSlider(
         modifier = modifier
             .padding(8.dp)
             .clip(RoundedCornerShape(16.dp))
-            .background(Color.LightGray)
+            .background(color)
     ) {
         Row(
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -290,13 +292,13 @@ fun IntRangeSlider(
         ) {
             Text(
                 text = description,
-                fontSize = 24.sp,
-                color = Color.Black,
+                fontSize = 20.sp,
+                color = textColor,
             )
             Text(
                 text = value.roundToInt().toString(),
-                fontSize = 24.sp,
-                color = Color.Black,
+                fontSize = 20.sp,
+                color = textColor,
                 textAlign = TextAlign.Center,
             )
         }
@@ -309,8 +311,8 @@ fun IntRangeSlider(
             colors = SliderDefaults.colors(
                 thumbColor = MaterialTheme.colorScheme.primary,
                 activeTrackColor = MaterialTheme.colorScheme.primary,
-                inactiveTickColor = Color.White.copy(alpha = 0f),
-                activeTickColor = Color.White.copy(alpha = 0f),
+                inactiveTickColor = Color.Unspecified,
+                activeTickColor = Color.Unspecified,
             ),
             modifier = Modifier.padding(start = 8.dp, end = 8.dp)
         )
