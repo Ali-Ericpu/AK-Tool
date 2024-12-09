@@ -68,7 +68,8 @@ object Table {
 
     fun getRealFavPoint(percent: Int): Int {
         val favorFrames = FAVOR_TABLE.get<ListMap>("favorFrames")!!
-        return favorFrames[percent]["level"] as Int
+        val data = favorFrames.getOrNull(percent) ?: favorFrames.last()
+        return data["level"] as Int
     }
 
     fun getFavPointPercent(favPoint: Int): Int {

@@ -92,7 +92,11 @@ fun CharacterDetail(
     var maxSkillLevel by remember { mutableIntStateOf(if (char.evolvePhase < 1) 4 else 7) }
     val maxEvoLevel by remember { mutableIntStateOf(Table.getMaxCharEvoLevel(character.charId)) }
     val coroutineScope = rememberCoroutineScope()
-    LazyColumn(modifier = Modifier.fillMaxSize().alpha(0.95f)) {
+    LazyColumn(
+        modifier = Modifier
+            .fillMaxSize()
+            .alpha(0.95f)
+    ) {
         item {
             Row(modifier = Modifier.padding(start = 4.dp)) {
                 CharacterCard(char)
@@ -221,15 +225,22 @@ fun CharacterDetail(
                     Text(stringResource(R.string.cancel))
                 }
                 Button(onClick = {
-                    if (char.evolvePhase == 2 && char.equip.isNotEmpty()) {
-                        val first = char.equip.keys.first()
-                        if (char.currentEquip == null) {
-                            char.currentEquip = first
-                        }
-                        char.equip.values.forEach {
-                            if (it.locked == 1) {
-                                it.unlock()
+                    if (char.evolvePhase == 2) {
+                        if (char.equip.isNotEmpty()) {
+                            val first = char.equip.keys.first()
+                            if (char.currentEquip == null) {
+                                char.currentEquip = first
                             }
+                            char.equip.values.forEach {
+                                if (it.locked == 1) {
+                                    it.unlock()
+                                }
+                            }
+                        }
+                        if (char.skin == char.charId + "#1" &&
+                            Table.CHARACTER_TABLE[char.charId]!!["displayNumber"] != null
+                        ) {
+                            char.skin = char.charId + "#2"
                         }
                     } else if (char.evolvePhase < 2) {
                         char.currentTmpl = null

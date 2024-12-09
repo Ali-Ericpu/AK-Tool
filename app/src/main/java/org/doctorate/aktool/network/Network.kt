@@ -46,7 +46,7 @@ object Network {
         return service.syncCharacter(config.uid, config.adminKey)
     }
 
-    suspend fun saveCharacter(body: SaveCharRequest): Result<String?> {
+    suspend fun saveCharacter(body: SaveCharRequest): Result<Map<String, Any>?> {
         val config = AppConfig.config
         return service.saveCharacter(config.uid, config.adminKey, body)
     }

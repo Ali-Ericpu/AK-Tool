@@ -341,9 +341,9 @@ fun LabelTextField(
         if (icon != null) {
             icon()
         } else {
-            Text(label)
+            Text(label, color = Color.Black)
         }
-        Text(value)
+        Text(value, color = Color.Black)
     }
     if (showDialog) {
         EditTextDialog(

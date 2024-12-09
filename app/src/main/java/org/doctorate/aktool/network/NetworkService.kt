@@ -23,15 +23,15 @@ interface NetworkService {
 
     @POST("admin/character/save")
     suspend fun saveCharacter(
-        @Header("adminKey") adminKey: String,
         @Header("uid") uid: String,
+        @Header("adminKey") adminKey: String,
         @Body body: SaveCharRequest
-    ): Result<String?>
+    ): Result<Map<String, Any>?>
 
     @POST("admin/gainItem")
     suspend fun gainItem(
-        @Header("adminKey") adminKey: String,
         @Header("uid") uid: String,
+        @Header("adminKey") adminKey: String,
         @Body body: GainItemRequest
     ): Result<Map<String, Any>?>
 
