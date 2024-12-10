@@ -57,4 +57,6 @@
     <string name="item_type">道具类型</string>
     <string name="item">道具</string>
     <string name="count">数量</string>
+    <string name="search">搜索</string>
+    <string name="copy_success">复制成功 : %1$s</string>
 </resources>

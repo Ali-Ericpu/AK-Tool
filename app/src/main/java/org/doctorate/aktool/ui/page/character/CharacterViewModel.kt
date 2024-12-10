@@ -18,10 +18,12 @@ import org.doctorate.aktool.pojo.entity.Character
 import org.doctorate.aktool.pojo.entity.Item
 import org.doctorate.aktool.pojo.request.GainItemRequest
 import org.doctorate.aktool.pojo.request.SaveCharRequest
+import org.doctorate.aktool.utils.replace
 
 class CharacterViewModel : ViewModel() {
     val characterData = mutableMapOf<String, Character>()
     private val characterList = mutableStateListOf<Character>()
+    private val charNameMap = mutableMapOf<String, String>()
 
     private var _splash = MutableStateFlow(true)
     val splash = _splash.asStateFlow()
@@ -38,6 +40,9 @@ class CharacterViewModel : ViewModel() {
     private var _gainChar = MutableStateFlow(false)
     val gainChar = _gainChar.asStateFlow()
 
+    private var _isSearch = MutableStateFlow(false)
+    val isSearch = _isSearch.asStateFlow()
+
     fun charList(): List<Character> = characterList.apply { sort() }
 
     fun initCharData(context: Context) = viewModelScope.launch {
@@ -45,6 +50,14 @@ class CharacterViewModel : ViewModel() {
             _loadAnimate.emit(true)
             characterData.clear()
             runCatching {
+                launch {
+                    charNameMap.clear()
+                    Table.CHARACTER_TABLE.forEach { (charId, charData) ->
+                        if (charId.startsWith("char_") && charData["displayNumber"] != null) {
+                            charNameMap[charData["name"] as String] = charId
+                        }
+                    }
+                }
                 val result = Network.syncCharacter()
                 if (result.data == null) {
                     throw RuntimeException("数据异常")
@@ -107,5 +120,32 @@ class CharacterViewModel : ViewModel() {
         _gainChar.emit(_gainChar.value.not())
     }
 
+    fun getSearchedCharList(charName: String): List<String> {
+        if (charName.isEmpty()) return emptyList()
+        val charList = mutableListOf<String>()
+        for (name in charNameMap.keys) {
+            if (charName in name) {
+                charList.add(name)
+            }
+            if (charList.size == 10) {
+                break
+            }
+        }
+        return charList
+    }
+
+    fun changeSearchState() = viewModelScope.launch {
+        _isSearch.emit(_isSearch.value.not())
+    }
+
+    fun getCharIdByCharName(charName: String): String {
+        return charNameMap[charName] ?: "ERROR"
+    }
+
+    fun searchChar(charName: String) {
+        characterData.values.find { it.name == charName }?.let {
+            characterList.replace(it)
+        }
+    }
 
 }

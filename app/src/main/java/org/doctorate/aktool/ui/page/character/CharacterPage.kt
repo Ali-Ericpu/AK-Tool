@@ -2,12 +2,17 @@ package org.doctorate.aktool.ui.page.character
 
 import android.widget.Toast
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -15,6 +20,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -26,17 +32,25 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.BasicAlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -45,9 +59,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.layout
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -64,6 +80,7 @@ import org.doctorate.aktool.pojo.entity.Character
 import org.doctorate.aktool.pojo.entity.Profession
 import org.doctorate.aktool.ui.page.setting.EditTextDialog
 import org.doctorate.aktool.ui.page.splash.CircleIconButton
+import org.doctorate.aktool.utils.replace
 import java.net.URLEncoder
 import kotlin.math.roundToInt
 
@@ -78,6 +95,7 @@ fun CharacterPage(navToCharacterDetail: (Int) -> Unit = {}) {
     val showGainCharDialog by viewModel.gainChar.collectAsState()
     val currentProfession by viewModel.profession.collectAsState()
     val selectProfession by viewModel.isSelect.collectAsState()
+    val showSearchDialog by viewModel.isSearch.collectAsState()
     val professions = Profession.entries.toList()
     val coroutineScope = rememberCoroutineScope()
     val professionOffsetX by animateFloatAsState(if (selectProfession) 0f else 1.2f, label = "")
@@ -167,6 +185,11 @@ fun CharacterPage(navToCharacterDetail: (Int) -> Unit = {}) {
                         icon = Icons.Default.Add,
                         onClick = { viewModel.changeGainCharState() }
                     )
+
+                    CircleIconButton(
+                        icon = Icons.Default.Search,
+                        onClick = { viewModel.changeSearchState() }
+                    )
                     CircleIconButton(
                         icon = Icons.Default.Refresh,
                         onClick = {
@@ -234,7 +257,15 @@ fun CharacterPage(navToCharacterDetail: (Int) -> Unit = {}) {
             }
         )
     }
-
+    if (showSearchDialog) {
+        SearchCharDialog(
+            onKeywordType = { viewModel.getSearchedCharList(it) },
+            onSearchCharId = { viewModel.getCharIdByCharName(it) }
+        ) {
+            it?.let { viewModel.searchChar(it) }
+            viewModel.changeSearchState()
+        }
+    }
 
 }
 
@@ -534,6 +565,121 @@ fun CharacterCard(
         }
 
     }
+}
+
+@OptIn(
+    ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class,
+    ExperimentalFoundationApi::class
+)
+@Preview
+@Composable
+fun SearchCharDialog(
+    onKeywordType: (String) -> List<String> = { listOf() },
+    onSearchCharId: (String) -> String = { "" },
+    onConfirmKeyword: (String?) -> Unit = { }
+) {
+    val context = LocalContext.current
+    val manager = LocalClipboardManager.current
+    var keyword by remember { mutableStateOf("") }
+    val charNameList = remember { mutableStateListOf<String>() }
+    var selectedKeyword by remember { mutableStateOf("") }
+    BasicAlertDialog(
+        onDismissRequest = { onConfirmKeyword(null) },
+        modifier = Modifier
+            .wrapContentSize()
+            .clip(RoundedCornerShape(12.dp))
+            .background(MaterialTheme.colorScheme.background)
+            .padding(start = 16.dp, end = 16.dp, top = 16.dp)
+    ) {
+        Column(
+            verticalArrangement = Arrangement.SpaceBetween,
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Text(
+                text = stringResource(R.string.search),
+                color = MaterialTheme.colorScheme.onBackground,
+                style = MaterialTheme.typography.displaySmall,
+                modifier = Modifier
+                    .align(Alignment.Start)
+                    .height(72.dp)
+                    .fillMaxWidth()
+            )
+            OutlinedTextField(
+                value = keyword,
+                maxLines = Int.MAX_VALUE,
+                onValueChange = {
+                    keyword = it
+                    charNameList.replace(onKeywordType(keyword))
+                },
+            )
+            FlowRow(
+                horizontalArrangement = Arrangement.SpaceAround,
+                verticalArrangement = Arrangement.Top,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                charNameList.forEach {
+                    val message = stringResource(R.string.copy_success)
+                    Box(
+                        modifier = Modifier
+                            .wrapContentSize()
+                            .padding(4.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(if (selectedKeyword == it) MaterialTheme.colorScheme.primary else Color.LightGray)
+                            .combinedClickable(
+                                enabled = true,
+                                onClick = { selectedKeyword = it },
+                                onDoubleClick = {
+                                    manager.setText(AnnotatedString(it))
+                                    Toast.makeText(context, message.format(it), Toast.LENGTH_SHORT).show()
+                                },
+                                onLongClick = {
+                                    val charId = onSearchCharId(it)
+                                    manager.setText(AnnotatedString(charId))
+                                    Toast.makeText(context, message.format(charId), Toast.LENGTH_SHORT).show()
+                                }
+                            )
+                            .padding(8.dp)
+                    ) {
+                        Text(text = it, color = Color.Black)
+                    }
+                }
+            }
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Absolute.Right,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(80.dp)
+            ) {
+                Button(
+                    onClick = { onConfirmKeyword(null) },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.Black.copy(alpha = 0f)
+                    )
+                ) {
+                    Text(
+                        text = stringResource(R.string.cancel),
+                        color = MaterialTheme.colorScheme.onBackground,
+                        style = MaterialTheme.typography.bodyLarge,
+                    )
+                }
+                Button(
+                    onClick = { onConfirmKeyword(selectedKeyword) },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.Black.copy(alpha = 0f),
+                        disabledContainerColor = Color.Black.copy(alpha = 0f)
+                    )
+                ) {
+                    Text(
+                        text = stringResource(R.string.confirm),
+                        color = MaterialTheme.colorScheme.primary,
+                        style = MaterialTheme.typography.bodyLarge,
+                    )
+                }
+            }
+        }
+    }
+
 }
 
 fun Modifier.offsetPercent(offsetPercentX: Float = 0f, offsetPercentY: Float = 0f): Modifier =

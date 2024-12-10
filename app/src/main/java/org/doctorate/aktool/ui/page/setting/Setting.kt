@@ -13,7 +13,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -211,10 +211,10 @@ fun EditTextDialog(
     BasicAlertDialog(
         onDismissRequest = { onValueSave(null) },
         modifier = Modifier
-            .width(320.dp)
-            .height(240.dp)
+            .wrapContentSize()
             .clip(RoundedCornerShape(12.dp))
             .background(MaterialTheme.colorScheme.background)
+            .padding(start = 16.dp, end = 16.dp, top = 16.dp)
     ) {
         Column(
             verticalArrangement = Arrangement.SpaceBetween,
@@ -222,13 +222,12 @@ fun EditTextDialog(
         ) {
             Text(
                 text = label,
-                color = Color.Black,
+                color = MaterialTheme.colorScheme.onBackground,
                 style = MaterialTheme.typography.displaySmall,
                 modifier = Modifier
                     .align(Alignment.Start)
-                    .height(80.dp)
+                    .height(72.dp)
                     .fillMaxWidth()
-                    .padding(16.dp)
             )
             OutlinedTextField(
                 value = value,
@@ -241,17 +240,17 @@ fun EditTextDialog(
                 horizontalArrangement = Arrangement.Absolute.Right,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(60.dp)
+                    .height(80.dp)
             ) {
                 Button(
                     onClick = { onValueSave(null) },
-                    colors = ButtonDefaults.buttonColors().copy(
+                    colors = ButtonDefaults.buttonColors(
                         containerColor = Color.Black.copy(alpha = 0f)
                     )
                 ) {
                     Text(
                         text = stringResource(R.string.cancel),
-                        color = Color.Black,
+                        color = MaterialTheme.colorScheme.onBackground,
                         style = MaterialTheme.typography.bodyLarge,
                     )
                 }
@@ -263,7 +262,7 @@ fun EditTextDialog(
                             onValueSave(value)
                         }
                     },
-                    colors = ButtonDefaults.buttonColors().copy(
+                    colors = ButtonDefaults.buttonColors(
                         containerColor = Color.Black.copy(alpha = 0f),
                         disabledContainerColor = Color.Black.copy(alpha = 0f)
                     )

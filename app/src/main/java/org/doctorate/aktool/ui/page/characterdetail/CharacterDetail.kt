@@ -252,11 +252,12 @@ fun CharacterDetail(
                     if (char.level == maxLevel) {
                         char.exp = 0
                     }
-                    char.favorPoint = Table.getRealFavPoint(char.favorPoint)
                     Log.d("CharData", "CharacterDetail: ${JsonUtil.toPrettyJson(char)}")
                     coroutineScope.launch {
                         runCatching {
-                            charViewModel.changeCharData(char)
+                            charViewModel.changeCharData(
+                                char.copy(favorPoint = Table.getRealFavPoint(char.favorPoint))
+                            )
                         }.onSuccess {
                             Toast.makeText(context, R.string.save_success, Toast.LENGTH_SHORT)
                                 .show()
