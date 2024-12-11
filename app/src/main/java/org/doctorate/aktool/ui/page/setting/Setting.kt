@@ -93,6 +93,7 @@ fun Setting() {
             EditText(
                 value = config.serverUri,
                 label = stringResource(R.string.server_uri),
+                hide = true,
                 onValueSave = {
                     if (Network.initService(it)) {
                         onConfigChange(config.copy(serverUri = it))
@@ -109,6 +110,7 @@ fun Setting() {
             EditText(
                 value = config.adminKey,
                 label = stringResource(R.string.admin_key),
+                hide = true,
                 onValueSave = { onConfigChange(config.copy(adminKey = it)) }
             )
             EditSwitch(
@@ -148,6 +150,7 @@ fun Setting() {
 fun EditText(
     value: String = "",
     label: String = "",
+    hide: Boolean = false,
     onValueSave: (String) -> Unit = { }
 ) {
     var dialogState by remember { mutableStateOf(false) }
@@ -165,7 +168,7 @@ fun EditText(
         OutlinedTextField(
             singleLine = true,
             readOnly = true,
-            value = value,
+            value = if (hide) "*".repeat(value.length) else value,
             colors = OutlinedTextFieldDefaults.colors(
                 focusedTextColor = Color.Black,
                 unfocusedTextColor = Color.Black
@@ -214,7 +217,7 @@ fun EditTextDialog(
             .wrapContentSize()
             .clip(RoundedCornerShape(12.dp))
             .background(MaterialTheme.colorScheme.background)
-            .padding(start = 16.dp, end = 16.dp, top = 16.dp)
+            .padding(16.dp)
     ) {
         Column(
             verticalArrangement = Arrangement.SpaceBetween,
@@ -226,7 +229,7 @@ fun EditTextDialog(
                 style = MaterialTheme.typography.displaySmall,
                 modifier = Modifier
                     .align(Alignment.Start)
-                    .height(72.dp)
+                    .padding(bottom = 24.dp)
                     .fillMaxWidth()
             )
             OutlinedTextField(
@@ -240,7 +243,7 @@ fun EditTextDialog(
                 horizontalArrangement = Arrangement.Absolute.Right,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(80.dp)
+                    .padding(top = 16.dp)
             ) {
                 Button(
                     onClick = { onValueSave(null) },

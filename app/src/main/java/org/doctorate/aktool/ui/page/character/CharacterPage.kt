@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -106,11 +105,12 @@ fun CharacterPage(navToCharacterDetail: (Int) -> Unit = {}) {
         onRefresh = { refresh() },
         modifier = Modifier.fillMaxSize()
     ) {
-        if (!showLoadAnimate) {
+        if (!showLoadAnimate && !splash) {
             LazyVerticalGrid(
                 GridCells.FixedSize(108.dp),
-                verticalArrangement = Arrangement.SpaceAround,
+                verticalArrangement = Arrangement.Top,
                 horizontalArrangement = Arrangement.SpaceAround,
+                modifier = Modifier.fillMaxSize()
             ) {
                 items(charList) { char ->
                     CharacterCard(char) {
@@ -118,64 +118,56 @@ fun CharacterPage(navToCharacterDetail: (Int) -> Unit = {}) {
                     }
                 }
             }
-        }
-        Box(
-            modifier = Modifier
-                .width(48.dp)
-                .fillMaxHeight()
-                .padding(top = 48.dp)
-                .align(Alignment.TopEnd)
-        ) {
-            LazyColumn(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(4.dp))
-                    .offsetPercent(offsetPercentX = professionOffsetX)
-            ) {
-                item {
-                    IconButton(
-                        onClick = {
-                            if (currentProfession == "ALL") {
-                                viewModel.changeSelectState(false)
-                            } else {
-                                viewModel.selectProfession("ALL")
-                            }
-                        },
-                        modifier = Modifier
-                            .height(48.dp)
-                            .fillMaxWidth()
-                            .background(Color.Black.copy(alpha = 0.7f))
-                            .align(alignment = Alignment.Center)
-                    ) {
-                        Text(
-                            text = if (currentProfession == "ALL") "BACK" else "ALL",
-                            textAlign = TextAlign.Center,
-                            style = TextStyle(color = MaterialTheme.colorScheme.primary)
-                        )
-                    }
-                }
-                items(professions) {
-                    Box {
-                        Image(
-                            painter = painterResource(it.icon),
-                            contentDescription = it.name,
+            Box(modifier = Modifier.width(48.dp).align(Alignment.CenterEnd)) {
+                LazyColumn(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(4.dp))
+                        .offsetPercent(offsetPercentX = professionOffsetX)
+                ) {
+                    item {
+                        IconButton(
+                            onClick = {
+                                if (currentProfession == "ALL") {
+                                    viewModel.changeSelectState(false)
+                                } else {
+                                    viewModel.selectProfession("ALL")
+                                }
+                            },
                             modifier = Modifier
-                                .alpha(0.7f)
-                                .clickable(onClick = { viewModel.selectProfession(it.name) })
-                        )
-                        if (currentProfession == it.name) {
-                            Image(
-                                painter = painterResource(R.drawable.profession_select),
-                                contentDescription = "select",
-                                alignment = Alignment.CenterEnd,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(48.dp)
+                                .height(48.dp)
+                                .fillMaxWidth()
+                                .background(Color.Black.copy(alpha = 0.7f))
+                                .align(alignment = Alignment.Center)
+                        ) {
+                            Text(
+                                text = if (currentProfession == "ALL") "BACK" else "ALL",
+                                textAlign = TextAlign.Center,
+                                color = MaterialTheme.colorScheme.primary
                             )
                         }
                     }
+                    items(professions) {
+                        Box {
+                            Image(
+                                painter = painterResource(it.icon),
+                                contentDescription = it.name,
+                                modifier = Modifier
+                                    .alpha(0.7f)
+                                    .clickable(onClick = { viewModel.selectProfession(it.name) })
+                            )
+                            if (currentProfession == it.name) {
+                                Image(
+                                    painter = painterResource(R.drawable.profession_select),
+                                    contentDescription = "select",
+                                    alignment = Alignment.CenterEnd,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(48.dp)
+                                )
+                            }
+                        }
+                    }
                 }
-            }
-            if (!showLoadAnimate && !splash) {
                 Column(modifier = Modifier.offsetPercent(offsetPercentX = menuOffsetX)) {
                     CircleIconButton(
                         icon = Icons.Default.Menu,
@@ -185,7 +177,6 @@ fun CharacterPage(navToCharacterDetail: (Int) -> Unit = {}) {
                         icon = Icons.Default.Add,
                         onClick = { viewModel.changeGainCharState() }
                     )
-
                     CircleIconButton(
                         icon = Icons.Default.Search,
                         onClick = { viewModel.changeSearchState() }
@@ -589,7 +580,7 @@ fun SearchCharDialog(
             .wrapContentSize()
             .clip(RoundedCornerShape(12.dp))
             .background(MaterialTheme.colorScheme.background)
-            .padding(start = 16.dp, end = 16.dp, top = 16.dp)
+            .padding(16.dp)
     ) {
         Column(
             verticalArrangement = Arrangement.SpaceBetween,
@@ -601,7 +592,7 @@ fun SearchCharDialog(
                 style = MaterialTheme.typography.displaySmall,
                 modifier = Modifier
                     .align(Alignment.Start)
-                    .height(72.dp)
+                    .padding(bottom = 24.dp)
                     .fillMaxWidth()
             )
             OutlinedTextField(
@@ -617,30 +608,29 @@ fun SearchCharDialog(
                 verticalArrangement = Arrangement.Top,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                charNameList.forEach {
+                charNameList.forEach { word ->
                     val message = stringResource(R.string.copy_success)
                     Box(
                         modifier = Modifier
                             .wrapContentSize()
                             .padding(4.dp)
                             .clip(RoundedCornerShape(12.dp))
-                            .background(if (selectedKeyword == it) MaterialTheme.colorScheme.primary else Color.LightGray)
+                            .background(if (selectedKeyword == word) MaterialTheme.colorScheme.primary else Color.LightGray)
                             .combinedClickable(
                                 enabled = true,
-                                onClick = { selectedKeyword = it },
-                                onDoubleClick = {
-                                    manager.setText(AnnotatedString(it))
-                                    Toast.makeText(context, message.format(it), Toast.LENGTH_SHORT).show()
+                                onClick = {
+                                    selectedKeyword = word
+                                    keyword = word
                                 },
                                 onLongClick = {
-                                    val charId = onSearchCharId(it)
+                                    val charId = onSearchCharId(word)
                                     manager.setText(AnnotatedString(charId))
                                     Toast.makeText(context, message.format(charId), Toast.LENGTH_SHORT).show()
                                 }
                             )
                             .padding(8.dp)
                     ) {
-                        Text(text = it, color = Color.Black)
+                        Text(text = word, color = Color.Black)
                     }
                 }
             }
@@ -649,7 +639,7 @@ fun SearchCharDialog(
                 horizontalArrangement = Arrangement.Absolute.Right,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(80.dp)
+                    .padding(top = 16.dp)
             ) {
                 Button(
                     onClick = { onConfirmKeyword(null) },
