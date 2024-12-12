@@ -25,7 +25,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.BasicAlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -54,8 +53,11 @@ import org.doctorate.aktool.R
 import org.doctorate.aktool.config.Table
 import org.doctorate.aktool.pojo.entity.Item
 import org.doctorate.aktool.pojo.request.AddFlushMessageRequest
+import org.doctorate.aktool.pojo.request.ResetActivityRequest
 import org.doctorate.aktool.pojo.request.UnlockAllCharRequest
 import org.doctorate.aktool.ui.page.characterdetail.IntRangeSlider
+import org.doctorate.aktool.ui.page.setting.BasicDialog
+import org.doctorate.aktool.ui.page.setting.ConfirmButtonRow
 import kotlin.math.min
 import kotlin.math.roundToInt
 
@@ -68,6 +70,7 @@ fun ExtraPage() {
     val showMessageDialog by viewModel.showMessageDialog.collectAsState()
     val showItemDialog by viewModel.showItemDialog.collectAsState()
     val isConnecting by viewModel.isConnecting.collectAsState()
+    val showActivityDialog by viewModel.showActivityDialog.collectAsState()
     Box(modifier = Modifier.fillMaxSize()) {
         LazyColumn(
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -91,6 +94,9 @@ fun ExtraPage() {
                 }
                 RequestButton(stringResource(R.string.gain_item)) {
                     viewModel.changeItemState()
+                }
+                RequestButton(stringResource(R.string.reset_act)) {
+                    viewModel.changeActivityState()
                 }
             }
         }
@@ -142,6 +148,12 @@ fun ExtraPage() {
         GainItemDialog {
             it?.let { viewModel.gainItem(it, context) }
             viewModel.changeItemState()
+        }
+    }
+    if (showActivityDialog) {
+        ResetActivityDialog {
+            it?.let { viewModel.resetActivity(it, context) }
+            viewModel.changeActivityState()
         }
     }
 }
@@ -274,232 +286,124 @@ private fun UnlockAllCharDialog(onValueSave: (UnlockAllCharRequest?) -> Unit = {
                     }
                 },
             )
-            Row(
-                horizontalArrangement = Arrangement.SpaceAround,
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Button(
-                    onClick = { onValueSave(null) },
-                    colors = ButtonDefaults.buttonColors().copy(
-                        containerColor = Color.Black.copy(alpha = 0f)
-                    )
-                ) {
-                    Text(
-                        text = stringResource(R.string.cancel),
-                        color = MaterialTheme.colorScheme.onBackground,
-                        style = MaterialTheme.typography.bodyLarge,
-                    )
-                }
-                Button(
-                    onClick = {
-                        onValueSave(
-                            UnlockAllCharRequest(
-                                favorPoint = Table.getRealFavPoint(favorPoint.roundToInt()),
-                                potentialRank = potentialRank.roundToInt(),
-                                specializeLevel = specializeLevel.roundToInt(),
-                                mainSkillLvl = mainSkillLvl.roundToInt(),
-                                evolvePhase = evolvePhase.roundToInt(),
-                                level = level.roundToInt(),
-                                equipLevel = equipLevel.roundToInt(),
-                                enableRogueChar = false
-                            )
+            ConfirmButtonRow(
+                onCancel = { onValueSave(null) },
+                onConfirm = {
+                    onValueSave(
+                        UnlockAllCharRequest(
+                            favorPoint = Table.getRealFavPoint(favorPoint.roundToInt()),
+                            potentialRank = potentialRank.roundToInt(),
+                            specializeLevel = specializeLevel.roundToInt(),
+                            mainSkillLvl = mainSkillLvl.roundToInt(),
+                            evolvePhase = evolvePhase.roundToInt(),
+                            level = level.roundToInt(),
+                            equipLevel = equipLevel.roundToInt(),
+                            enableRogueChar = false
                         )
-                    },
-                    colors = ButtonDefaults.buttonColors().copy(
-                        containerColor = Color.Black.copy(alpha = 0f),
-                        disabledContainerColor = Color.Black.copy(alpha = 0f)
-                    )
-                ) {
-                    Text(
-                        text = stringResource(R.string.confirm),
-                        color = MaterialTheme.colorScheme.primary,
-                        style = MaterialTheme.typography.bodyLarge,
                     )
                 }
-            }
+            )
         }
     }
 }
 
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Preview
 @Composable
 private fun AddFlushMessageDialog(onValueSave: (AddFlushMessageRequest?) -> Unit = {}) {
     val context = LocalContext.current
     var uid by remember { mutableStateOf("ALL") }
     var message by remember { mutableStateOf("") }
-    val enable = message.isNotEmpty()
-    BasicAlertDialog(
-        onDismissRequest = { onValueSave(null) },
-        modifier = Modifier
-            .wrapContentSize()
-            .clip(RoundedCornerShape(12.dp))
-            .background(MaterialTheme.colorScheme.background)
-    ) {
-        Column(
-            verticalArrangement = Arrangement.SpaceBetween,
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            Text(
-                text = stringResource(R.string.push_message),
-                color = MaterialTheme.colorScheme.onBackground,
-                style = MaterialTheme.typography.displaySmall,
-                modifier = Modifier
-                    .align(Alignment.Start)
-                    .height(80.dp)
-                    .fillMaxWidth()
-                    .padding(16.dp)
-            )
-            OutlinedTextField(
-                value = uid,
-                label = { Text(stringResource(R.string.uid)) },
-                singleLine = true,
-                onValueChange = { uid = it },
-            )
-            OutlinedTextField(
-                value = message,
-                label = { Text(stringResource(R.string.message)) },
-                maxLines = Int.MAX_VALUE,
-                onValueChange = { message = it },
-            )
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Absolute.Right,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(60.dp)
-            ) {
-                Button(
-                    onClick = { onValueSave(null) },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color.Black.copy(alpha = 0f)
-                    )
-                ) {
-                    Text(
-                        text = stringResource(R.string.cancel),
-                        color = MaterialTheme.colorScheme.onBackground,
-                        style = MaterialTheme.typography.bodyLarge,
-                    )
-                }
-                Button(
-                    onClick = {
-                        if (enable) {
-                            onValueSave(AddFlushMessageRequest(uid, message))
-                        } else {
-                            Toast.makeText(context, R.string.error_data, Toast.LENGTH_SHORT).show()
-                        }
-                    },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color.Black.copy(alpha = 0f),
-                        disabledContainerColor = Color.Black.copy(alpha = 0f)
-                    )
-                ) {
-                    Text(
-                        text = stringResource(R.string.confirm),
-                        color = if (enable) MaterialTheme.colorScheme.primary else Color.Red,
-                        style = MaterialTheme.typography.bodyLarge,
-                    )
-                }
+    val error = message.isEmpty()
+    BasicDialog(
+        error = error,
+        label = stringResource(R.string.push_message),
+        onCancel = { onValueSave(null) },
+        onConfirm = {
+            if (error) {
+                Toast.makeText(context, R.string.error_data, Toast.LENGTH_SHORT).show()
+            } else {
+                onValueSave(AddFlushMessageRequest(uid, message))
             }
         }
+    ) {
+        OutlinedTextField(
+            value = uid,
+            label = { Text(stringResource(R.string.uid)) },
+            singleLine = true,
+            onValueChange = { uid = it },
+        )
+        OutlinedTextField(
+            value = message,
+            label = { Text(stringResource(R.string.message)) },
+            maxLines = Int.MAX_VALUE,
+            onValueChange = { message = it },
+        )
     }
-
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Preview
+@Composable
+private fun ResetActivityDialog(onValueSave: (ResetActivityRequest?) -> Unit = {}) {
+    val context = LocalContext.current
+    var id by remember { mutableStateOf("") }
+    var type by remember { mutableStateOf("") }
+    val error = id.isEmpty() || type.isEmpty()
+    BasicDialog(
+        error = error,
+        label = stringResource(R.string.reset_act),
+        onCancel = { onValueSave(null) },
+        onConfirm = {
+            if (error) {
+                Toast.makeText(context, R.string.error_data, Toast.LENGTH_SHORT).show()
+            } else {
+                onValueSave(ResetActivityRequest(type, id))
+            }
+        }
+    ) {
+        OutlinedTextField(
+            value = type,
+            label = { Text(stringResource(R.string.act_type)) },
+            singleLine = true,
+            onValueChange = { type = it },
+        )
+        OutlinedTextField(
+            value = id,
+            label = { Text(stringResource(R.string.act_id)) },
+            singleLine = true,
+            onValueChange = { id = it },
+        )
+    }
+}
+
 @Composable
 private fun GainItemDialog(onValueSave: (Item?) -> Unit = {}) {
     val context = LocalContext.current
     var itemId by remember { mutableStateOf("") }
     var itemType by remember { mutableStateOf("") }
     var count by remember { mutableFloatStateOf(1f) }
-    val enable = itemId.isNotEmpty() && itemType.isNotEmpty()
-    BasicAlertDialog(
-        onDismissRequest = { onValueSave(null) },
-        modifier = Modifier
-            .wrapContentSize()
-            .clip(RoundedCornerShape(12.dp))
-            .background(MaterialTheme.colorScheme.background)
-    ) {
-        Column(
-            verticalArrangement = Arrangement.SpaceBetween,
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            Text(
-                text = stringResource(R.string.item),
-                color = MaterialTheme.colorScheme.onBackground,
-                style = MaterialTheme.typography.displaySmall,
-                modifier = Modifier
-                    .align(Alignment.Start)
-                    .height(80.dp)
-                    .fillMaxWidth()
-                    .padding(16.dp)
-            )
-            OutlinedTextField(
-                value = itemId,
-                label = { Text(stringResource(R.string.item_id)) },
-                singleLine = true,
-                onValueChange = { itemId = it },
-            )
-            OutlinedTextField(
-                value = itemType,
-                label = { Text(stringResource(R.string.item_type)) },
-                maxLines = Int.MAX_VALUE,
-                onValueChange = { itemType = it },
-            )
-            IntRangeSlider(
-                value = count,
-                start = 1,
-                maxValue = 99,
-                textColor = MaterialTheme.colorScheme.onBackground,
-                color = Color.Unspecified,
-                description = stringResource(R.string.count),
-                onValueChange = { count = it },
-                modifier = Modifier.padding(4.dp)
-            )
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Absolute.Right,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(60.dp)
-            ) {
-                Button(
-                    onClick = { onValueSave(null) },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color.Black.copy(alpha = 0f)
-                    )
-                ) {
-                    Text(
-                        text = stringResource(R.string.cancel),
-                        color = MaterialTheme.colorScheme.onBackground,
-                        style = MaterialTheme.typography.bodyLarge,
-                    )
-                }
-                Button(
-                    onClick = {
-                        if (enable) {
-                            onValueSave(Item(itemId, itemType, count.roundToInt()))
-                        } else {
-                            Toast.makeText(context, R.string.error_data, Toast.LENGTH_SHORT).show()
-                        }
-                    },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color.Black.copy(alpha = 0f),
-                        disabledContainerColor = Color.Black.copy(alpha = 0f)
-                    )
-                ) {
-                    Text(
-                        text = stringResource(R.string.confirm),
-                        color = if (enable) MaterialTheme.colorScheme.primary else Color.Red,
-                        style = MaterialTheme.typography.bodyLarge,
-                    )
-                }
+    val error = itemId.isEmpty() || itemType.isEmpty()
+    BasicDialog(
+        error = error,
+        label = stringResource(R.string.item),
+        onCancel = { onValueSave(null) },
+        onConfirm = {
+            if (error) {
+                Toast.makeText(context, R.string.error_data, Toast.LENGTH_SHORT).show()
+            } else {
+                onValueSave(Item(itemId, itemType, count.roundToInt()))
             }
         }
+    ) {
+        OutlinedTextField(
+            value = itemId,
+            label = { Text(stringResource(R.string.item_id)) },
+            singleLine = true,
+            onValueChange = { itemId = it },
+        )
+        OutlinedTextField(
+            value = itemType,
+            label = { Text(stringResource(R.string.item_type)) },
+            maxLines = Int.MAX_VALUE,
+            onValueChange = { itemType = it },
+        )
     }
-
 }

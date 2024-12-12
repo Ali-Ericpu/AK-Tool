@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -32,9 +31,6 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.BasicAlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -77,6 +73,7 @@ import org.doctorate.aktool.R
 import org.doctorate.aktool.config.Table
 import org.doctorate.aktool.pojo.entity.Character
 import org.doctorate.aktool.pojo.entity.Profession
+import org.doctorate.aktool.ui.page.setting.BasicDialog
 import org.doctorate.aktool.ui.page.setting.EditTextDialog
 import org.doctorate.aktool.ui.page.splash.CircleIconButton
 import org.doctorate.aktool.utils.replace
@@ -118,7 +115,11 @@ fun CharacterPage(navToCharacterDetail: (Int) -> Unit = {}) {
                     }
                 }
             }
-            Box(modifier = Modifier.width(48.dp).align(Alignment.CenterEnd)) {
+            Box(
+                modifier = Modifier
+                    .width(48.dp)
+                    .align(Alignment.CenterEnd)
+            ) {
                 LazyColumn(
                     modifier = Modifier
                         .clip(RoundedCornerShape(4.dp))
@@ -236,8 +237,7 @@ fun CharacterPage(navToCharacterDetail: (Int) -> Unit = {}) {
                         runCatching {
                             viewModel.gainChar(charId)
                         }.onSuccess {
-                            Toast.makeText(context, R.string.save_success, Toast.LENGTH_SHORT)
-                                .show()
+                            Toast.makeText(context, R.string.save_success, Toast.LENGTH_SHORT).show()
                             refresh()
                         }.onFailure {
                             Toast.makeText(context, it.message, Toast.LENGTH_SHORT).show()
@@ -574,102 +574,53 @@ fun SearchCharDialog(
     var keyword by remember { mutableStateOf("") }
     val charNameList = remember { mutableStateListOf<String>() }
     var selectedKeyword by remember { mutableStateOf("") }
-    BasicAlertDialog(
-        onDismissRequest = { onConfirmKeyword(null) },
-        modifier = Modifier
-            .wrapContentSize()
-            .clip(RoundedCornerShape(12.dp))
-            .background(MaterialTheme.colorScheme.background)
-            .padding(16.dp)
+    BasicDialog(
+        label = stringResource(R.string.search),
+        onCancel = { onConfirmKeyword(null) },
+        onConfirm = { onConfirmKeyword(selectedKeyword) }
     ) {
-        Column(
-            verticalArrangement = Arrangement.SpaceBetween,
-            horizontalAlignment = Alignment.CenterHorizontally,
+        OutlinedTextField(
+            value = keyword,
+            maxLines = Int.MAX_VALUE,
+            onValueChange = {
+                keyword = it
+                charNameList.replace(onKeywordType(keyword))
+            },
+        )
+        FlowRow(
+            horizontalArrangement = Arrangement.SpaceAround,
+            verticalArrangement = Arrangement.Top,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 16.dp)
         ) {
-            Text(
-                text = stringResource(R.string.search),
-                color = MaterialTheme.colorScheme.onBackground,
-                style = MaterialTheme.typography.displaySmall,
-                modifier = Modifier
-                    .align(Alignment.Start)
-                    .padding(bottom = 24.dp)
-                    .fillMaxWidth()
-            )
-            OutlinedTextField(
-                value = keyword,
-                maxLines = Int.MAX_VALUE,
-                onValueChange = {
-                    keyword = it
-                    charNameList.replace(onKeywordType(keyword))
-                },
-            )
-            FlowRow(
-                horizontalArrangement = Arrangement.SpaceAround,
-                verticalArrangement = Arrangement.Top,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                charNameList.forEach { word ->
-                    val message = stringResource(R.string.copy_success)
-                    Box(
-                        modifier = Modifier
-                            .wrapContentSize()
-                            .padding(4.dp)
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(if (selectedKeyword == word) MaterialTheme.colorScheme.primary else Color.LightGray)
-                            .combinedClickable(
-                                enabled = true,
-                                onClick = {
-                                    selectedKeyword = word
-                                    keyword = word
-                                },
-                                onLongClick = {
-                                    val charId = onSearchCharId(word)
-                                    manager.setText(AnnotatedString(charId))
-                                    Toast.makeText(context, message.format(charId), Toast.LENGTH_SHORT).show()
-                                }
-                            )
-                            .padding(8.dp)
-                    ) {
-                        Text(text = word, color = Color.Black)
-                    }
-                }
-            }
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Absolute.Right,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 16.dp)
-            ) {
-                Button(
-                    onClick = { onConfirmKeyword(null) },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color.Black.copy(alpha = 0f)
-                    )
+            charNameList.forEach { word ->
+                val message = stringResource(R.string.copy_success)
+                Box(
+                    modifier = Modifier
+                        .wrapContentSize()
+                        .padding(4.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(if (selectedKeyword == word) MaterialTheme.colorScheme.primary else Color.LightGray)
+                        .combinedClickable(
+                            enabled = true,
+                            onClick = {
+                                selectedKeyword = word
+                                keyword = word
+                            },
+                            onLongClick = {
+                                val charId = onSearchCharId(word)
+                                manager.setText(AnnotatedString(charId))
+                                Toast.makeText(context, message.format(charId), Toast.LENGTH_SHORT).show()
+                            }
+                        )
+                        .padding(8.dp)
                 ) {
-                    Text(
-                        text = stringResource(R.string.cancel),
-                        color = MaterialTheme.colorScheme.onBackground,
-                        style = MaterialTheme.typography.bodyLarge,
-                    )
-                }
-                Button(
-                    onClick = { onConfirmKeyword(selectedKeyword) },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color.Black.copy(alpha = 0f),
-                        disabledContainerColor = Color.Black.copy(alpha = 0f)
-                    )
-                ) {
-                    Text(
-                        text = stringResource(R.string.confirm),
-                        color = MaterialTheme.colorScheme.primary,
-                        style = MaterialTheme.typography.bodyLarge,
-                    )
+                    Text(text = word, color = Color.Black)
                 }
             }
         }
     }
-
 }
 
 fun Modifier.offsetPercent(offsetPercentX: Float = 0f, offsetPercentY: Float = 0f): Modifier =

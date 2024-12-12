@@ -7,6 +7,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -211,8 +212,38 @@ fun EditTextDialog(
     val context = LocalContext.current
     var value by remember { mutableStateOf(value) }
     val error = error(value)
+    BasicDialog(
+        label = label,
+        error = error,
+        onCancel = { onValueSave(null) },
+        onConfirm = {
+            if (error) {
+                Toast.makeText(context, R.string.error_data, Toast.LENGTH_SHORT).show()
+            } else {
+                onValueSave(value)
+            }
+        }
+    ) {
+        OutlinedTextField(
+            value = value,
+            maxLines = Int.MAX_VALUE,
+            isError = error,
+            onValueChange = { value = it },
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun BasicDialog(
+    label: String = "Test",
+    error: Boolean = false,
+    onCancel: () -> Unit = { },
+    onConfirm: () -> Unit = { },
+    content: @Composable (ColumnScope.() -> Unit) = {}
+) {
     BasicAlertDialog(
-        onDismissRequest = { onValueSave(null) },
+        onDismissRequest = { onCancel() },
         modifier = Modifier
             .wrapContentSize()
             .clip(RoundedCornerShape(12.dp))
@@ -232,51 +263,12 @@ fun EditTextDialog(
                     .padding(bottom = 24.dp)
                     .fillMaxWidth()
             )
-            OutlinedTextField(
-                value = value,
-                maxLines = Int.MAX_VALUE,
-                isError = error,
-                onValueChange = { value = it },
+            content()
+            ConfirmButtonRow(
+                error = error,
+                onCancel = { onCancel() },
+                onConfirm = { onConfirm() }
             )
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Absolute.Right,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 16.dp)
-            ) {
-                Button(
-                    onClick = { onValueSave(null) },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color.Black.copy(alpha = 0f)
-                    )
-                ) {
-                    Text(
-                        text = stringResource(R.string.cancel),
-                        color = MaterialTheme.colorScheme.onBackground,
-                        style = MaterialTheme.typography.bodyLarge,
-                    )
-                }
-                Button(
-                    onClick = {
-                        if (error) {
-                            Toast.makeText(context, R.string.error_data, Toast.LENGTH_SHORT).show()
-                        } else {
-                            onValueSave(value)
-                        }
-                    },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color.Black.copy(alpha = 0f),
-                        disabledContainerColor = Color.Black.copy(alpha = 0f)
-                    )
-                ) {
-                    Text(
-                        text = stringResource(R.string.confirm),
-                        color = if (error) Color.Red else MaterialTheme.colorScheme.primary,
-                        style = MaterialTheme.typography.bodyLarge,
-                    )
-                }
-            }
         }
     }
 }
@@ -389,5 +381,48 @@ fun ProgressButton(
             }
         }
 
+    }
+}
+
+@Composable
+fun ConfirmButtonRow(
+    error: Boolean = false,
+    onCancel: () -> Unit = { },
+    onConfirm: () -> Unit = { }
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Absolute.Right,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 16.dp)
+    ) {
+        Button(
+            onClick = { onCancel() },
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color.Black.copy(alpha = 0f)
+            )
+        ) {
+            Text(
+                text = stringResource(R.string.cancel),
+                color = MaterialTheme.colorScheme.onBackground,
+                style = MaterialTheme.typography.bodyLarge,
+            )
+        }
+        Button(
+            onClick = {
+                onConfirm()
+            },
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color.Black.copy(alpha = 0f),
+                disabledContainerColor = Color.Black.copy(alpha = 0f)
+            )
+        ) {
+            Text(
+                text = stringResource(R.string.confirm),
+                color = if (error) Color.Red else MaterialTheme.colorScheme.primary,
+                style = MaterialTheme.typography.bodyLarge,
+            )
+        }
     }
 }

@@ -13,6 +13,7 @@ import org.doctorate.aktool.pojo.entity.Item
 import org.doctorate.aktool.pojo.entity.Result
 import org.doctorate.aktool.pojo.request.AddFlushMessageRequest
 import org.doctorate.aktool.pojo.request.GainItemRequest
+import org.doctorate.aktool.pojo.request.ResetActivityRequest
 import org.doctorate.aktool.pojo.request.UnlockAllCharRequest
 
 class ExtraViewModel : ViewModel() {
@@ -25,6 +26,9 @@ class ExtraViewModel : ViewModel() {
 
     private var _showItemDialog = MutableStateFlow(false)
     val showItemDialog = _showItemDialog.asStateFlow()
+
+    private var _showActivityDialog = MutableStateFlow(false)
+    val showActivityDialog = _showActivityDialog.asStateFlow()
 
     private var _isConnecting = MutableStateFlow(false)
     val isConnecting = _isConnecting.asStateFlow()
@@ -39,6 +43,10 @@ class ExtraViewModel : ViewModel() {
 
     fun changeItemState() = viewModelScope.launch {
         _showItemDialog.emit(_showItemDialog.value.not())
+    }
+
+    fun changeActivityState() = viewModelScope.launch {
+        _showActivityDialog.emit(_showActivityDialog.value.not())
     }
 
     private suspend fun doRequest(
@@ -85,6 +93,12 @@ class ExtraViewModel : ViewModel() {
     fun gainItem(body: Item, context: Context) = viewModelScope.launch {
         doRequest(context) {
             Network.gainItem(GainItemRequest(listOf(body)))
+        }
+    }
+
+    fun resetActivity(body: ResetActivityRequest, context: Context) = viewModelScope.launch {
+        doRequest(context) {
+            Network.resetActivity(body)
         }
     }
 

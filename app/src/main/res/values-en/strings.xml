@@ -59,4 +59,7 @@
     <string name="count">Count</string>
     <string name="search">Search</string>
     <string name="copy_success">Copy Success : %1$s</string>
+    <string name="act_id">Activity ID</string>
+    <string name="act_type">Activity Type</string>
+    <string name="reset_act">Reset Activity</string>
 </resources>

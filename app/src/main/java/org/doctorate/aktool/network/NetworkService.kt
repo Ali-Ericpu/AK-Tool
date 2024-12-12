@@ -5,6 +5,7 @@ import org.doctorate.aktool.pojo.entity.Result
 import org.doctorate.aktool.pojo.entity.Status
 import org.doctorate.aktool.pojo.request.AddFlushMessageRequest
 import org.doctorate.aktool.pojo.request.GainItemRequest
+import org.doctorate.aktool.pojo.request.ResetActivityRequest
 import org.doctorate.aktool.pojo.request.SaveCharRequest
 import org.doctorate.aktool.pojo.request.SaveStatusRequest
 import org.doctorate.aktool.pojo.request.UnlockAllCharRequest
@@ -71,6 +72,13 @@ interface NetworkService {
     suspend fun addFlushMessage(
         @Header("adminKey") adminKey: String,
         @Body body: AddFlushMessageRequest
+    ): Result<Map<String, Any>?>
+
+    @POST("admin/resetActivity")
+    suspend fun resetActivity(
+        @Header("uid") uid: String,
+        @Header("adminKey") adminKey: String,
+        @Body body: ResetActivityRequest
     ): Result<Map<String, Any>?>
 
 }
