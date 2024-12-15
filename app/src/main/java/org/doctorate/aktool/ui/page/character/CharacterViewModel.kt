@@ -62,7 +62,7 @@ class CharacterViewModel : ViewModel() {
                 if (result.data == null) {
                     throw RuntimeException("数据异常")
                 }
-                result.data.forEach { instId, char ->
+                result.data.forEach { (instId, char) ->
                     runCatching { Table.getCharacterData(char.charId) }.onSuccess {
                         char.name = it["name"] as String
                         char.profession = it["profession"] as String
@@ -97,7 +97,7 @@ class CharacterViewModel : ViewModel() {
     suspend fun changeCharData(char: Character) = withContext(Dispatchers.IO) {
         val result = Network.saveCharacter(SaveCharRequest(char.instId, char))
         if (result.status != 0) {
-            throw RuntimeException(result.msg.toString())
+            throw RuntimeException(result.msg)
         }
         characterData[char.instId.toString()] = char
         selectProfession(_profession.value)
@@ -112,7 +112,7 @@ class CharacterViewModel : ViewModel() {
         val request = GainItemRequest(listOf(Item(charId, "CHAR", 1)))
         val result = Network.gainItem(request)
         if (result.status != 0) {
-            throw RuntimeException(result.msg.toString())
+            throw RuntimeException(result.msg)
         }
     }
 

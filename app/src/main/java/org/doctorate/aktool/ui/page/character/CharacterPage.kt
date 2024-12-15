@@ -231,8 +231,8 @@ fun CharacterPage(navToCharacterDetail: (Int) -> Unit = {}) {
         EditTextDialog(
             label = stringResource(R.string.char_id),
             error = { !it.startsWith("char_") || Table.CHARACTER_TABLE[it] == null },
-            onValueSave = {
-                it?.let { charId ->
+            onValueSave = { charId ->
+                charId?.let {
                     coroutineScope.launch {
                         runCatching {
                             viewModel.gainChar(charId)
@@ -558,10 +558,7 @@ fun CharacterCard(
     }
 }
 
-@OptIn(
-    ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class,
-    ExperimentalFoundationApi::class
-)
+@OptIn(ExperimentalLayoutApi::class, ExperimentalFoundationApi::class)
 @Preview
 @Composable
 fun SearchCharDialog(
@@ -635,15 +632,15 @@ fun Modifier.offsetPercent(offsetPercentX: Float = 0f, offsetPercentY: Float = 0
 
 @Composable
 fun portraitPainter(skinId: String): Painter {
-    val skinId = URLEncoder.encode(skinId, "UTF-8")
-    val imageUrl = "https://web.hycdn.cn/arknights/game/assets/char_skin/portrait/$skinId.png"
+    val encode = URLEncoder.encode(skinId, "UTF-8")
+    val imageUrl = "https://web.hycdn.cn/arknights/game/assets/char_skin/portrait/$encode.png"
     return rememberAsyncImagePainter(model = imageUrl)
 }
 
 @Composable
 fun skillPainter(skillId: String): Painter {
-    val skillId = URLEncoder.encode(skillId, "UTF-8")
-    val imageUrl = "https://web.hycdn.cn/arknights/game/assets/char_skill/$skillId.png"
+    val encode = URLEncoder.encode(skillId, "UTF-8")
+    val imageUrl = "https://web.hycdn.cn/arknights/game/assets/char_skill/$encode.png"
     return rememberAsyncImagePainter(
         model = imageUrl,
         placeholder = painterResource(R.drawable.character_default_skill_icon),

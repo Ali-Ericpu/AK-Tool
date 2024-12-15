@@ -85,7 +85,7 @@ fun CharacterDetail(
             skills = character.skills.map { it.copy() }
         ))
     }
-    var skills = remember { mutableStateListOf<Skill>().apply { addAll(char.skills) } }
+    val skills = remember { mutableStateListOf<Skill>().apply { addAll(char.skills) } }
     var maxLevel by remember {
         mutableIntStateOf(Table.getMaxCharLevel(char.charId, char.evolvePhase))
     }
@@ -244,7 +244,7 @@ fun CharacterDetail(
                         }
                     } else if (char.evolvePhase < 2) {
                         char.currentTmpl = null
-                        char.tmpl?.clear()
+                        char.tmpl = null
                         char.currentEquip = null
                         char.equip.values.forEach { it.lock() }
                         char.skills.forEach { it.specializeLevel = 0 }

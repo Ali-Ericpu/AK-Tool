@@ -11,6 +11,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -404,6 +405,20 @@ private fun GainItemDialog(onValueSave: (Item?) -> Unit = {}) {
             label = { Text(stringResource(R.string.item_type)) },
             maxLines = Int.MAX_VALUE,
             onValueChange = { itemType = it },
+        )
+        IntRangeSlider(
+            value = count,
+            start = 1,
+            maxValue = 99,
+            textColor = MaterialTheme.colorScheme.onBackground,
+            color = Color.Unspecified,
+            description = stringResource(R.string.count),
+            onValueChange = { count = it },
+            modifier = Modifier.padding(4.dp).border(
+                width = 1.dp,
+                color = MaterialTheme.colorScheme.onBackground,
+                shape = RoundedCornerShape(12.dp)
+            )
         )
     }
 }

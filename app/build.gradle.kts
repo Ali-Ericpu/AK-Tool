@@ -6,14 +6,14 @@ plugins {
 
 android {
     namespace = "org.doctorate.aktool"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "org.doctorate.aktool"
         minSdk = 28
-        targetSdk = 34
-        versionCode = 8
-        versionName = "1.3.2"
+        targetSdk = 35
+        versionCode = 9
+        versionName = "1.3.3"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -28,11 +28,11 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
     kotlinOptions {
-        jvmTarget = "11"
+        jvmTarget = "17"
     }
     buildFeatures {
         compose = true

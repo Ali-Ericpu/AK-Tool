@@ -201,7 +201,6 @@ fun EditText(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditTextDialog(
     value: String = "",
@@ -210,25 +209,25 @@ fun EditTextDialog(
     onValueSave: (String?) -> Unit = { }
 ) {
     val context = LocalContext.current
-    var value by remember { mutableStateOf(value) }
-    val error = error(value)
+    var text by remember { mutableStateOf(value) }
+    val isError = error(text)
     BasicDialog(
         label = label,
-        error = error,
+        error = isError,
         onCancel = { onValueSave(null) },
         onConfirm = {
-            if (error) {
+            if (isError) {
                 Toast.makeText(context, R.string.error_data, Toast.LENGTH_SHORT).show()
             } else {
-                onValueSave(value)
+                onValueSave(text)
             }
         }
     ) {
         OutlinedTextField(
-            value = value,
+            value = text,
             maxLines = Int.MAX_VALUE,
-            isError = error,
-            onValueChange = { value = it },
+            isError = isError,
+            onValueChange = { text = it },
         )
     }
 }
@@ -279,7 +278,7 @@ fun EditSwitch(
     state: Boolean,
     onCheckedChange: (Boolean) -> Unit,
 ) {
-    var state by remember { mutableStateOf(state) }
+    var checked by remember { mutableStateOf(state) }
     Row(
         modifier = Modifier
             .padding(8.dp)
@@ -297,8 +296,8 @@ fun EditSwitch(
                 .fillMaxHeight()
         )
         Switch(
-            checked = state,
-            onCheckedChange = { onCheckedChange(it.also { state = it }) }
+            checked = checked,
+            onCheckedChange = { onCheckedChange(it.also { checked = it }) }
         )
     }
 }

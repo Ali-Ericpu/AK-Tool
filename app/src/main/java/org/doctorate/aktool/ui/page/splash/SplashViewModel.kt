@@ -7,7 +7,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 class SplashViewModel : ViewModel() {
-    private var _splash = MutableStateFlow<Boolean>(true)
+    private var _splash = MutableStateFlow(true)
     val splash = _splash.asStateFlow()
 
     fun closeSplash() = viewModelScope.launch {

@@ -16,16 +16,15 @@ object Table {
     private val jsonList = listOf("character_table.json", "favor_table.json")
     var CHARACTER_TABLE: NestingMap = mapOf()
         private set
-    var FAVOR_TABLE: Map<String, Any> = mapOf()
-        private set
+    private var FAVOR_TABLE: Map<String, Any> = mapOf()
 
     fun initData(context: Context): Boolean {
         if (CHARACTER_TABLE.isNotEmpty() && FAVOR_TABLE.isNotEmpty()) {
             return true
         }
         val dir = context.filesDir
-        val fileList = jsonList.map {
-            File(dir, "data/excel/$it").also {
+        val fileList = jsonList.map { name ->
+            File(dir, "data/excel/$name").also {
                 if (it.exists().not()) {
                     Toast.makeText(context, R.string.file_not_exist, Toast.LENGTH_SHORT).show()
                     return false
@@ -41,10 +40,10 @@ object Table {
         val dir = context.filesDir
         jsonList.forEachIndexed { index, fileName ->
             val file = File(dir, "data/excel/$fileName")
-            val uri = URI("$uri/assetbundle/excel/$fileName").toURL()
+            val url = URI("$uri/assetbundle/excel/$fileName").toURL()
             when (index) {
-                0 -> CHARACTER_TABLE = JsonUtil.fromJson<NestingMap>(uri).write(file)
-                1 -> FAVOR_TABLE = JsonUtil.fromJson<Map<String, Any>>(uri).write(file)
+                0 -> CHARACTER_TABLE = JsonUtil.fromJson<NestingMap>(url).write(file)
+                1 -> FAVOR_TABLE = JsonUtil.fromJson<Map<String, Any>>(url).write(file)
             }
         }
     }

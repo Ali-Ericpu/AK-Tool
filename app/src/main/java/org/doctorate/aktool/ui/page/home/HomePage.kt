@@ -87,7 +87,9 @@ fun HomePage() {
                     LabelTextField(
                         value = status.nickName,
                         label = stringResource(R.string.nick_name),
-                        error = { it.toCharArray().sumOf { if (it.code > 255) 2L else 1L } > 16 },
+                        error = { text ->
+                            text.toCharArray().sumOf { if (it.code > 255) 2L else 1L } > 16
+                        },
                         onValueSave = {
                             viewModel.updateStatus(SaveStatusRequest(nickName = it), context)
                         },
@@ -110,7 +112,9 @@ fun HomePage() {
                         LabelTextField(
                             value = status.nickNumber,
                             label = stringResource(R.string.nick_num),
-                            error = { it.length != 4 || it.any { it.code !in 48..57 } },
+                            error = { text ->
+                                text.length != 4 || text.any { it.code !in 48..57 }
+                            },
                             onValueSave = {
                                 viewModel.updateStatus(SaveStatusRequest(nickNumber = it), context)
                             },

@@ -13,14 +13,14 @@ import org.doctorate.aktool.network.Network
 import org.doctorate.aktool.pojo.entity.Status
 import org.doctorate.aktool.pojo.request.SaveStatusRequest
 
-class HomeViewModel() : ViewModel() {
+class HomeViewModel : ViewModel() {
     private var _isSplash = MutableStateFlow(true)
     val isSplash = _isSplash.asStateFlow()
 
     private var _isRefreshing = MutableStateFlow(false)
     val isRefreshing = _isRefreshing.asStateFlow()
 
-    private var _status = MutableStateFlow<Status>(Status.status())
+    private var _status = MutableStateFlow(Status.status())
     val status: StateFlow<Status> = _status.asStateFlow()
 
     fun refresh(context: Context) = viewModelScope.launch {
