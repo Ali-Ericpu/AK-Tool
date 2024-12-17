@@ -139,12 +139,12 @@ fun CharacterDetail(
                         }.toList()
                         maxLevel = Table.getMaxCharLevel(char.charId, phase)
                         maxSkillLevel = if (phase < 1) 4 else 7
-                        char = (char.copy(
+                        char = char.copy(
                             mainSkillLvl = min(maxSkillLevel, char.mainSkillLvl),
                             skills = skills,
                             defaultSkillIndex = skillIndex,
                             level = min(maxLevel, char.level)
-                        ))
+                        )
                     },
                     modifier = Modifier.weight(1f)
                 )

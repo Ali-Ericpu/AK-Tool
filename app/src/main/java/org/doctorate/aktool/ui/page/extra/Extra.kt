@@ -496,11 +496,7 @@ private fun RegisterAccountDialog(onValueSave: (RegisterAccountRequest?) -> Unit
 @Composable
 private fun ValidateCodeDialog(
     isRefreshing: Boolean = false,
-    validateCode: List<Pair<String, String>> = listOf(
-        "31231" to "321312",
-        "3123311" to "3211312",
-        "3123131" to "32123312",
-    ),
+    validateCode: List<Pair<String, String>> = listOf(),
     onRefresh: () -> Unit = { },
     onExit: () -> Unit = { }
 ) {
@@ -526,53 +522,53 @@ private fun ValidateCodeDialog(
                     modifier = Modifier.align(Alignment.Center)
                 )
             }
-            LazyColumn(
-                modifier = Modifier.height(260.dp)
-            ) {
-                item {
-                    Text(
-                        text = stringResource(R.string.valid_code),
-                        color = MaterialTheme.colorScheme.onBackground,
-                        style = MaterialTheme.typography.displaySmall,
-                        modifier = Modifier
-                            .padding(bottom = 16.dp)
-                            .fillMaxWidth()
-                    )
-                }
-                items(validateCode) { (account, code) ->
-                    Row(
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(bottom = 4.dp)
-                            .border(
-                                width = 1.dp,
-                                color = MaterialTheme.colorScheme.primary,
-                                shape = RoundedCornerShape(12.dp)
-                            )
-                            .padding(4.dp)
-                    ) {
-                        val message = stringResource(R.string.copy_success)
-                        Text(account, fontSize = 24.sp)
-                        IconButton(
-                            onClick = {
-                                manager.setText(AnnotatedString(code))
-                                Toast.makeText(context, message.format(code), Toast.LENGTH_SHORT).show()
-                            },
+            Column {
+                Text(
+                    text = stringResource(R.string.valid_code),
+                    color = MaterialTheme.colorScheme.onBackground,
+                    style = MaterialTheme.typography.displaySmall,
+                    modifier = Modifier
+                        .padding(bottom = 16.dp)
+                        .fillMaxWidth()
+                )
+                LazyColumn(
+                    modifier = Modifier.height(240.dp)
+                ) {
+                    items(validateCode) { (account, code) ->
+                        Row(
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 4.dp)
+                                .border(
+                                    width = 1.dp,
+                                    color = MaterialTheme.colorScheme.primary,
+                                    shape = RoundedCornerShape(12.dp)
+                                )
                                 .padding(4.dp)
-                                .fillMaxHeight()
                         ) {
-                            Icon(
-                                painter = painterResource(R.drawable.baseline_copy),
-                                contentDescription = null,
+                            val message = stringResource(R.string.copy_success)
+                            Text(account, fontSize = 24.sp)
+                            IconButton(
+                                onClick = {
+                                    manager.setText(AnnotatedString(code))
+                                    Toast.makeText(context, message.format(code), Toast.LENGTH_SHORT).show()
+                                },
                                 modifier = Modifier
-                                    .clip(CircleShape)
-                                    .fillMaxSize()
-                                    .background(MaterialTheme.colorScheme.primary)
-                                    .padding(12.dp)
-                            )
+                                    .padding(4.dp)
+                                    .fillMaxHeight()
+                            ) {
+                                Icon(
+                                    painter = painterResource(R.drawable.baseline_copy),
+                                    contentDescription = null,
+                                    modifier = Modifier
+                                        .clip(CircleShape)
+                                        .fillMaxSize()
+                                        .background(MaterialTheme.colorScheme.primary)
+                                        .padding(12.dp)
+                                )
+                            }
                         }
                     }
                 }

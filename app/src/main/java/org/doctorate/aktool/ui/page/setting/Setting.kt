@@ -259,7 +259,7 @@ fun BasicDialog(
                 style = MaterialTheme.typography.displaySmall,
                 modifier = Modifier
                     .align(Alignment.Start)
-                    .padding(bottom = 24.dp)
+                    .padding(bottom = 16.dp)
                     .fillMaxWidth()
             )
             content()
