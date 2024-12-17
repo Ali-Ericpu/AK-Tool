@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 //noinspection UsingMaterialAndMaterial3Libraries
 import androidx.compose.material.Slider
@@ -31,7 +32,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -55,13 +55,11 @@ import kotlinx.coroutines.launch
 import org.doctorate.aktool.R
 import org.doctorate.aktool.config.Table
 import org.doctorate.aktool.pojo.entity.Character
-import org.doctorate.aktool.pojo.entity.Skill
 import org.doctorate.aktool.ui.page.character.CharacterCard
 import org.doctorate.aktool.ui.page.character.CharacterViewModel
 import org.doctorate.aktool.ui.page.character.skillPainter
 import org.doctorate.aktool.ui.page.setting.EditSwitch
 import org.doctorate.aktool.utils.JsonUtil
-import org.doctorate.aktool.utils.replace
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.roundToInt
@@ -85,7 +83,6 @@ fun CharacterDetail(
             skills = character.skills.map { it.copy() }
         ))
     }
-    val skills = remember { mutableStateListOf<Skill>().apply { addAll(char.skills) } }
     var maxLevel by remember {
         mutableIntStateOf(Table.getMaxCharLevel(char.charId, char.evolvePhase))
     }
@@ -131,27 +128,21 @@ fun CharacterDetail(
                     description = stringResource(R.string.evp_phase),
                     onValueChange = { char = char.copy(evolvePhase = it.roundToInt()) },
                     onValueChangeFinished = { phase ->
-                        skills.clear()
-                        char.skills.forEachIndexed { index, skill ->
+                        var skillIndex = -1
+                        val skills = char.skills.onEachIndexed { index, skill ->
                             if (phase >= index) {
                                 skill.unlock = 1
-                                char.defaultSkillIndex = index
+                                skillIndex = index
                             } else {
                                 skill.unlock = 0
                             }
-                            skills.add(skill)
-                        }
-                        if (char.skills.getOrNull(char.defaultSkillIndex) == null) {
-                            char.skills.forEachIndexed { index, skill ->
-                                if (skill.unlock == 1) {
-                                    char.defaultSkillIndex = index
-                                }
-                            }
-                        }
+                        }.toList()
                         maxLevel = Table.getMaxCharLevel(char.charId, phase)
                         maxSkillLevel = if (phase < 1) 4 else 7
                         char = (char.copy(
                             mainSkillLvl = min(maxSkillLevel, char.mainSkillLvl),
+                            skills = skills,
+                            defaultSkillIndex = skillIndex,
                             level = min(maxLevel, char.level)
                         ))
                     },
@@ -166,7 +157,7 @@ fun CharacterDetail(
                     modifier = Modifier.weight(1f)
                 )
             }
-            if (skills.isNotEmpty()) {
+            if (char.skills.isNotEmpty()) {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -189,23 +180,20 @@ fun CharacterDetail(
                             .padding(start = 4.dp, end = 4.dp, bottom = 4.dp)
                             .height(80.dp)
                     ) {
-                        items(skills.size) { index ->
-                            val skill = skills[index]
+                        items(char.skills) { skill ->
                             SkillDetail(
-                                char.evolvePhase,
-                                char.mainSkillLvl,
-                                skill,
-                                char.defaultSkillIndex == index,
+                                skillId = skill.skillId,
+                                unlock = skill.unlock == 1,
+                                showSpecialLevel = char.evolvePhase >= 2 && char.mainSkillLvl >=7,
+                                specialLevel = skill.specializeLevel,
+                                char.skills.indexOf(skill) == char.defaultSkillIndex,
                                 onSelectedChange = {
                                     if (skill.unlock == 1) {
-                                        char.defaultSkillIndex = index
+                                        val index = char.skills.indexOf(skill)
                                         char = char.copy(defaultSkillIndex = index)
                                     }
-                                    skills.replace(char.skills)
                                 },
-                                onSpecialLevelChange = {
-                                    skill.specializeLevel = it
-                                }
+                                onSpecialLevelChange = { skill.specializeLevel = it }
                             )
                         }
                     }
@@ -333,20 +321,21 @@ fun IntRangeSlider(
 
 @Composable
 fun SkillDetail(
-    evoPhase: Int = 2,
-    skillLevel: Int = 7,
-    skill: Skill = Skill("114514", 1, 1, 3, -1),
+    skillId: String = "",
+    unlock:Boolean = true,
+    showSpecialLevel: Boolean = false,
+    specialLevel: Int = 0,
     select: Boolean = true,
-    onSelectedChange: (Boolean) -> Unit = {},
+    onSelectedChange: () -> Unit = {},
     onSpecialLevelChange: (Int) -> Unit = {}
 ) {
-    var specializeLevel by remember { mutableIntStateOf(skill.specializeLevel) }
+    var specializeLevel by remember { mutableIntStateOf(specialLevel) }
     Row(modifier = Modifier.padding(8.dp)) {
-        Box(modifier = Modifier.clickable { onSelectedChange(true) }) {
-            val skillPainter = if (skill.unlock == 0) {
-                painterResource(R.drawable.character_locked_skill)
+        Box(modifier = Modifier.clickable { onSelectedChange() }) {
+            val skillPainter = if (unlock) {
+                skillPainter(skillId)
             } else {
-                skillPainter(skill.skillId)
+                painterResource(R.drawable.character_locked_skill)
             }
             Image(
                 painter = skillPainter,
@@ -361,7 +350,7 @@ fun SkillDetail(
                         ),
                     )
             )
-            if (evoPhase >= 2 && skillLevel == 7) {
+            if (showSpecialLevel) {
                 val specialLevelPainter = when (specializeLevel) {
                     1 -> R.drawable.character_special_skill_1
                     2 -> R.drawable.character_special_skill_2
@@ -397,14 +386,14 @@ fun SkillDetail(
         ) {
             IconButton(
                 onClick = { onSpecialLevelChange(++specializeLevel) },
-                enabled = evoPhase >= 2 && skillLevel >= 7 && specializeLevel < 3,
+                enabled = showSpecialLevel && specializeLevel < 3,
                 modifier = Modifier.weight(1f)
             ) {
                 Text("+")
             }
             IconButton(
                 onClick = { onSpecialLevelChange(--specializeLevel) },
-                enabled = evoPhase >= 2 && skillLevel >= 7 && specializeLevel > 0,
+                enabled = showSpecialLevel && specializeLevel > 0,
                 modifier = Modifier.weight(1f)
             ) {
                 Text("-")

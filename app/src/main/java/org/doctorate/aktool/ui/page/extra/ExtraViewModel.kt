@@ -13,6 +13,7 @@ import org.doctorate.aktool.pojo.entity.Item
 import org.doctorate.aktool.pojo.entity.Result
 import org.doctorate.aktool.pojo.request.AddFlushMessageRequest
 import org.doctorate.aktool.pojo.request.GainItemRequest
+import org.doctorate.aktool.pojo.request.RegisterAccountRequest
 import org.doctorate.aktool.pojo.request.ResetActivityRequest
 import org.doctorate.aktool.pojo.request.UnlockAllCharRequest
 
@@ -30,8 +31,16 @@ class ExtraViewModel : ViewModel() {
     private var _showActivityDialog = MutableStateFlow(false)
     val showActivityDialog = _showActivityDialog.asStateFlow()
 
+    private var _showAccountDialog = MutableStateFlow(false)
+    val showAccountDialog = _showAccountDialog.asStateFlow()
+
+    private var _showValidCodeDialog = MutableStateFlow(false)
+    val showValidCodeDialog = _showValidCodeDialog.asStateFlow()
+
     private var _isConnecting = MutableStateFlow(false)
     val isConnecting = _isConnecting.asStateFlow()
+
+    private var validateCode = mapOf<String, String>()
 
     fun changeUnlockCharState() = viewModelScope.launch {
         _showUnlockChar.emit(_showUnlockChar.value.not())
@@ -47,6 +56,14 @@ class ExtraViewModel : ViewModel() {
 
     fun changeActivityState() = viewModelScope.launch {
         _showActivityDialog.emit(_showActivityDialog.value.not())
+    }
+
+    fun changeAccountState() = viewModelScope.launch {
+        _showAccountDialog.emit(_showAccountDialog.value.not())
+    }
+
+    fun changeValidCodeState() = viewModelScope.launch {
+        _showValidCodeDialog.emit(_showValidCodeDialog.value.not())
     }
 
     private suspend fun doRequest(
@@ -101,5 +118,24 @@ class ExtraViewModel : ViewModel() {
             Network.resetActivity(body)
         }
     }
+
+    fun registerAccount(body: RegisterAccountRequest, context: Context) = viewModelScope.launch {
+        doRequest(context) {
+            Network.registerAccount(body)
+        }
+    }
+
+    fun syncValidCode(context: Context) = viewModelScope.launch {
+        _isConnecting.emit(true)
+        runCatching {
+            val result = Network.syncValidCode()
+            validateCode = result.data ?: throw RuntimeException(result.msg)
+        }.onFailure {
+            Toast.makeText(context, it.message, Toast.LENGTH_SHORT).show()
+        }
+        _isConnecting.emit(false)
+    }
+
+    fun validateCodeList(): List<Pair<String, String>> = validateCode.toList()
 
 }

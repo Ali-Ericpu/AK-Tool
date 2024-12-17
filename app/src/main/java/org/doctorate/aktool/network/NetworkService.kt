@@ -5,6 +5,7 @@ import org.doctorate.aktool.pojo.entity.Result
 import org.doctorate.aktool.pojo.entity.Status
 import org.doctorate.aktool.pojo.request.AddFlushMessageRequest
 import org.doctorate.aktool.pojo.request.GainItemRequest
+import org.doctorate.aktool.pojo.request.RegisterAccountRequest
 import org.doctorate.aktool.pojo.request.ResetActivityRequest
 import org.doctorate.aktool.pojo.request.SaveCharRequest
 import org.doctorate.aktool.pojo.request.SaveStatusRequest
@@ -80,5 +81,15 @@ interface NetworkService {
         @Header("adminKey") adminKey: String,
         @Body body: ResetActivityRequest
     ): Result<Map<String, Any>?>
+
+
+    @POST("admin/registerAccount")
+    suspend fun registerAccount(
+        @Header("adminKey") adminKey: String,
+        @Body body: RegisterAccountRequest
+    ): Result<Map<String, Any>?>
+
+    @GET("admin/syncValidCode")
+    suspend fun syncValidCode(@Header("adminKey") adminKey: String): Result<Map<String, String>>
 
 }

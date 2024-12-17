@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -23,15 +24,20 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.BasicAlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -43,17 +49,21 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.viewmodel.compose.viewModel
 import org.doctorate.aktool.R
 import org.doctorate.aktool.config.Table
 import org.doctorate.aktool.pojo.entity.Item
 import org.doctorate.aktool.pojo.request.AddFlushMessageRequest
+import org.doctorate.aktool.pojo.request.RegisterAccountRequest
 import org.doctorate.aktool.pojo.request.ResetActivityRequest
 import org.doctorate.aktool.pojo.request.UnlockAllCharRequest
 import org.doctorate.aktool.ui.page.characterdetail.IntRangeSlider
@@ -72,13 +82,19 @@ fun ExtraPage() {
     val showItemDialog by viewModel.showItemDialog.collectAsState()
     val isConnecting by viewModel.isConnecting.collectAsState()
     val showActivityDialog by viewModel.showActivityDialog.collectAsState()
+    val showAccountDialog by viewModel.showAccountDialog.collectAsState()
+    val showValidCodeDialog by viewModel.showValidCodeDialog.collectAsState()
     Box(modifier = Modifier.fillMaxSize()) {
         LazyColumn(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
             modifier = Modifier.fillMaxSize()
         ) {
+
             item {
+                RequestButton(stringResource(R.string.register_acc)) {
+                    viewModel.changeAccountState()
+                }
                 RequestButton(stringResource(R.string.unlock_all_char)) {
                     if (Table.initData(context)) {
                         viewModel.changeUnlockCharState()
@@ -99,10 +115,13 @@ fun ExtraPage() {
                 RequestButton(stringResource(R.string.reset_act)) {
                     viewModel.changeActivityState()
                 }
+                RequestButton(stringResource(R.string.query_valid_code)) {
+                    viewModel.changeValidCodeState()
+                }
             }
         }
         AnimatedVisibility(
-            visible = isConnecting,
+            visible = isConnecting && !showValidCodeDialog,
             enter = fadeIn(initialAlpha = 0.1f, animationSpec = tween(100)),
             exit = fadeOut(targetAlpha = 0f, animationSpec = tween(800))
         ) {
@@ -156,6 +175,20 @@ fun ExtraPage() {
             it?.let { viewModel.resetActivity(it, context) }
             viewModel.changeActivityState()
         }
+    }
+    if (showAccountDialog) {
+        RegisterAccountDialog {
+            it?.let { viewModel.registerAccount(it, context) }
+            viewModel.changeAccountState()
+        }
+    }
+    if (showValidCodeDialog) {
+        ValidateCodeDialog(
+            isRefreshing = isConnecting,
+            validateCode = viewModel.validateCodeList(),
+            onRefresh = { viewModel.syncValidCode(context) },
+            onExit = { viewModel.changeValidCodeState() }
+        )
     }
 }
 
@@ -414,11 +447,136 @@ private fun GainItemDialog(onValueSave: (Item?) -> Unit = {}) {
             color = Color.Unspecified,
             description = stringResource(R.string.count),
             onValueChange = { count = it },
-            modifier = Modifier.padding(4.dp).border(
-                width = 1.dp,
-                color = MaterialTheme.colorScheme.onBackground,
-                shape = RoundedCornerShape(12.dp)
-            )
+            modifier = Modifier
+                .padding(4.dp)
+                .border(
+                    width = 1.dp,
+                    color = MaterialTheme.colorScheme.onBackground,
+                    shape = RoundedCornerShape(12.dp)
+                )
         )
+    }
+}
+
+@Composable
+private fun RegisterAccountDialog(onValueSave: (RegisterAccountRequest?) -> Unit = {}) {
+    val context = LocalContext.current
+    var account by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
+    val error = account.toULongOrNull() == null || account.length > 11 || password.isEmpty()
+    BasicDialog(
+        error = error,
+        label = stringResource(R.string.register_acc),
+        onCancel = { onValueSave(null) },
+        onConfirm = {
+            if (error) {
+                Toast.makeText(context, R.string.error_data, Toast.LENGTH_SHORT).show()
+            } else {
+                onValueSave(RegisterAccountRequest(account, password))
+            }
+        }
+    ) {
+        OutlinedTextField(
+            value = account,
+            label = { Text(stringResource(R.string.account)) },
+            singleLine = true,
+            onValueChange = { account = it },
+        )
+        OutlinedTextField(
+            value = password,
+            label = { Text(stringResource(R.string.password)) },
+            singleLine = true,
+            onValueChange = { password = it },
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Preview
+@Composable
+private fun ValidateCodeDialog(
+    isRefreshing: Boolean = false,
+    validateCode: List<Pair<String, String>> = listOf(
+        "31231" to "321312",
+        "3123311" to "3211312",
+        "3123131" to "32123312",
+    ),
+    onRefresh: () -> Unit = { },
+    onExit: () -> Unit = { }
+) {
+    val context = LocalContext.current
+    val manager = LocalClipboardManager.current
+    LaunchedEffect(Unit) { onRefresh() }
+    BasicAlertDialog(
+        onDismissRequest = { onExit() },
+        modifier = Modifier
+            .wrapContentSize()
+            .clip(RoundedCornerShape(12.dp))
+            .background(MaterialTheme.colorScheme.background)
+            .padding(16.dp)
+    ) {
+        PullToRefreshBox(
+            isRefreshing = isRefreshing,
+            onRefresh = { onRefresh() }
+        ) {
+            if (validateCode.isEmpty()) {
+                Text(
+                    text = stringResource(R.string.is_nothing),
+                    fontSize = 24.sp,
+                    modifier = Modifier.align(Alignment.Center)
+                )
+            }
+            LazyColumn(
+                modifier = Modifier.height(260.dp)
+            ) {
+                item {
+                    Text(
+                        text = stringResource(R.string.valid_code),
+                        color = MaterialTheme.colorScheme.onBackground,
+                        style = MaterialTheme.typography.displaySmall,
+                        modifier = Modifier
+                            .padding(bottom = 16.dp)
+                            .fillMaxWidth()
+                    )
+                }
+                items(validateCode) { (account, code) ->
+                    Row(
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 4.dp)
+                            .border(
+                                width = 1.dp,
+                                color = MaterialTheme.colorScheme.primary,
+                                shape = RoundedCornerShape(12.dp)
+                            )
+                            .padding(4.dp)
+                    ) {
+                        val message = stringResource(R.string.copy_success)
+                        Text(account, fontSize = 24.sp)
+                        IconButton(
+                            onClick = {
+                                manager.setText(AnnotatedString(code))
+                                Toast.makeText(context, message.format(code), Toast.LENGTH_SHORT).show()
+                            },
+                            modifier = Modifier
+                                .padding(4.dp)
+                                .fillMaxHeight()
+                        ) {
+                            Icon(
+                                painter = painterResource(R.drawable.baseline_copy),
+                                contentDescription = null,
+                                modifier = Modifier
+                                    .clip(CircleShape)
+                                    .fillMaxSize()
+                                    .background(MaterialTheme.colorScheme.primary)
+                                    .padding(12.dp)
+                            )
+                        }
+                    }
+                }
+            }
+        }
     }
 }

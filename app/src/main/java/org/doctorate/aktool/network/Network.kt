@@ -7,6 +7,7 @@ import org.doctorate.aktool.pojo.entity.Result
 import org.doctorate.aktool.pojo.entity.Status
 import org.doctorate.aktool.pojo.request.AddFlushMessageRequest
 import org.doctorate.aktool.pojo.request.GainItemRequest
+import org.doctorate.aktool.pojo.request.RegisterAccountRequest
 import org.doctorate.aktool.pojo.request.ResetActivityRequest
 import org.doctorate.aktool.pojo.request.SaveCharRequest
 import org.doctorate.aktool.pojo.request.SaveStatusRequest
@@ -89,6 +90,14 @@ object Network {
     suspend fun resetActivity(body: ResetActivityRequest): Result<Map<String, Any>?> {
         val config = AppConfig.config
         return service.resetActivity(config.uid, config.adminKey, body)
+    }
+
+    suspend fun registerAccount(body: RegisterAccountRequest): Result<Map<String, Any>?> {
+        return service.registerAccount(AppConfig.config.adminKey, body)
+    }
+
+    suspend fun syncValidCode(): Result<Map<String, String>> {
+        return service.syncValidCode(AppConfig.config.adminKey)
     }
 
 }

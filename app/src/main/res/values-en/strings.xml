@@ -62,4 +62,10 @@
     <string name="act_id">Activity ID</string>
     <string name="act_type">Activity Type</string>
     <string name="reset_act">Reset Activity</string>
+    <string name="register_acc">Register Account</string>
+    <string name="account">Account</string>
+    <string name="password">Password</string>
+    <string name="query_valid_code">Query Validate Code</string>
+    <string name="valid_code">Validate Code</string>
+    <string name="is_nothing">Nothing Here</string>
 </resources>
