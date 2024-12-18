@@ -23,6 +23,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -96,6 +97,7 @@ fun CharacterPage(navToCharacterDetail: (Int) -> Unit = {}) {
     val coroutineScope = rememberCoroutineScope()
     val professionOffsetX by animateFloatAsState(if (selectProfession) 0f else 1.2f, label = "")
     val menuOffsetX by animateFloatAsState(if (!selectProfession) 0f else 1.5f, label = "")
+    val lazyGridState = rememberLazyGridState()
     val refresh: () -> Unit = { viewModel.initCharData(context) }
     PullToRefreshBox(
         isRefreshing = showLoadAnimate,
@@ -107,6 +109,7 @@ fun CharacterPage(navToCharacterDetail: (Int) -> Unit = {}) {
                 GridCells.FixedSize(108.dp),
                 verticalArrangement = Arrangement.Top,
                 horizontalArrangement = Arrangement.SpaceAround,
+                state = lazyGridState,
                 modifier = Modifier.fillMaxSize()
             ) {
                 items(charList) { char ->
@@ -132,6 +135,7 @@ fun CharacterPage(navToCharacterDetail: (Int) -> Unit = {}) {
                                     viewModel.changeSelectState(false)
                                 } else {
                                     viewModel.selectProfession("ALL")
+                                    coroutineScope.launch { lazyGridState.scrollToItem(0) }
                                 }
                             },
                             modifier = Modifier
@@ -154,7 +158,10 @@ fun CharacterPage(navToCharacterDetail: (Int) -> Unit = {}) {
                                 contentDescription = it.name,
                                 modifier = Modifier
                                     .alpha(0.7f)
-                                    .clickable(onClick = { viewModel.selectProfession(it.name) })
+                                    .clickable {
+                                        viewModel.selectProfession(it.name)
+                                        coroutineScope.launch { lazyGridState.scrollToItem(0) }
+                                    }
                             )
                             if (currentProfession == it.name) {
                                 Image(

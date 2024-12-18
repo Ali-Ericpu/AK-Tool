@@ -511,29 +511,31 @@ private fun ValidateCodeDialog(
             .background(MaterialTheme.colorScheme.background)
             .padding(16.dp)
     ) {
-        PullToRefreshBox(
-            isRefreshing = isRefreshing,
-            onRefresh = { onRefresh() }
-        ) {
-            if (validateCode.isEmpty()) {
-                Text(
-                    text = stringResource(R.string.is_nothing),
-                    fontSize = 24.sp,
-                    modifier = Modifier.align(Alignment.Center)
-                )
-            }
-            Column {
-                Text(
-                    text = stringResource(R.string.valid_code),
-                    color = MaterialTheme.colorScheme.onBackground,
-                    style = MaterialTheme.typography.displaySmall,
-                    modifier = Modifier
-                        .padding(bottom = 16.dp)
-                        .fillMaxWidth()
-                )
-                LazyColumn(
-                    modifier = Modifier.height(240.dp)
-                ) {
+        Column {
+            Text(
+                text = stringResource(R.string.valid_code),
+                color = MaterialTheme.colorScheme.onBackground,
+                style = MaterialTheme.typography.displaySmall,
+                modifier = Modifier
+                    .padding(bottom = 16.dp)
+                    .fillMaxWidth()
+            )
+            PullToRefreshBox(
+                isRefreshing = isRefreshing,
+                onRefresh = { onRefresh() },
+            ) {
+                LazyColumn(modifier = Modifier.height(240.dp)) {
+                    item {
+                        if (validateCode.isEmpty()) {
+                            Box(modifier = Modifier.fillParentMaxSize()) {
+                                Text(
+                                    text = stringResource(R.string.is_nothing),
+                                    fontSize = 24.sp,
+                                    modifier = Modifier.align(Alignment.Center)
+                                )
+                            }
+                        }
+                    }
                     items(validateCode) { (account, code) ->
                         Row(
                             horizontalArrangement = Arrangement.SpaceBetween,

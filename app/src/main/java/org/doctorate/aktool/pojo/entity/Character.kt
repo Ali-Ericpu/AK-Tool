@@ -1,7 +1,6 @@
 package org.doctorate.aktool.pojo.entity
 
 import org.doctorate.aktool.R
-import java.io.Serializable
 
 data class Character(
     val instId: Int,
@@ -25,7 +24,7 @@ data class Character(
     var starMark: Int,
     var currentTmpl: String? = null,
     var tmpl: MutableMap<String, TmplChar>? = null
-) : Comparable<Character>, Serializable {
+) : Comparable<Character> {
     override fun compareTo(other: Character): Int =
         when {
             this.starMark != other.starMark -> other.starMark.compareTo(starMark)
@@ -92,13 +91,13 @@ data class Skill(
     var state: Int,
     var specializeLevel: Int,
     var completeUpgradeTime: Long,
-) : Serializable
+)
 
 data class Equip(
     var hide: Int,
     var level: Int,
     var locked: Int
-) : Serializable {
+) {
     fun lock() {
         hide = 1
         level = 1
@@ -118,7 +117,7 @@ data class TmplChar(
     var skills: List<Skill>,
     var currentEquip: String?,
     var equip: MutableMap<String, Equip>
-) : Serializable
+)
 
 enum class Profession(val icon: Int) {
     SNIPER(R.drawable.character_profession_sniper),
