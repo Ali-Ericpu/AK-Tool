@@ -42,6 +42,16 @@ class CharacterDetailViewModel(savedStateHandle: SavedStateHandle) : ViewModel()
                 skill.unlock = 0
             }
         }.toList()
+        var currentEquip = char.currentEquip
+        val equip = char.equip.onEach { (equipId, data) ->
+            if (phase >= 2) {
+                data.unlock()
+                currentEquip = equipId
+            } else {
+                data.lock()
+                currentEquip = null
+            }
+        }.toMutableMap()
         val maxLevel = Table.getMaxCharLevel(char.charId, phase)
         val maxSkillLevel = if (phase < 1) 4 else 7
         _maxLevel.emit(maxLevel)
@@ -52,6 +62,8 @@ class CharacterDetailViewModel(savedStateHandle: SavedStateHandle) : ViewModel()
                 mainSkillLvl = min(maxSkillLevel, char.mainSkillLvl),
                 skills = skills,
                 defaultSkillIndex = skillIndex,
+                currentEquip = currentEquip,
+                equip = equip,
                 level = min(maxLevel, char.level)
             )
         )

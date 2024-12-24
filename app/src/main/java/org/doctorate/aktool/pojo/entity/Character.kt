@@ -78,7 +78,7 @@ data class Character(
             "JP",
             null,
             mutableMapOf(),
-            1,
+            0,
             null,
             null
         )

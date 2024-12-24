@@ -1,5 +1,6 @@
 package org.doctorate.aktool.ui.page
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -47,9 +48,8 @@ enum class Page(val route: String, val desc: String, val icon: ImageVector) {
     SETTING("setting", "设置", Icons.Default.Settings);
 
     companion object {
-        fun getRoute(route: String?): Page {
-            if (route == null) return HOME
-            return entries.find { route.startsWith(it.route) } ?: HOME
+        fun getRoute(route: String?): Page? {
+            return entries.find { route == it.route }
         }
     }
 }
@@ -117,41 +117,43 @@ fun RoutePage() {
                 Setting()
             }
         }
-        NavigationBar(modifier = Modifier.alpha(0.9f)) {
-            Page.entries.map {
-                val color =
-                    if (it == currentPage) MaterialTheme.colorScheme.primary else Color.Gray
-                NavigationBarItem(
-                    modifier = Modifier.fillMaxWidth(),
-                    icon = {
-                        Icon(
-                            imageVector = it.icon,
-                            contentDescription = it.name,
-                            tint = color,
+        AnimatedVisibility(currentPage != null) {
+            NavigationBar(modifier = Modifier.alpha(0.9f)) {
+                Page.entries.map {
+                    val color =
+                        if (it == currentPage) MaterialTheme.colorScheme.primary else Color.Gray
+                    NavigationBarItem(
+                        modifier = Modifier.fillMaxWidth(),
+                        icon = {
+                            Icon(
+                                imageVector = it.icon,
+                                contentDescription = it.name,
+                                tint = color,
+                            )
+                        },
+                        label = { Text(text = it.desc, color = color) },
+                        selected = it == currentPage,
+                        onClick = {
+                            if (it != currentPage) {
+                                navController.navigateSingleTopTo(it.route)
+                            }
+                        },
+                        colors = NavigationBarItemColors(
+                            selectedIconColor = color,
+                            selectedTextColor = color,
+                            selectedIndicatorColor = color.copy(alpha = 0F),
+                            unselectedIconColor = Color.LightGray,
+                            unselectedTextColor = Color.LightGray,
+                            disabledIconColor = Color.Gray,
+                            disabledTextColor = Color.Gray
                         )
-                    },
-                    label = { Text(text = it.desc, color = color) },
-                    selected = it == currentPage,
-                    onClick = {
-                        if (it != currentPage) {
-                            navController.navigateSingleTopTo(it.route)
-                        }
-                    },
-                    colors = NavigationBarItemColors(
-                        selectedIconColor = color,
-                        selectedTextColor = color,
-                        selectedIndicatorColor = color.copy(alpha = 0F),
-                        unselectedIconColor = Color.LightGray,
-                        unselectedTextColor = Color.LightGray,
-                        disabledIconColor = Color.Gray,
-                        disabledTextColor = Color.Gray
                     )
-                )
+                }
             }
         }
     }
-
 }
+
 
 fun NavHostController.navigateSingleTopTo(route: String) = navigate(route) {
     popUpTo(

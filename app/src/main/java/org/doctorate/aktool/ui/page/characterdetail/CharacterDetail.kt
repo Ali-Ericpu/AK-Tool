@@ -19,12 +19,16 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 //noinspection UsingMaterialAndMaterial3Libraries
 import androidx.compose.material.Slider
 //noinspection UsingMaterialAndMaterial3Libraries
 import androidx.compose.material.SliderDefaults
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.Button
+import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -38,6 +42,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -46,6 +51,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.launch
 import org.doctorate.aktool.R
@@ -53,6 +59,7 @@ import org.doctorate.aktool.config.Table
 import org.doctorate.aktool.pojo.entity.Character
 import org.doctorate.aktool.ui.page.character.CharacterCard
 import org.doctorate.aktool.ui.page.character.CharacterViewModel
+import org.doctorate.aktool.ui.page.character.equipPainter
 import org.doctorate.aktool.ui.page.character.skillPainter
 import org.doctorate.aktool.ui.page.setting.EditSwitch
 import org.doctorate.aktool.utils.JsonUtil
@@ -140,7 +147,7 @@ fun CharacterDetail(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(8.dp)
+                        .padding(4.dp)
                         .clip(RoundedCornerShape(16.dp))
                         .background(Color.LightGray)
                 ) {
@@ -159,14 +166,13 @@ fun CharacterDetail(
                             .padding(start = 4.dp, end = 4.dp, bottom = 4.dp)
                             .height(80.dp)
                     ) {
-                        items(char.skills) { skill ->
-                            val index = char.skills.indexOf(skill)
+                        itemsIndexed(char.skills) { index, skill ->
                             SkillDetail(
                                 skillId = skill.skillId,
                                 unlock = skill.unlock == 1,
                                 showSpecialLevel = char.evolvePhase >= 2 && char.mainSkillLvl >= 7,
                                 specializeLevel = skill.specializeLevel,
-                                index == char.defaultSkillIndex,
+                                select = index == char.defaultSkillIndex,
                                 onSelectedChange = {
                                     if (skill.unlock == 1) {
                                         vm.accept(char.copy(defaultSkillIndex = index))
@@ -176,6 +182,48 @@ fun CharacterDetail(
                                     val copy = skill.copy(specializeLevel = level)
                                     val skills = char.skills.toMutableList()
                                     vm.accept(char.copy(skills = skills.also { it[index] = copy }))
+                                }
+                            )
+                        }
+                    }
+                }
+            }
+            if (char.equip.isNotEmpty()) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(4.dp)
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(Color.LightGray)
+                ) {
+                    Text(
+                        text = stringResource(R.string.equip),
+                        fontSize = 20.sp,
+                        modifier = Modifier.padding(top = 8.dp, start = 16.dp, end = 16.dp)
+                    )
+                    LazyRow(
+                        horizontalArrangement = Arrangement.SpaceAround,
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(80.dp)
+                            .padding(4.dp)
+                    ) {
+                        items(char.equip.toList()) { (equipId, equipData) ->
+                            EquipDetail(
+                                equipId = equipId,
+                                level = equipData.level,
+                                locked = equipData.locked,
+                                isSelect = char.currentEquip == equipId,
+                                onSelectedChange = {
+                                    if (char.evolvePhase >= 2) {
+                                        vm.accept(char.copy(currentEquip = equipId))
+                                    }
+                                },
+                                onLevelChange = { level ->
+                                    val copy = equipData.copy(level = level)
+                                    val map = char.equip.toMutableMap()
+                                    vm.accept(char.copy(equip = map.also { it[equipId] = copy }))
                                 }
                             )
                         }
@@ -230,7 +278,8 @@ fun CharacterDetail(
                                 char.copy(favorPoint = Table.getRealFavPoint(char.favorPoint))
                             )
                         }.onSuccess {
-                            Toast.makeText(context, R.string.save_success, Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, R.string.save_success, Toast.LENGTH_SHORT)
+                                .show()
                             onCharSave()
                         }.onFailure {
                             Toast.makeText(context, it.message, Toast.LENGTH_SHORT).show()
@@ -261,7 +310,7 @@ fun IntRangeSlider(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
         modifier = modifier
-            .padding(8.dp)
+            .padding(4.dp)
             .clip(RoundedCornerShape(16.dp))
             .background(color)
     ) {
@@ -375,6 +424,110 @@ fun SkillDetail(
             IconButton(
                 onClick = { onSpecialLevelChange(specializeLevel - 1) },
                 enabled = showSpecialLevel && specializeLevel > 0,
+                modifier = Modifier.weight(1f)
+            ) {
+                Text("-")
+            }
+        }
+    }
+}
+
+@Composable
+fun EquipDetail(
+    equipId: String = "",
+    level: Int = 1,
+    locked: Int = 1,
+    isSelect: Boolean = false,
+    onSelectedChange: () -> Unit = { },
+    onLevelChange: (Int) -> Unit = { }
+) {
+    val equipType = Table.getEquipType(equipId)
+    val isOriginal = equipType == "original"
+    Row(modifier = Modifier.padding(8.dp)) {
+        ConstraintLayout(
+            modifier = Modifier
+                .clickable { onSelectedChange() }
+                .fillMaxHeight()
+        ) {
+            val (equipIconRef, levelRef, selectRef, lockedRef) = createRefs()
+            Image(
+                painter = equipPainter(equipType),
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                colorFilter = if (isOriginal) ColorFilter.tint(Color.Black) else null,
+                modifier = Modifier
+                    .border(
+                        width = 4.dp,
+                        color = MaterialTheme.colorScheme.primary.copy(
+                            alpha = if (isSelect) 1f else 0f,
+                        ),
+                    )
+                    .constrainAs(equipIconRef) {
+                        centerTo(parent)
+                    }
+                    .fillMaxHeight()
+                    .width(60.dp)
+                    .padding(start = 4.dp)
+            )
+            if (locked == 1) {
+                Icon(
+                    imageVector = Icons.Default.Lock,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.constrainAs(lockedRef) {
+                        centerTo(equipIconRef)
+                    }
+                )
+            } else if (isOriginal.not() && locked == 0) {
+                val specialLevelPainter = when (level) {
+                    1 -> R.drawable.character_special_skill_1
+                    2 -> R.drawable.character_special_skill_2
+                    3 -> R.drawable.character_special_skill_3
+                    else -> R.drawable.character_special_skill_0
+                }
+                Image(
+                    painter = painterResource(specialLevelPainter),
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .width(16.dp)
+                        .constrainAs(levelRef) {
+                            top.linkTo(equipIconRef.top)
+                            start.linkTo(equipIconRef.start)
+                        }
+                )
+            }
+            if (isSelect) {
+                Image(
+                    painter = painterResource(R.drawable.character_skill_selected),
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .width(24.dp)
+                        .constrainAs(selectRef) {
+                            top.linkTo(equipIconRef.top)
+                            end.linkTo(equipIconRef.end)
+                        }
+                )
+            }
+        }
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.SpaceAround,
+            modifier = Modifier
+                .fillMaxHeight()
+                .width(28.dp)
+        ) {
+            IconButton(
+                onClick = { onLevelChange(level + 1) },
+                enabled = isOriginal.not() && locked == 0 && level < 3,
+                modifier = Modifier.weight(1f)
+            ) {
+                Text("+")
+            }
+            IconButton(
+                onClick = { onLevelChange(level - 1) },
+                enabled = isOriginal.not() && locked == 0 && level > 1,
                 modifier = Modifier.weight(1f)
             ) {
                 Text("-")

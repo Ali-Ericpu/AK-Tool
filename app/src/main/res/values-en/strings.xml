@@ -68,4 +68,5 @@
     <string name="query_valid_code">Query Validate Code</string>
     <string name="valid_code">Validate Code</string>
     <string name="is_nothing">Nothing Here</string>
+    <string name="equip">Equip</string>
 </resources>

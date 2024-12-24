@@ -278,7 +278,6 @@ fun EditSwitch(
     state: Boolean,
     onCheckedChange: (Boolean) -> Unit,
 ) {
-    var checked by remember { mutableStateOf(state) }
     Row(
         modifier = Modifier
             .padding(8.dp)
@@ -296,8 +295,8 @@ fun EditSwitch(
                 .fillMaxHeight()
         )
         Switch(
-            checked = checked,
-            onCheckedChange = { onCheckedChange(it.also { checked = it }) }
+            checked = state,
+            onCheckedChange = { onCheckedChange(it) }
         )
     }
 }

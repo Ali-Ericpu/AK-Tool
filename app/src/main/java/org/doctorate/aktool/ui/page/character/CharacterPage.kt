@@ -121,11 +121,12 @@ fun CharacterPage(navToCharacterDetail: (Int) -> Unit = {}) {
             Box(
                 modifier = Modifier
                     .width(48.dp)
-                    .align(Alignment.CenterEnd)
+                    .align(Alignment.TopEnd)
+                    .padding(top = 80.dp)
             ) {
                 LazyColumn(
                     modifier = Modifier
-                        .clip(RoundedCornerShape(4.dp))
+                        .clip(RoundedCornerShape(8.dp))
                         .offsetPercent(offsetPercentX = professionOffsetX)
                 ) {
                     item {
@@ -340,7 +341,7 @@ fun CharacterCard(
             .clickable { (onCharSelect(char.instId)) }
     ) {
         ConstraintLayout(modifier = Modifier.fillMaxSize()) {
-            val (charBgRef, portraitRef, topHubRef, bottomHubRef, charNameRef, rarityLightRef, professionRef) = remember { createRefs() }
+            val (charBgRef, portraitRef, topHubRef, bottomHubRef, charNameRef, rarityLightRef, professionRef, equipRef) = remember { createRefs() }
             val (potentialBgRef, starRef, evoRef, evoBgRef, levelRef, lvRef, levelBgRef, skillRef, potentialRef, starMarkRef) = remember { createRefs() }
             //char bg
             Image(
@@ -523,6 +524,17 @@ fun CharacterCard(
                         bottom.linkTo(charNameRef.top)
                     }
             )
+            //equip
+            char.currentEquip?.let { equipId ->
+                Image(
+                    painter = equipPainter(Table.getEquipType(equipId)),
+                    contentDescription = null,
+                    modifier = Modifier.size(32.dp).constrainAs(equipRef) {
+                        centerVerticallyTo(skillRef)
+                        end.linkTo(skillRef.start)
+                    }
+                )
+            }
             //char name
             Text(
                 char.name!!,
@@ -615,7 +627,9 @@ fun SearchCharDialog(
                             onLongClick = {
                                 val charId = onSearchCharId(word)
                                 manager.setText(AnnotatedString(charId))
-                                Toast.makeText(context, message.format(charId), Toast.LENGTH_SHORT).show()
+                                Toast
+                                    .makeText(context, message.format(charId), Toast.LENGTH_SHORT)
+                                    .show()
                             }
                         )
                         .padding(8.dp)
@@ -653,4 +667,10 @@ fun skillPainter(skillId: String): Painter {
         placeholder = painterResource(R.drawable.character_default_skill_icon),
         error = painterResource(R.drawable.character_default_skill_icon),
     )
+}
+
+@Composable
+fun equipPainter(equipId: String): Painter {
+    val imageUrl = "https://web.hycdn.cn/arknights/game/assets/uniequip/type/$equipId.png"
+    return rememberAsyncImagePainter(model = imageUrl)
 }

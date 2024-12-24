@@ -13,10 +13,11 @@ import java.io.File
 import java.net.URI
 
 object Table {
-    private val jsonList = listOf("character_table.json", "favor_table.json")
+    private val jsonList = listOf("character_table.json", "favor_table.json", "uniequip_table.json")
     var CHARACTER_TABLE: NestingMap = mapOf()
         private set
     private var FAVOR_TABLE: Map<String, Any> = mapOf()
+    private var UNI_EQUIP_TABLE: Map<String, Any> = mapOf()
 
     fun initData(context: Context): Boolean {
         if (CHARACTER_TABLE.isNotEmpty() && FAVOR_TABLE.isNotEmpty()) {
@@ -33,6 +34,7 @@ object Table {
         }
         CHARACTER_TABLE = JsonUtil.fromJson(fileList[0])
         FAVOR_TABLE = JsonUtil.fromJson(fileList[1])
+        UNI_EQUIP_TABLE = JsonUtil.fromJson(fileList[2])
         return true
     }
 
@@ -44,6 +46,7 @@ object Table {
             when (index) {
                 0 -> CHARACTER_TABLE = JsonUtil.fromJson<NestingMap>(url).write(file)
                 1 -> FAVOR_TABLE = JsonUtil.fromJson<Map<String, Any>>(url).write(file)
+                2 -> UNI_EQUIP_TABLE = JsonUtil.fromJson<Map<String, Any>>(url).write(file)
             }
         }
     }
@@ -79,6 +82,10 @@ object Table {
             }
         }
         return 0
+    }
+
+    fun getEquipType(equipId:String) :String {
+        return UNI_EQUIP_TABLE.get<NestingMap>("equipDict")!![equipId]?.get<String>("typeIcon") ?: "original"
     }
 
 }
