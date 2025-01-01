@@ -4,6 +4,7 @@ import android.os.Build
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.Image
@@ -42,7 +43,6 @@ import java.util.concurrent.TimeUnit
 class MainActivity : ComponentActivity(), SingletonImageLoader.Factory {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
         if (Build.VERSION.SDK_INT > 28) {
             window.isNavigationBarContrastEnforced = false
         }
@@ -61,10 +61,17 @@ class MainActivity : ComponentActivity(), SingletonImageLoader.Factory {
                     )
                 }
             }) {
+                val darkMode = config.darkMode || isSystemInDarkTheme()
                 AKToolTheme(
-                    darkTheme = config.darkMode || isSystemInDarkTheme(),
+                    darkTheme = darkMode,
                     dynamicColor = config.dynamicColor
                 ) {
+                    enableEdgeToEdge(
+                        statusBarStyle = SystemBarStyle.auto(
+                            android.graphics.Color.TRANSPARENT,
+                            android.graphics.Color.TRANSPARENT,
+                        ) { darkMode }
+                    )
                     Surface {
                         if (config.customBg) {
                             Image(
