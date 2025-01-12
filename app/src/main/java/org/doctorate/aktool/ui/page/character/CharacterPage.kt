@@ -359,7 +359,7 @@ fun CharacterCard(
             Image(
                 painter = portraitPainter(char.skin),
                 contentDescription = null,
-                contentScale = ContentScale.Crop,
+                contentScale = ContentScale.FillWidth,
                 modifier = Modifier
                     .padding(start = 4.dp, end = 4.dp)
                     .fillMaxWidth()
@@ -466,7 +466,7 @@ fun CharacterCard(
                     .size(46.dp)
                     .constrainAs(levelBgRef) {
                         start.linkTo(parent.start, 2.dp)
-                        bottom.linkTo(charNameRef.top, (-4).dp)
+                        bottom.linkTo(charNameRef.top, (-8).dp)
                     }
             )
             Text(
