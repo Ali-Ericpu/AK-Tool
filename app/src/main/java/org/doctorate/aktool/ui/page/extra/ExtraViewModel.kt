@@ -138,4 +138,10 @@ class ExtraViewModel : ViewModel() {
 
     fun validateCodeList(): List<Pair<String, String>> = validateCode.toList()
 
+    fun resetRlv2(context: Context) = viewModelScope.launch {
+        doRequest(context) {
+            Network.resetRlv2()
+        }
+    }
+
 }

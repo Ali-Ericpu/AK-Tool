@@ -69,4 +69,5 @@
     <string name="valid_code">Validate Code</string>
     <string name="is_nothing">Nothing Here</string>
     <string name="equip">Equip</string>
+    <string name="reset_rlv2">Reset RogueLike Status</string>
 </resources>

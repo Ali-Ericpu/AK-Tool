@@ -69,4 +69,5 @@
     <string name="valid_code">验证码</string>
     <string name="is_nothing">这里什么也没有</string>
     <string name="equip">模组</string>
+    <string name="reset_rlv2">重置集成战略状态</string>
 </resources>

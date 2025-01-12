@@ -118,6 +118,9 @@ fun ExtraPage() {
                 RequestButton(stringResource(R.string.query_valid_code)) {
                     viewModel.changeValidCodeState()
                 }
+                RequestButton(stringResource(R.string.reset_rlv2)) {
+                    viewModel.resetRlv2(context)
+                }
             }
         }
         AnimatedVisibility(

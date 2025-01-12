@@ -100,4 +100,9 @@ object Network {
         return service.syncValidCode(AppConfig.config.adminKey)
     }
 
+    suspend fun resetRlv2(): Result<Map<String, Any>?> {
+        val config = AppConfig.config
+        return service.resetRlv2(config.uid, config.adminKey)
+    }
+
 }

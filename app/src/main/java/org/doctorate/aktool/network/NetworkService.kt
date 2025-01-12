@@ -92,4 +92,10 @@ interface NetworkService {
     @GET("admin/syncValidCode")
     suspend fun syncValidCode(@Header("adminKey") adminKey: String): Result<Map<String, String>>
 
+    @POST("admin/rlv2/reset")
+    suspend fun resetRlv2(
+        @Header("uid") uid: String,
+        @Header("adminKey") adminKey: String
+    ): Result<Map<String, Any>?>
+
 }
