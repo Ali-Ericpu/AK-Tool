@@ -228,6 +228,7 @@ fun EditTextDialog(
             maxLines = Int.MAX_VALUE,
             isError = isError,
             onValueChange = { text = it },
+            modifier = Modifier.fillMaxWidth()
         )
     }
 }

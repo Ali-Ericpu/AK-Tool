@@ -602,6 +602,7 @@ fun SearchCharDialog(
                 keyword = it
                 charNameList.replace(onKeywordType(keyword))
             },
+            modifier = Modifier.fillMaxWidth()
         )
         FlowRow(
             horizontalArrangement = Arrangement.SpaceAround,
