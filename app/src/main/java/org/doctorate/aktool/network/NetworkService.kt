@@ -98,4 +98,10 @@ interface NetworkService {
         @Header("adminKey") adminKey: String
     ): Result<Map<String, Any>?>
 
+    @POST("admin/account/queryAccountByUID")
+    suspend fun queryAccountByUID(
+        @Header("uid") uid: String,
+        @Header("adminKey") adminKey: String
+    ): Result<Map<String, String>>
+
 }

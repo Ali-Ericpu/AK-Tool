@@ -76,6 +76,7 @@ import kotlin.math.roundToInt
 @Composable
 fun ExtraPage() {
     val context = LocalContext.current
+    val clipboardManager = LocalClipboardManager.current
     val viewModel: ExtraViewModel = viewModel()
     val showUnlockChar by viewModel.showUnlockChar.collectAsState()
     val showMessageDialog by viewModel.showMessageDialog.collectAsState()
@@ -120,6 +121,9 @@ fun ExtraPage() {
                 }
                 RequestButton(stringResource(R.string.reset_rlv2)) {
                     viewModel.resetRlv2(context)
+                }
+                RequestButton(stringResource(R.string.query_account)) {
+                    viewModel.queryAccountByUID(context, clipboardManager)
                 }
             }
         }
@@ -558,7 +562,11 @@ private fun ValidateCodeDialog(
                             IconButton(
                                 onClick = {
                                     manager.setText(AnnotatedString(code))
-                                    Toast.makeText(context, message.format(code), Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(
+                                        context,
+                                        message.format(code),
+                                        Toast.LENGTH_SHORT
+                                    ).show()
                                 },
                                 modifier = Modifier
                                     .padding(4.dp)

@@ -105,4 +105,9 @@ object Network {
         return service.resetRlv2(config.uid, config.adminKey)
     }
 
+    suspend fun queryAccountByUID(): Result<Map<String, String>> {
+        val config = AppConfig.config
+        return service.queryAccountByUID(config.uid, config.adminKey)
+    }
+
 }

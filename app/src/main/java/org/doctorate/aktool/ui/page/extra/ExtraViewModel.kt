@@ -2,6 +2,8 @@ package org.doctorate.aktool.ui.page.extra
 
 import android.content.Context
 import android.widget.Toast
+import androidx.compose.ui.platform.ClipboardManager
+import androidx.compose.ui.text.AnnotatedString
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -141,6 +143,16 @@ class ExtraViewModel : ViewModel() {
     fun resetRlv2(context: Context) = viewModelScope.launch {
         doRequest(context) {
             Network.resetRlv2()
+        }
+    }
+
+    fun queryAccountByUID(context: Context, manager: ClipboardManager) = viewModelScope.launch {
+        runCatching {
+            val account = Network.queryAccountByUID().data!!["account"]!!
+            manager.setText(AnnotatedString(account))
+            Toast.makeText(context, context.getString(R.string.copy_success, account), Toast.LENGTH_SHORT).show()
+        }.onFailure {
+            Toast.makeText(context, it.message, Toast.LENGTH_SHORT).show()
         }
     }
 

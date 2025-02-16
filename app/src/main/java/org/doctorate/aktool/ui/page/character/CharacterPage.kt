@@ -628,9 +628,7 @@ fun SearchCharDialog(
                             onLongClick = {
                                 val charId = onSearchCharId(word)
                                 manager.setText(AnnotatedString(charId))
-                                Toast
-                                    .makeText(context, message.format(charId), Toast.LENGTH_SHORT)
-                                    .show()
+                                Toast.makeText(context, message.format(charId), Toast.LENGTH_SHORT).show()
                             }
                         )
                         .padding(8.dp)

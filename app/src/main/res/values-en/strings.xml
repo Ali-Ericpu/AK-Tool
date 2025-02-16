@@ -70,4 +70,5 @@
     <string name="is_nothing">Nothing Here</string>
     <string name="equip">Equip</string>
     <string name="reset_rlv2">Reset RogueLike Status</string>
+    <string name="query_account">Query Account</string>
 </resources>
