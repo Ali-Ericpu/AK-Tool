@@ -72,6 +72,7 @@ import coil3.compose.rememberAsyncImagePainter
 import kotlinx.coroutines.launch
 import org.doctorate.aktool.R
 import org.doctorate.aktool.config.Table
+import org.doctorate.aktool.pojo.entity.CharPainter
 import org.doctorate.aktool.pojo.entity.Character
 import org.doctorate.aktool.pojo.entity.Profession
 import org.doctorate.aktool.ui.page.setting.BasicDialog
@@ -113,7 +114,7 @@ fun CharacterPage(navToCharacterDetail: (Int) -> Unit = {}) {
                 modifier = Modifier.fillMaxSize()
             ) {
                 items(charList) { char ->
-                    CharacterCard(char) {
+                    CharacterCard(char = char) {
                         navToCharacterDetail(it)
                     }
                 }
@@ -271,8 +272,8 @@ fun CharacterPage(navToCharacterDetail: (Int) -> Unit = {}) {
 @Preview
 @Composable
 fun CharacterCard(
-    char: Character = Character.char(),
     modifier: Modifier = Modifier,
+    char: Character = Character.char(),
     onCharSelect: (Int) -> Unit = { }
 ) {
     val evolvePhasePainter = when (char.evolvePhase) {
@@ -281,59 +282,8 @@ fun CharacterCard(
         2 -> R.drawable.character_elite_2
         else -> R.drawable.character_elite_0
     }
-    var rarityPainter = R.drawable.character_star_1
-    var charBgPainter = R.drawable.character_charbg_1
-    var upperHubPainter = R.drawable.character_upperhub_1
-    var lowerHubPainter = R.drawable.character_lowerhub1
-    var rarityLightPainter = R.drawable.character_rartylight_1
-    val professionPainter = when (char.profession!!) {
-        "PIONEER" -> R.drawable.icon_profession_pioneer
-        "WARRIOR" -> R.drawable.icon_profession_warrior
-        "SNIPER" -> R.drawable.icon_profession_sniper
-        "SPECIAL" -> R.drawable.icon_profession_special
-        "TANK" -> R.drawable.icon_profession_tank
-        "CASTER" -> R.drawable.icon_profession_caster
-        "MEDIC" -> R.drawable.icon_profession_medic
-        "SUPPORT" -> R.drawable.icon_profession_support
-        else -> throw IllegalArgumentException("unknown character profession :${char.profession}")
-    }
-    when (char.rank!!) {
-        2 -> {
-            rarityPainter = R.drawable.character_star_2
-            upperHubPainter = R.drawable.character_upperhub_2
-            rarityLightPainter = R.drawable.character_rartylight_2
-        }
-
-        3 -> {
-            rarityPainter = R.drawable.character_star_3
-            upperHubPainter = R.drawable.character_upperhub_3
-            rarityLightPainter = R.drawable.character_rartylight_3
-        }
-
-        4 -> {
-            rarityPainter = R.drawable.character_star_4
-            charBgPainter = R.drawable.character_charbg_4
-            upperHubPainter = R.drawable.character_upperhub_4
-            lowerHubPainter = R.drawable.character_lowerhub4
-            rarityLightPainter = R.drawable.character_rartylight_4
-        }
-
-        5 -> {
-            rarityPainter = R.drawable.character_star_5
-            charBgPainter = R.drawable.character_charbg_5
-            upperHubPainter = R.drawable.character_upperhub_5
-            lowerHubPainter = R.drawable.character_lowerhub5
-            rarityLightPainter = R.drawable.character_rartylight_5
-        }
-
-        6 -> {
-            rarityPainter = R.drawable.character_star_6
-            charBgPainter = R.drawable.character_charbg_6
-            upperHubPainter = R.drawable.character_upperhub_6
-            lowerHubPainter = R.drawable.character_lowerhub6
-            rarityLightPainter = R.drawable.character_rartylight_6
-        }
-    }
+    val charPainter = CharPainter.form(char.rank!!)
+    val profession = Profession.valueOf(char.profession!!)
     Box(
         modifier = modifier
             .height(228.dp)
@@ -345,7 +295,7 @@ fun CharacterCard(
             val (potentialBgRef, starRef, evoRef, evoBgRef, levelRef, lvRef, levelBgRef, skillRef, potentialRef, starMarkRef) = remember { createRefs() }
             //char bg
             Image(
-                painter = painterResource(charBgPainter),
+                painter = painterResource(charPainter.charBgPainter),
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
@@ -369,7 +319,7 @@ fun CharacterCard(
             )
             //rarity light
             Image(
-                painter = painterResource(rarityLightPainter),
+                painter = painterResource(charPainter.rarityLightPainter),
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
@@ -381,7 +331,7 @@ fun CharacterCard(
             )
             //top hub
             Image(
-                painter = painterResource(upperHubPainter),
+                painter = painterResource(charPainter.upperHubPainter),
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
@@ -393,7 +343,7 @@ fun CharacterCard(
             )
             //profession icon
             Image(
-                painterResource(professionPainter), null,
+                painterResource(profession.icon), null,
                 modifier = Modifier
                     .size(18.dp)
                     .constrainAs(professionRef) {
@@ -403,7 +353,7 @@ fun CharacterCard(
             )
             //char rarity star
             Image(
-                painterResource(rarityPainter), null,
+                painterResource(charPainter.rarityPainter), null,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
                     .height(18.dp)
@@ -440,7 +390,7 @@ fun CharacterCard(
             )
             //lower hub
             Image(
-                painterResource(lowerHubPainter), null,
+                painterResource(charPainter.lowerHubPainter), null,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
                     .fillMaxWidth()

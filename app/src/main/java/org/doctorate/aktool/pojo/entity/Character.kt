@@ -1,5 +1,6 @@
 package org.doctorate.aktool.pojo.entity
 
+import androidx.annotation.DrawableRes
 import org.doctorate.aktool.R
 
 data class Character(
@@ -119,13 +120,13 @@ data class TmplChar(
     var equip: MutableMap<String, Equip>
 )
 
-enum class Profession(val icon: Int) {
-    SNIPER(R.drawable.character_profession_sniper),
-    WARRIOR(R.drawable.character_profession_warrior),
-    TANK(R.drawable.character_profession_tank),
-    PIONEER(R.drawable.character_profession_pioneer),
-    CASTER(R.drawable.character_profession_caster),
-    MEDIC(R.drawable.character_profession_medic),
-    SUPPORT(R.drawable.character_profession_support),
-    SPECIAL(R.drawable.character_profession_special),
+enum class Profession(@DrawableRes val icon: Int) {
+    SNIPER(R.drawable.icon_profession_sniper),
+    WARRIOR(R.drawable.icon_profession_warrior),
+    TANK(R.drawable.icon_profession_tank),
+    PIONEER(R.drawable.icon_profession_pioneer),
+    CASTER(R.drawable.icon_profession_caster),
+    MEDIC(R.drawable.icon_profession_medic),
+    SUPPORT(R.drawable.icon_profession_support),
+    SPECIAL(R.drawable.icon_profession_special),
 }

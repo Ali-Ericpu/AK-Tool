@@ -101,7 +101,7 @@ fun CharacterDetail(
     ) {
         item {
             Row(modifier = Modifier.padding(start = 4.dp)) {
-                CharacterCard(char)
+                CharacterCard(char = char)
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.SpaceBetween,

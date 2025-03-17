@@ -12,8 +12,8 @@ android {
         applicationId = "org.doctorate.aktool"
         minSdk = 28
         targetSdk = 35
-        versionCode = 17
-        versionName = "1.5.5"
+        versionCode = 18
+        versionName = "1.5.6"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -37,6 +37,8 @@ android {
     buildFeatures {
         compose = true
     }
+    ndkVersion = "25.2.9519653"
+    buildToolsVersion = "35.0.0"
 }
 
 dependencies {

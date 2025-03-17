@@ -2,7 +2,6 @@ package org.doctorate.aktool
 
 import android.os.Build
 import android.os.Bundle
-import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
@@ -37,6 +36,7 @@ import org.doctorate.aktool.config.writeConfig
 import org.doctorate.aktool.ui.page.RoutePage
 import org.doctorate.aktool.ui.page.splash.SplashPage
 import org.doctorate.aktool.ui.theme.AKToolTheme
+import org.doctorate.aktool.utils.toast
 import java.util.concurrent.TimeUnit
 
 
@@ -56,8 +56,8 @@ class MainActivity : ComponentActivity(), SingletonImageLoader.Factory {
                     writeConfig(
                         newConfig = new,
                         context = context,
-                        onSuccess = { Toast.makeText(context, R.string.save_success, Toast.LENGTH_SHORT).show() },
-                        onFailure = { Toast.makeText(context, it, Toast.LENGTH_SHORT).show() }
+                        onSuccess = { context.toast(R.string.save_success) },
+                        onFailure = { context.toast(it) }
                     )
                 }
             }) {
