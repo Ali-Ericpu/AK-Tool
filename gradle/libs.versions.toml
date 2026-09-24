@@ -17,6 +17,7 @@ materialIconsExtended = "1.7.3"
 navigation3 = "1.2.0-beta01"
 navigation3-lifecycle = "2.11.0"
 junit = "4.13.2"
+miuix = "0.9.4"
 
 [libraries]
 compose-components-resources = { module = "org.jetbrains.compose.components:components-resources", version.ref = "compose-multiplatform" }
@@ -60,6 +61,8 @@ compose-ui = { module = "org.jetbrains.compose.ui:ui", version.ref = "compose-mu
 compose-ui-tooling-preview = { module = "org.jetbrains.compose.ui:ui-tooling-preview", version.ref = "compose-multiplatform" }
 compose-material = { module = "org.jetbrains.compose.material:material", version.ref = "material" }
 constraintlayout-multiplatform = { module = "tech.annexflow.compose:constraintlayout-compose-multiplatform", version = "0.8.2" }
+miuix-ui = { module = "top.yukonga.miuix.kmp:miuix-ui", version.ref = "miuix" }
+miuix-preference = { module = "top.yukonga.miuix.kmp:miuix-preference", version.ref = "miuix" }
 
 [plugins]
 kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }

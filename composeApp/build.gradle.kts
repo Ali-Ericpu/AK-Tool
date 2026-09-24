@@ -27,6 +27,8 @@ kotlin {
             implementation(libs.compose.ui.tooling.preview)
             implementation(libs.compose.material)
             implementation(libs.constraintlayout.multiplatform)
+            implementation(libs.miuix.ui)
+            implementation(libs.miuix.preference)
 
             implementation(libs.kotlinx.coroutines.core)
             implementation(libs.kotlinx.serialization.json)
