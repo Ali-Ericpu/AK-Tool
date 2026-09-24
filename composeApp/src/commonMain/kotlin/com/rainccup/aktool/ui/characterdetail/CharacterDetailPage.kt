@@ -10,15 +10,21 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.requiredHeight
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -27,13 +33,18 @@ import androidx.compose.material.Slider
 //noinspection UsingMaterialAndMaterial3Libraries
 import androidx.compose.material.SliderDefaults
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -45,13 +56,16 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalDensity
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Density
 
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
+import androidx.lifecycle.viewmodel.compose.viewModel
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
 import co.touchlab.kermit.Logger
@@ -60,11 +74,14 @@ import com.rainccup.aktool.resources.Res
 import com.rainccup.aktool.resources.*
 import com.rainccup.aktool.core.datastore.GameTableRepository
 import com.rainccup.aktool.core.model.Character
+import com.rainccup.aktool.core.platform.platformUiScale
 import com.rainccup.aktool.ui.character.CharacterCard
 import com.rainccup.aktool.ui.character.CharacterViewModel
 import com.rainccup.aktool.ui.character.equipPainter
+import com.rainccup.aktool.ui.character.offsetPercent
 import com.rainccup.aktool.ui.character.skillPainter
 import com.rainccup.aktool.ui.setting.EditSwitch
+import com.rainccup.aktool.ui.splash.CircleIconButton
 import kotlin.math.max
 import kotlin.math.roundToInt
 
@@ -95,201 +112,210 @@ fun CharacterDetailPage(
     val maxSkillLevel by vm.maxSkillLevel.collectAsState()
     val maxEvoPhase by vm.maxEvoPhase.collectAsState()
     val coroutineScope = rememberCoroutineScope()
+    val baseDensity = LocalDensity.current
+    val uiScale = platformUiScale()
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
             .alpha(0.95f)
     ) {
         item {
-            Row(modifier = Modifier.padding(start = 4.dp)) {
-                CharacterCard(char = char)
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.SpaceBetween,
-                    modifier = Modifier.height(220.dp)
-                ) {
-                    IntRangeSlider(
-                        value = char.potentialRank.toFloat(),
-                        start = 0,
-                        maxValue = 5,
-                        description = stringResource(Res.string.potential_rank),
-                        onValueChange = { vm.accept(char.copy(potentialRank = it.roundToInt())) },
-                        modifier = Modifier.weight(1f)
-                    )
-                    IntRangeSlider(
-                        value = char.favorPoint.toFloat(),
-                        start = 0,
-                        maxValue = 200,
-                        description = stringResource(Res.string.fav_pt),
-                        onValueChange = { vm.accept(char.copy(favorPoint = it.roundToInt())) },
-                        modifier = Modifier.weight(1f)
-                    )
-                }
-            }
-            Row(modifier = Modifier.fillMaxWidth()) {
-                IntRangeSlider(
-                    value = char.evolvePhase.toFloat(),
-                    start = 0,
-                    maxValue = maxEvoPhase,
-                    description = stringResource(Res.string.evp_phase),
-                    onValueChange = { vm.changeEvoPhase(it.roundToInt()) },
-                    modifier = Modifier.weight(1f)
+            CompositionLocalProvider(
+                LocalDensity provides Density(
+                    baseDensity.density * uiScale,
+                    baseDensity.fontScale
                 )
-                IntRangeSlider(
-                    value = char.level.toFloat(),
-                    start = 1,
-                    maxValue = maxLevel,
-                    description = stringResource(Res.string.level),
-                    onValueChange = { vm.accept(char.copy(level = it.roundToInt())) },
-                    modifier = Modifier.weight(1f)
-                )
-            }
-            if (char.skills.isNotEmpty()) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(4.dp)
-                        .clip(RoundedCornerShape(16.dp))
-                        .background(Color.LightGray)
-                ) {
-                    IntRangeSlider(
-                        value = char.mainSkillLvl.toFloat(),
-                        start = 1,
-                        maxValue = maxSkillLevel,
-                        description = stringResource(Res.string.skill_level),
-                        onValueChange = { vm.accept(char.copy(mainSkillLvl = it.roundToInt())) },
-                    )
-                    LazyRow(
-                        horizontalArrangement = Arrangement.SpaceAround,
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(start = 4.dp, end = 4.dp, bottom = 4.dp)
-                            .height(80.dp)
-                    ) {
-                        itemsIndexed(char.skills) { index, skill ->
-                            SkillDetail(
-                                skillId = skill.skillId,
-                                unlock = skill.unlock == 1,
-                                showSpecialLevel = char.evolvePhase >= 2 && char.mainSkillLvl >= 7,
-                                specializeLevel = skill.specializeLevel,
-                                select = index == char.defaultSkillIndex,
-                                onSelectedChange = {
-                                    if (skill.unlock == 1) {
-                                        vm.accept(char.copy(defaultSkillIndex = index))
-                                    }
-                                },
-                                onSpecialLevelChange = { level ->
-                                    val copy = skill.copy(specializeLevel = level)
-                                    val skills = char.skills.toMutableList()
-                                    vm.accept(char.copy(skills = skills.also { it[index] = copy }))
-                                }
-                            )
-                        }
-                    }
-                }
-            }
-            if (char.equip.isNotEmpty()) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(4.dp)
-                        .clip(RoundedCornerShape(16.dp))
-                        .background(Color.LightGray)
-                ) {
-                    Text(
-                        text = stringResource(Res.string.equip),
-                        fontSize = 20.sp,
-                        modifier = Modifier.padding(top = 8.dp, start = 16.dp, end = 16.dp)
-                    )
-                    LazyRow(
-                        horizontalArrangement = Arrangement.SpaceAround,
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(80.dp)
-                            .padding(4.dp)
-                    ) {
-                        items(char.equip.toList()) { (equipId, equipData) ->
-                            EquipDetail(
-                                equipId = equipId,
-                                level = equipData.level,
-                                locked = equipData.locked,
-                                isSelect = char.currentEquip == equipId,
-                                onSelectedChange = {
-                                    if (char.evolvePhase >= 2) {
-                                        vm.accept(char.copy(currentEquip = equipId))
-                                    }
-                                },
-                                onLevelChange = { level ->
-                                    val copy = equipData.copy(level = level)
-                                    val map = char.equip.toMutableMap()
-                                    vm.accept(char.copy(equip = map.also { it[equipId] = copy }))
-                                }
-                            )
-                        }
-                    }
-                }
-            }
-            EditSwitch(
-                label = stringResource(Res.string.star_mark),
-                state = char.starMark == 1,
-                onCheckedChange = { vm.accept(char.copy(starMark = if (it) 1 else 0)) },
-            )
-            Row(
-                horizontalArrangement = Arrangement.SpaceAround,
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth()
             ) {
-                Button(onClick = { onSaved() }) {
-                    Text(stringResource(Res.string.cancel))
-                }
-                Button(onClick = {
-                    if (char.evolvePhase == 2) {
-                        if (char.equip.isNotEmpty()) {
-                            val first = char.equip.keys.first()
-                            if (char.currentEquip == null) {
-                                vm.accept(char.copy(currentEquip = first))
-                            }
-                            char.equip.values.forEach {
-                                if (it.locked == 1) {
-                                    it.unlock()
-                                }
-                            }
-                        }
-                        if (char.skin == char.charId + "#1" &&
-                            gameTable.characterTable[char.charId]!!["displayNumber"] != null
-                        ) {
-                            vm.accept(char.copy(skin = char.charId + "#2"))
-                        }
-                    } else if (char.evolvePhase < 2) {
-                        vm.accept(
-                            char.copy(
-                                currentTmpl = null,
-                                tmpl = null,
-                                currentEquip = null,
-                                equip = char.equip.mapValues { it.value.copy() },
-                                skills = char.skills.map { it.copy(specializeLevel = 0) }
-                            )
+                Row(modifier = Modifier.padding(start = 4.dp).fillMaxWidth()) {
+                    CharacterCard(char = char)
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.SpaceBetween,
+                        modifier = Modifier.height(220.dp)
+                    ) {
+                        IntRangeSlider(
+                            value = char.potentialRank.toFloat(),
+                            start = 0,
+                            maxValue = 5,
+                            description = stringResource(Res.string.potential_rank),
+                            onValueChange = { vm.accept(char.copy(potentialRank = it.roundToInt())) },
+                            modifier = Modifier.weight(1f)
+                        )
+                        IntRangeSlider(
+                            value = char.favorPoint.toFloat(),
+                            start = 0,
+                            maxValue = 200,
+                            description = stringResource(Res.string.fav_pt),
+                            onValueChange = { vm.accept(char.copy(favorPoint = it.roundToInt())) },
+                            modifier = Modifier.weight(1f)
                         )
                     }
-                    if (char.level == maxLevel) {
-                        vm.accept(char.copy(exp = 0))
-                    }
-                    Logger.d { "CharacterDetail" }
-                    coroutineScope.launch {
-                        runCatching {
-                            charViewModel.changeCharData(
-                                char.copy(favorPoint = gameTable.getFavPointPercent(char.favorPoint))
-                            )
-                        }.onSuccess {
-                            onSaved()
-                        }.onFailure {
-
+                }
+                Row(modifier = Modifier.fillMaxWidth()) {
+                    IntRangeSlider(
+                        value = char.evolvePhase.toFloat(),
+                        start = 0,
+                        maxValue = maxEvoPhase,
+                        description = stringResource(Res.string.evp_phase),
+                        onValueChange = { vm.changeEvoPhase(it.roundToInt()) },
+                        modifier = Modifier.weight(1f)
+                    )
+                    IntRangeSlider(
+                        value = char.level.toFloat(),
+                        start = 1,
+                        maxValue = maxLevel,
+                        description = stringResource(Res.string.level),
+                        onValueChange = { vm.accept(char.copy(level = it.roundToInt())) },
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+                if (char.skills.isNotEmpty()) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(4.dp)
+                            .clip(RoundedCornerShape(16.dp))
+                            .background(Color.LightGray)
+                    ) {
+                        IntRangeSlider(
+                            value = char.mainSkillLvl.toFloat(),
+                            start = 1,
+                            maxValue = maxSkillLevel,
+                            description = stringResource(Res.string.skill_level),
+                            onValueChange = { vm.accept(char.copy(mainSkillLvl = it.roundToInt())) },
+                        )
+                        LazyRow(
+                            horizontalArrangement = Arrangement.SpaceAround,
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(start = 4.dp, end = 4.dp, bottom = 4.dp)
+                                .height(80.dp)
+                        ) {
+                            itemsIndexed(char.skills) { index, skill ->
+                                SkillDetail(
+                                    skillId = skill.skillId,
+                                    unlock = skill.unlock == 1,
+                                    showSpecialLevel = char.evolvePhase >= 2 && char.mainSkillLvl >= 7,
+                                    specializeLevel = skill.specializeLevel,
+                                    select = index == char.defaultSkillIndex,
+                                    onSelectedChange = {
+                                        if (skill.unlock == 1) {
+                                            vm.accept(char.copy(defaultSkillIndex = index))
+                                        }
+                                    },
+                                    onSpecialLevelChange = { level ->
+                                        val copy = skill.copy(specializeLevel = level)
+                                        val skills = char.skills.toMutableList()
+                                        vm.accept(char.copy(skills = skills.also { it[index] = copy }))
+                                    }
+                                )
+                            }
                         }
                     }
-                }) {
-                    Text(stringResource(Res.string.save))
+                }
+                if (char.equip.isNotEmpty()) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(4.dp)
+                            .clip(RoundedCornerShape(16.dp))
+                            .background(Color.LightGray)
+                    ) {
+                        Text(
+                            text = stringResource(Res.string.equip),
+                            fontSize = 20.sp,
+                            modifier = Modifier.padding(top = 8.dp, start = 16.dp, end = 16.dp)
+                        )
+                        LazyRow(
+                            horizontalArrangement = Arrangement.SpaceAround,
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(80.dp)
+                                .padding(4.dp)
+                        ) {
+                            items(char.equip.toList()) { (equipId, equipData) ->
+                                EquipDetail(
+                                    equipId = equipId,
+                                    level = equipData.level,
+                                    locked = equipData.locked,
+                                    isSelect = char.currentEquip == equipId,
+                                    onSelectedChange = {
+                                        if (char.evolvePhase >= 2) {
+                                            vm.accept(char.copy(currentEquip = equipId))
+                                        }
+                                    },
+                                    onLevelChange = { level ->
+                                        val copy = equipData.copy(level = level)
+                                        val map = char.equip.toMutableMap()
+                                        vm.accept(char.copy(equip = map.also { it[equipId] = copy }))
+                                    }
+                                )
+                            }
+                        }
+                    }
+                }
+                EditSwitch(
+                    label = stringResource(Res.string.star_mark),
+                    state = char.starMark == 1,
+                    onCheckedChange = { vm.accept(char.copy(starMark = if (it) 1 else 0)) },
+                )
+                Row(
+                    horizontalArrangement = Arrangement.SpaceAround,
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Button(onClick = { onSaved() }) {
+                        Text(stringResource(Res.string.cancel))
+                    }
+                    Button(onClick = {
+                        if (char.evolvePhase == 2) {
+                            if (char.equip.isNotEmpty()) {
+                                val first = char.equip.keys.first()
+                                if (char.currentEquip == null) {
+                                    vm.accept(char.copy(currentEquip = first))
+                                }
+                                char.equip.values.forEach {
+                                    if (it.locked == 1) {
+                                        it.unlock()
+                                    }
+                                }
+                            }
+                            if (char.skin == char.charId + "#1" &&
+                                gameTable.characterTable[char.charId]!!["displayNumber"] != null
+                            ) {
+                                vm.accept(char.copy(skin = char.charId + "#2"))
+                            }
+                        } else if (char.evolvePhase < 2) {
+                            vm.accept(
+                                char.copy(
+                                    currentTmpl = null,
+                                    tmpl = null,
+                                    currentEquip = null,
+                                    equip = char.equip.mapValues { it.value.copy() },
+                                    skills = char.skills.map { it.copy(specializeLevel = 0) }
+                                )
+                            )
+                        }
+                        if (char.level == maxLevel) {
+                            vm.accept(char.copy(exp = 0))
+                        }
+                        Logger.d { "CharacterDetail" }
+                        coroutineScope.launch {
+                            runCatching {
+                                charViewModel.changeCharData(
+                                    char.copy(favorPoint = gameTable.getFavPointPercent(char.favorPoint))
+                                )
+                            }.onSuccess {
+                                onSaved()
+                            }.onFailure {
+
+                            }
+                        }
+                    }) {
+                        Text(stringResource(Res.string.save))
+                    }
                 }
             }
         }

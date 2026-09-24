@@ -30,6 +30,9 @@ import com.rainccup.aktool.ui.characterdetail.CharacterDetailPage
 import com.rainccup.aktool.ui.extra.ExtraPage
 import com.rainccup.aktool.ui.home.HomePage
 import com.rainccup.aktool.ui.setting.SettingPage
+import com.rainccup.aktool.resources.Res
+import com.rainccup.aktool.resources.*
+import org.jetbrains.compose.resources.stringResource
 import androidx.savedstate.serialization.SavedStateConfiguration
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
@@ -59,12 +62,16 @@ private data class TabMeta(
 @Composable
 fun AppNavHost() {
     val backStack = rememberNavBackStack(navConfig, AppRoute.Home)
-    val tabs = remember {
+    val homeLabel = stringResource(Res.string.home)
+    val characterLabel = stringResource(Res.string.character)
+    val extraLabel = stringResource(Res.string.extra)
+    val settingLabel = stringResource(Res.string.setting)
+    val tabs = remember(homeLabel, characterLabel, extraLabel, settingLabel) {
         listOf(
-            TabMeta(AppRoute.Home, "涓婚〉", Icons.Default.Home),
-            TabMeta(AppRoute.Character, "骞插憳", Icons.Default.AccountBox),
-            TabMeta(AppRoute.Extra, "鏇村", Icons.Default.Build),
-            TabMeta(AppRoute.Setting, "璁剧疆", Icons.Default.Settings),
+            TabMeta(AppRoute.Home, homeLabel, Icons.Default.Home),
+            TabMeta(AppRoute.Character, characterLabel, Icons.Default.AccountBox),
+            TabMeta(AppRoute.Extra, extraLabel, Icons.Default.Build),
+            TabMeta(AppRoute.Setting, settingLabel, Icons.Default.Settings),
         )
     }
     val currentTop = backStack.lastOrNull()

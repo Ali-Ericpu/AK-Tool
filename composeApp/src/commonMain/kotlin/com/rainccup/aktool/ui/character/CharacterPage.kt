@@ -1,6 +1,7 @@
 package com.rainccup.aktool.ui.character
 import org.koin.compose.koinInject
 
+import com.rainccup.aktool.core.platform.platformUiScale
 import com.rainccup.aktool.core.platform.urlEncode
 
 
@@ -18,14 +19,17 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -43,6 +47,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
@@ -54,19 +59,26 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.layout
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalDensity
+import co.touchlab.kermit.Logger
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.constraintlayout.compose.ConstraintLayout
 import org.koin.compose.viewmodel.koinViewModel
 import coil3.compose.rememberAsyncImagePainter
 import kotlinx.coroutines.launch
@@ -100,109 +112,117 @@ fun CharacterPage(onOpenDetail: (String) -> Unit) {
     val menuOffsetX by animateFloatAsState(if (!selectProfession) 0f else 1.5f, label = "")
     val lazyGridState = rememberLazyGridState()
     val refresh: () -> Unit = { viewModel.initCharData() }
+    val baseDensity = LocalDensity.current
+    val uiScale = platformUiScale()
     PullToRefreshBox(
         isRefreshing = showLoadAnimate,
         onRefresh = { refresh() },
         modifier = Modifier.fillMaxSize()
     ) {
-        if (!showLoadAnimate && !splash) {
-            LazyVerticalGrid(
-                GridCells.FixedSize(108.dp),
-                verticalArrangement = Arrangement.Top,
-                horizontalArrangement = Arrangement.SpaceAround,
-                state = lazyGridState,
-                modifier = Modifier.fillMaxSize()
-            ) {
-                items(charList) { char ->
-                    CharacterCard(char = char) {
-                        onOpenDetail(it.toString())
-                    }
-                }
-            }
-            Box(
-                modifier = Modifier
-                    .width(48.dp)
-                    .align(Alignment.TopEnd)
-                    .padding(top = 80.dp)
-            ) {
-                LazyColumn(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(8.dp))
-                        .offsetPercent(offsetPercentX = professionOffsetX)
+        CompositionLocalProvider(
+            LocalDensity provides Density(baseDensity.density * uiScale, baseDensity.fontScale)
+        ) {
+            if (!showLoadAnimate && !splash) {
+                LazyVerticalGrid(
+                    GridCells.FixedSize(108.dp),
+                    verticalArrangement = Arrangement.Top,
+                    horizontalArrangement = Arrangement.SpaceAround,
+                    state = lazyGridState,
+                    modifier = Modifier.fillMaxSize()
                 ) {
-                    item {
-                        IconButton(
-                            onClick = {
-                                if (currentProfession == "ALL") {
-                                    viewModel.changeSelectState(false)
-                                } else {
-                                    viewModel.selectProfession("ALL")
-                                    coroutineScope.launch { lazyGridState.scrollToItem(0) }
-                                }
-                            },
-                            modifier = Modifier
-                                .height(48.dp)
-                                .fillMaxWidth()
-                                .background(Color.Black.copy(alpha = 0.7f))
-                                .align(alignment = Alignment.Center)
-                        ) {
-                            Text(
-                                text = if (currentProfession == "ALL") "BACK" else "ALL",
-                                textAlign = TextAlign.Center,
-                                color = MaterialTheme.colorScheme.primary
-                            )
+                    itemsIndexed(charList) { index, char ->
+                        CharacterCard(char = char, diagnose = index == 0) {
+                            onOpenDetail(it.toString())
                         }
                     }
-                    items(professions) {
-                        Box {
-                            Image(
-                                painter = painterResource(it.icon),
-                                contentDescription = it.name,
-                                modifier = Modifier
-                                    .alpha(0.7f)
-                                    .clickable {
-                                        viewModel.selectProfession(it.name)
+                }
+                Box(
+                    modifier = Modifier
+                        .width(52.dp)
+                        .align(Alignment.TopEnd)
+                        .padding(top = 80.dp)
+                ) {
+                    LazyColumn(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(8.dp))
+                            .offsetPercent(offsetPercentX = professionOffsetX)
+                    ) {
+                        item {
+                            IconButton(
+                                onClick = {
+                                    if (currentProfession == "ALL") {
+                                        viewModel.changeSelectState(false)
+                                    } else {
+                                        viewModel.selectProfession("ALL")
                                         coroutineScope.launch { lazyGridState.scrollToItem(0) }
                                     }
-                            )
-                            if (currentProfession == it.name) {
-                                Image(
-                                    painter = painterResource(Res.drawable.profession_select),
-                                    contentDescription = "select",
-                                    alignment = Alignment.CenterEnd,
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .height(48.dp)
+                                },
+                                modifier = Modifier
+                                    .height(52.dp)
+                                    .fillMaxWidth()
+                                    .background(Color.Black.copy(alpha = 0.7f))
+                                    .align(alignment = Alignment.Center)
+                            ) {
+                                Text(
+                                    text = if (currentProfession == "ALL") "BACK" else "ALL",
+                                    textAlign = TextAlign.Center,
+                                    color = MaterialTheme.colorScheme.primary
                                 )
                             }
                         }
-                    }
-                }
-                Column(modifier = Modifier.offsetPercent(offsetPercentX = menuOffsetX)) {
-                    CircleIconButton(
-                        icon = Icons.Default.Menu,
-                        onClick = { viewModel.changeSelectState(true) }
-                    )
-                    CircleIconButton(
-                        icon = Icons.Default.Add,
-                        onClick = { viewModel.changeGainCharState() }
-                    )
-                    CircleIconButton(
-                        icon = Icons.Default.Search,
-                        onClick = { viewModel.changeSearchState() }
-                    )
-                    CircleIconButton(
-                        icon = Icons.Default.Refresh,
-                        onClick = {
-                            coroutineScope.launch {
-                                try {
-                                    refresh()
-                                } catch (_: Exception) {
-                                    viewModel.closeAnimate()
+                        items(professions) {
+                            Box(modifier = Modifier.fillMaxSize()) {
+                                Image(
+                                    painter = painterResource(it.icon),
+                                    contentDescription = it.name,
+                                    modifier = Modifier
+                                        .alpha(0.9f)
+                                        .height(52.dp)
+                                        .fillMaxWidth()
+                                        .clickable {
+                                            viewModel.selectProfession(it.name)
+                                            coroutineScope.launch { lazyGridState.scrollToItem(0) }
+                                        }
+                                )
+                                if (currentProfession == it.name) {
+                                    Image(
+                                        painter = painterResource(Res.drawable.profession_select),
+                                        contentDescription = "select",
+                                        alignment = Alignment.CenterEnd,
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .height(52.dp)
+                                    )
                                 }
                             }
                         }
-                    )
+                    }
+                    Column(modifier = Modifier.offsetPercent(offsetPercentX = menuOffsetX)) {
+                        CircleIconButton(
+                            icon = Icons.Default.Menu,
+                            onClick = { viewModel.changeSelectState(true) }
+                        )
+                        CircleIconButton(
+                            icon = Icons.Default.Add,
+                            onClick = { viewModel.changeGainCharState() }
+                        )
+                        CircleIconButton(
+                            icon = Icons.Default.Search,
+                            onClick = { viewModel.changeSearchState() }
+                        )
+                        CircleIconButton(
+                            icon = Icons.Default.Refresh,
+                            onClick = {
+                                coroutineScope.launch {
+                                    try {
+                                        refresh()
+                                    } catch (_: Exception) {
+                                        viewModel.closeAnimate()
+                                    }
+                                }
+                            }
+                        )
+                    }
                 }
             }
         }
@@ -273,8 +293,17 @@ fun CharacterPage(onOpenDetail: (String) -> Unit) {
 fun CharacterCard(
     modifier: Modifier = Modifier,
     char: Character = Character.placeholder(),
+    diagnose: Boolean = false,
     onCharSelect: (Int) -> Unit = { }
 ) {
+    val density = LocalDensity.current
+    val diag: (String) -> Modifier = { tag ->
+        if (!diagnose) Modifier else Modifier.onGloballyPositioned { c ->
+            val w = c.size.width
+            val h = c.size.height
+            Logger.i { "DIAG $tag dp=${w / density.density}x${h / density.density} density=${density.density}" }
+        }
+    }
     val gameTable: GameTableRepository = koinInject()
     val evolvePhasePainter = when (char.evolvePhase) {
         0 -> Res.drawable.character_elite_0
@@ -288,241 +317,205 @@ fun CharacterCard(
         modifier = modifier
             .height(228.dp)
             .width(108.dp)
+            .clipToBounds()
             .clickable { (onCharSelect(char.instId)) }
     ) {
-        ConstraintLayout(modifier = Modifier.fillMaxSize()) {
-            val (charBgRef, portraitRef, topHubRef, bottomHubRef, charNameRef, rarityLightRef, professionRef, equipRef) = remember { createRefs() }
-            val (potentialBgRef, starRef, evoRef, evoBgRef, levelRef, lvRef, levelBgRef, skillRef, potentialRef, starMarkRef) = remember { createRefs() }
-            //char bg
-            Image(
-                painter = painterResource(charPainter.charBgPainter),
-                contentDescription = null,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .padding(start = 4.dp, end = 4.dp)
-                    .fillMaxWidth()
-                    .constrainAs(charBgRef) {
-                        bottom.linkTo(parent.bottom, 22.dp)
-                    }
-            )
-            //char skin
-            Image(
-                painter = portraitPainter(char.skin),
-                contentDescription = null,
-                contentScale = ContentScale.FillWidth,
-                modifier = Modifier
-                    .padding(start = 4.dp, end = 4.dp)
-                    .fillMaxWidth()
-                    .constrainAs(portraitRef) {
-                        top.linkTo(topHubRef.top)
-                    }
-            )
-            //rarity light
-            Image(
-                painter = painterResource(charPainter.rarityLightPainter),
-                contentDescription = null,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .padding(start = 4.dp, end = 4.dp)
-                    .fillMaxWidth()
-                    .constrainAs(rarityLightRef) {
-                        bottom.linkTo(charBgRef.bottom)
-                    }
-            )
-            //top hub
-            Image(
-                painter = painterResource(charPainter.upperHubPainter),
-                contentDescription = null,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .height(24.dp)
-                    .constrainAs(topHubRef) {
-                        start.linkTo(parent.start, 4.dp)
-                        top.linkTo(parent.top, 4.dp)
-                    }
-            )
-            //profession icon
-            Image(
-                painterResource(profession.icon), null,
-                modifier = Modifier
-                    .size(18.dp)
-                    .constrainAs(professionRef) {
-                        start.linkTo(topHubRef.start, 4.dp)
-                        top.linkTo(topHubRef.top, 4.dp)
-                    }
-            )
-            //char rarity star
-            Image(
-                painterResource(charPainter.rarityPainter), null,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .height(18.dp)
-                    .constrainAs(starRef) {
-                        start.linkTo(professionRef.end, 2.dp)
-                        top.linkTo(professionRef.top)
-                    }
-            )
-            //evolvePhase icon bg
-            Image(
-                painterResource(Res.drawable.character_elite_bg), null,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .height(48.dp)
-                    .alpha(0.7f)
-                    .constrainAs(evoBgRef) {
-                        bottom.linkTo(evoRef.bottom, (-12).dp)
-                        centerHorizontallyTo(evoRef)
-                    }
-            )
-            //star mark
-            val starMarkPainter = if (char.starMark == 1) Res.drawable.character_star_mark
-            else Res.drawable.character_star_mark_edit
-            Image(
-                painterResource(starMarkPainter),
-                null,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .height(24.dp)
-                    .constrainAs(starMarkRef) {
-                        start.linkTo(parent.start, 4.dp)
-                        bottom.linkTo(parent.bottom, 4.dp)
-                    }
-            )
-            //lower hub
-            Image(
-                painterResource(charPainter.lowerHubPainter), null,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .constrainAs(bottomHubRef) {
-                        bottom.linkTo(parent.bottom)
-                    }
-            )
-            //char evolvePhase
-            Image(
-                painterResource(evolvePhasePainter), null,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .size(48.dp)
-                    .constrainAs(evoRef) {
-                        bottom.linkTo(levelBgRef.top, (-10).dp)
-                        centerHorizontallyTo(levelRef)
-                    }
-            )
-            //char level
+        // ---- card layers: pure Compose layout (no ConstraintLayout) ----
+        // gold frame background
+        Image(
+            painter = painterResource(charPainter.charBgPainter),
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+            modifier = Modifier
+                .align(Alignment.BottomStart)
+                .offset(x = 4.dp, y = (-22).dp)
+                .size(100.dp, 182.dp)
+                .then(diag("charBg"))
+        )
+        // character portrait
+        Image(
+            painter = portraitPainter(char.skin),
+            contentDescription = null,
+            contentScale = ContentScale.FillWidth,
+            modifier = Modifier
+                .align(Alignment.TopStart)
+                .offset(x = 4.dp, y = 4.dp)
+                .width(100.dp)
+        )
+        // rarity light
+        Image(
+            painter = painterResource(charPainter.rarityLightPainter),
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+            modifier = Modifier
+                .align(Alignment.BottomStart)
+                .offset(x = 4.dp, y = (-22).dp)
+                .size(100.dp, 88.dp)
+                .then(diag("rarityLight"))
+        )
+        // upper hub
+        Image(
+            painter = painterResource(charPainter.upperHubPainter),
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+            modifier = Modifier
+                .align(Alignment.TopStart)
+                .offset(x = 4.dp, y = 4.dp)
+                .size(50.dp, 24.dp)
+        )
+        // profession icon
+        Image(
+            painterResource(profession.icon), null,
+            modifier = Modifier
+                .align(Alignment.TopStart)
+                .offset(x = 8.dp, y = 8.dp)
+                .size(18.dp)
+        )
+        // rarity stars
+        Image(
+            painterResource(charPainter.rarityPainter), null,
+            contentScale = ContentScale.Fit,
+            modifier = Modifier
+                .align(Alignment.TopStart)
+                .offset(x = 28.dp, y = 8.dp)
+                .height(18.dp)
+                .widthIn(max = 74.dp)
+        )
+        // evolve phase background
+        Image(
+            painterResource(Res.drawable.character_elite_bg), null,
+            contentScale = ContentScale.Crop,
+            modifier = Modifier
+                .align(Alignment.BottomStart)
+                .offset(x = 11.dp, y = (-40).dp)
+                .size(27.dp, 48.dp)
+                .alpha(0.7f)
+        )
+        // star mark
+        Image(
+            painterResource(if (char.starMark == 1) Res.drawable.character_star_mark else Res.drawable.character_star_mark_edit),
+            null,
+            contentScale = ContentScale.Crop,
+            modifier = Modifier
+                .align(Alignment.BottomStart)
+                .offset(x = 4.dp, y = (-4).dp)
+                .height(24.dp)
+                .then(diag("starMark"))
+        )
+        // lower hub
+        Image(
+            painterResource(charPainter.lowerHubPainter), null,
+            contentScale = ContentScale.Crop,
+            modifier = Modifier
+                .align(Alignment.BottomStart)
+                .size(108.dp, 84.dp)
+                .then(diag("bottomHub"))
+        )
+        // evolve phase icon
+        Image(
+            painterResource(evolvePhasePainter), null,
+            contentScale = ContentScale.Crop,
+            modifier = Modifier
+                .align(Alignment.BottomStart)
+                .offset(x = 1.dp, y = (-52).dp)
+                .size(48.dp)
+        )
+        // level badge with LV + level
+        Box(
+            modifier = Modifier
+                .align(Alignment.BottomStart)
+                .offset(x = 2.dp, y = (-18).dp)
+                .size(46.dp)
+                .then(diag("levelBg"))
+        ) {
             Image(
                 painterResource(Res.drawable.character_level_bg), null,
-                modifier = Modifier
-                    .size(46.dp)
-                    .constrainAs(levelBgRef) {
-                        start.linkTo(parent.start, 2.dp)
-                        bottom.linkTo(charNameRef.top, (-8).dp)
-                    }
-            )
-            Text(
-                text = char.level.toString(),
-                color = Color.White,
-                style = TextStyle(
-                    fontWeight = FontWeight.Normal,
-                    fontSize = 20.sp
-                ),
-                textAlign = TextAlign.Center,
-                modifier = Modifier
-                    .width(50.dp)
-                    .constrainAs(levelRef) {
-                        centerTo(levelBgRef)
-                        bottom.linkTo(levelBgRef.bottom, (-6).dp)
-                    }
-                    .alpha(0.9f)
+                modifier = Modifier.fillMaxSize()
             )
             Text(
                 text = stringResource(Res.string.lv),
                 color = Color.White,
-                style = TextStyle(
-                    fontWeight = FontWeight.Normal,
-                    fontSize = 6.sp
-                ),
-                modifier = Modifier.constrainAs(lvRef) {
-                    centerTo(levelBgRef)
-                    bottom.linkTo(levelRef.top, (-12).dp)
-                }
+                style = TextStyle(fontWeight = FontWeight.Normal, fontSize = 6.sp),
+                modifier = Modifier.align(Alignment.Center)
+                    .offset(y = (-10).dp)
             )
-            //char skill
-            val skill = char.skills.getOrNull(char.defaultSkillIndex)
-            val skillPainter = if (skill == null) {
-                if (char.currentTmpl == null) {
-                    painterResource(Res.drawable.character_empty_skill)
-                } else {
-                    val tmplChar = char.tmpl!![char.currentTmpl]
-                    val tmplSkill = tmplChar?.skills?.getOrNull(tmplChar.defaultSkillIndex)
-                    if (tmplSkill == null) {
-                        painterResource(Res.drawable.character_empty_skill)
-                    } else {
-                        skillPainter(tmplSkill.skillId)
-                    }
-                }
+            Text(
+                text = char.level.toString(),
+                color = Color.White,
+                style = TextStyle(fontWeight = FontWeight.Normal, fontSize = 22.sp),
+                textAlign = TextAlign.Center,
+                modifier = Modifier.align(Alignment.Center)
+                    .padding(top = 2.dp)
+            )
+        }
+        // skill icon
+        val skill = char.skills.getOrNull(char.defaultSkillIndex)
+        val skillPainter = if (skill == null) {
+            if (char.currentTmpl == null) {
+                painterResource(Res.drawable.character_empty_skill)
             } else {
-                skillPainter(skill.skillId)
+                val tmplChar = char.tmpl!![char.currentTmpl]
+                val tmplSkill = tmplChar?.skills?.getOrNull(tmplChar.defaultSkillIndex)
+                if (tmplSkill == null) painterResource(Res.drawable.character_empty_skill)
+                else skillPainter(tmplSkill.skillId)
             }
+        } else {
+            skillPainter(skill.skillId)
+        }
+        Image(
+            painter = skillPainter,
+            contentDescription = null,
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .offset(x = (-8).dp, y = (-26).dp)
+                .size(26.dp)
+                .then(diag("skill"))
+        )
+        // equip icon, centred between the level badge and the skill icon
+        char.currentEquip?.let { equipId ->
             Image(
-                painter = skillPainter,
+                painter = equipPainter(gameTable.getEquipType(equipId)),
                 contentDescription = null,
                 modifier = Modifier
-                    .size(26.dp)
-                    .constrainAs(skillRef) {
-                        end.linkTo(charNameRef.end)
-                        bottom.linkTo(charNameRef.top)
-                    }
+                    .align(Alignment.BottomEnd)
+                    .offset(x = (-31).dp, y = (-22).dp)
+                    .size(36.dp)
             )
-            //equip
-            char.currentEquip?.let { equipId ->
-                Image(
-                    painter = equipPainter(gameTable.getEquipType(equipId)),
-                    contentDescription = null,
-                    modifier = Modifier.size(32.dp).constrainAs(equipRef) {
-                        centerVerticallyTo(skillRef)
-                        end.linkTo(skillRef.start)
-                    }
-                )
+        }
+        // potential rank
+        if (char.potentialRank > 0) {
+            val potentialPainter = when (char.potentialRank) {
+                1 -> Res.drawable.character_potential_1
+                2 -> Res.drawable.character_potential_2
+                3 -> Res.drawable.character_potential_3
+                4 -> Res.drawable.character_potential_4
+                else -> Res.drawable.character_potential_5
             }
-            //char name
-            Text(
-                char.name!!,
-                color = Color.White,
-                style = MaterialTheme.typography.titleSmall,
-                modifier = Modifier.constrainAs(charNameRef) {
-                    end.linkTo(parent.end, 8.dp)
-                    bottom.linkTo(parent.bottom, 4.dp)
-                }
-            )
-            //char potentialRank
-            if (char.potentialRank > 0) {
-                val potentialPainter = when (char.potentialRank) {
-                    1 -> Res.drawable.character_potential_1
-                    2 -> Res.drawable.character_potential_2
-                    3 -> Res.drawable.character_potential_3
-                    4 -> Res.drawable.character_potential_4
-                    else -> Res.drawable.character_potential_5
-                }
-                Image(
-                    painterResource(Res.drawable.equip_bg), null,
-                    modifier = Modifier
-                        .size(16.dp)
-                        .constrainAs(potentialBgRef) {
-                            bottom.linkTo(skillRef.top, 4.dp)
-                            end.linkTo(skillRef.end)
-                        }
-                )
+            Box(
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .offset(x = (-8).dp, y = (-56).dp)
+                    .size(16.dp)
+            ) {
+                Image(painterResource(Res.drawable.equip_bg), null, Modifier.fillMaxSize())
                 Image(
                     painterResource(potentialPainter), null,
-                    modifier = Modifier
-                        .size(24.dp)
-                        .constrainAs(potentialRef) {
-                            centerTo(potentialBgRef)
-                        }
+                    modifier = Modifier.align(Alignment.Center).size(24.dp)
                 )
             }
         }
+        // character name
+        Text(
+            char.name!!,
+            color = Color.White,
+            style = MaterialTheme.typography.titleSmall,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .offset(x = (-8).dp, y = (-4).dp)
+                .widthIn(max = 100.dp)
+        )
 
     }
 }

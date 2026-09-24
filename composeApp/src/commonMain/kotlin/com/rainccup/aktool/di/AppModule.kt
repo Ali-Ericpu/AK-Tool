@@ -26,7 +26,16 @@ val appModule = module {
     single<FilePicker> { createFilePicker() }
     single<PlatformTheme> { createPlatformTheme() }
 
-    single { NetworkConfig() }
+    // Apply the persisted server settings at startup so Ktor does not fall back to the
+    // hardcoded default until the user re-saves the settings screen.
+    single {
+        val saved = get<ConfigRepository>().current()
+        NetworkConfig(
+            baseUrl = saved.serverUri.ifBlank { NetworkConfig.DEFAULT_BASE_URL },
+            uid = saved.uid,
+            adminKey = saved.adminKey,
+        )
+    }
     single { HttpClientProvider(get()) }
     single { ApiClient(get<NetworkConfig>()) { get<HttpClientProvider>().client() } }
 

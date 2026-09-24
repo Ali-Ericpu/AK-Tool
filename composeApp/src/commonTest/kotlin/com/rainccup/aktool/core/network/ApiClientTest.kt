@@ -3,12 +3,14 @@ package com.rainccup.aktool.core.network
 import com.rainccup.aktool.core.model.SaveStatusRequest
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respond
+import io.ktor.client.request.get
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.headersOf
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
 
 class ApiClientTest {
 
@@ -68,5 +70,35 @@ class ApiClientTest {
         api.saveStatus(SaveStatusRequest(level = 10))
         assertEquals(true, "\"level\":10" in capturedBody)
         assertEquals(false, "nickName" in capturedBody)
+    }
+
+    @Test
+    fun createHttpClient_blankBaseUrl_fallsBackToDefault() = runTest {
+        var host = ""
+        var path = ""
+        val engine = MockEngine { request ->
+            host = request.url.host
+            path = request.url.encodedPath
+            respond(
+                """{"msg":"ok","status":0,"type":"OK","data":{}}""",
+                HttpStatusCode.OK,
+                headersOf(HttpHeaders.ContentType, "application/json"),
+            )
+        }
+        val config = NetworkConfig(baseUrl = "")
+        createHttpClient(config, engine).use { client ->
+            client.get("admin/status/sync")
+        }
+        assertEquals("127.0.0.1", host)
+        assertEquals("admin/status/sync", path.trimStart('/'))
+    }
+
+    @Test
+    fun httpClientProvider_recreateBlankFallsBackToDefault() = runTest {
+        val config = NetworkConfig(baseUrl = "http://server.local")
+        val provider = HttpClientProvider(config)
+        provider.recreate("")
+        assertEquals(NetworkConfig.DEFAULT_BASE_URL, config.baseUrl)
+        assertNotNull(provider.client())
     }
 }

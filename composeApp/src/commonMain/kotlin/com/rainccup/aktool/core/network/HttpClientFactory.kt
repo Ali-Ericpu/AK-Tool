@@ -26,7 +26,7 @@ fun createHttpClient(
             level = LogLevel.INFO
         }
         defaultRequest {
-            url(config.baseUrl)
+            url(config.baseUrl.ifBlank { NetworkConfig.DEFAULT_BASE_URL })
             contentType(ContentType.Application.Json)
         }
     }
@@ -40,7 +40,7 @@ class HttpClientProvider(private val config: NetworkConfig) {
     fun client(): HttpClient = cached ?: createHttpClient(config).also { cached = it }
 
     fun recreate(baseUrl: String) {
-        config.baseUrl = baseUrl
+        config.baseUrl = baseUrl.ifBlank { NetworkConfig.DEFAULT_BASE_URL }
         cached?.close()
         cached = null
     }

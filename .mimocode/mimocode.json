@@ -1,0 +1,20 @@
+{
+  "$schema": "https://mimo.xiaomi.com/mimocode/config.json",
+  "experimental": {
+    "mcp_timeout": 120000
+  },
+  "mcp": {
+    "compose-hot-reload": {
+      "type": "local",
+      "timeout": 120000,
+      "command": [
+        "cmd",
+        "/c",
+        "gradlew.bat",
+        "--quiet",
+        "--console=plain",
+        ":composeApp:hotMcpServerDesktop"
+      ]
+    }
+  }
+}

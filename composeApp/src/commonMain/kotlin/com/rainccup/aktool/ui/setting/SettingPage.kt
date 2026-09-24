@@ -101,11 +101,6 @@ fun SettingPage() {
                 onCheckedChange = { onConfigChange(config.copy(darkMode = it)) }
             )
             EditSwitch(
-                label = stringResource(Res.string.dynamic_color),
-                state = config.dynamicColor,
-                onCheckedChange = { onConfigChange(config.copy(dynamicColor = it)) }
-            )
-            EditSwitch(
                 label = stringResource(Res.string.custom_bg),
                 state = config.customBg,
                 onCheckedChange = { onConfigChange(config.copy(customBg = it)) }
