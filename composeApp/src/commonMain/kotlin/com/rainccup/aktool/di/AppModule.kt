@@ -10,12 +10,13 @@ import com.rainccup.aktool.core.platform.ClipboardPort
 import com.rainccup.aktool.core.platform.FilePicker
 import com.rainccup.aktool.core.platform.Messenger
 import com.rainccup.aktool.core.platform.PlatformTheme
+import com.rainccup.aktool.core.platform.createAppPaths
 import com.rainccup.aktool.core.platform.createClipboard
 import com.rainccup.aktool.core.platform.createFilePicker
 import com.rainccup.aktool.core.platform.createMessenger
-import com.rainccup.aktool.core.platform.createAppPaths
 import com.rainccup.aktool.core.platform.createPlatformTheme
 import com.rainccup.aktool.core.repository.AdminRepository
+import com.rainccup.aktool.core.repository.ConfigSource
 import org.koin.dsl.module
 
 val appModule = module {
@@ -30,6 +31,7 @@ val appModule = module {
     single { ApiClient(get<NetworkConfig>()) { get<HttpClientProvider>().client() } }
 
     single { ConfigRepository(get()) }
+    single<ConfigSource> { get<ConfigRepository>() }
     single { GameTableRepository(get(), get()) }
     single { AdminRepository(get(), get(), get()) }
 }
