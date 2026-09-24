@@ -1,6 +1,6 @@
 ﻿package com.rainccup.aktool.ui.characterdetail
-import org.koin.compose.koinInject
 
+import org.koin.compose.koinInject
 
 
 import androidx.compose.foundation.Image
@@ -65,7 +65,6 @@ import com.rainccup.aktool.ui.character.CharacterViewModel
 import com.rainccup.aktool.ui.character.equipPainter
 import com.rainccup.aktool.ui.character.skillPainter
 import com.rainccup.aktool.ui.setting.EditSwitch
-import com.rainccup.aktool.core.common.JsonUtil
 import kotlin.math.max
 import kotlin.math.roundToInt
 
@@ -91,7 +90,7 @@ fun CharacterDetailPage(
         vm.updateMaxLevel(copy.charId, copy.evolvePhase)
         vm.accept(copy)
     }
-    val char by vm.char.collectAsState()
+    val char by vm.character.collectAsState()
     val maxLevel by vm.maxLevel.collectAsState()
     val maxSkillLevel by vm.maxSkillLevel.collectAsState()
     val maxEvoPhase by vm.maxEvoPhase.collectAsState()
@@ -250,7 +249,7 @@ fun CharacterDetailPage(
                         if (char.equip.isNotEmpty()) {
                             val first = char.equip.keys.first()
                             if (char.currentEquip == null) {
-                                char.currentEquip = first
+                                vm.accept(char.copy(currentEquip = first))
                             }
                             char.equip.values.forEach {
                                 if (it.locked == 1) {
@@ -261,17 +260,21 @@ fun CharacterDetailPage(
                         if (char.skin == char.charId + "#1" &&
                             gameTable.characterTable[char.charId]!!["displayNumber"] != null
                         ) {
-                            char.skin = char.charId + "#2"
+                            vm.accept(char.copy(skin = char.charId + "#2"))
                         }
                     } else if (char.evolvePhase < 2) {
-                        char.currentTmpl = null
-                        char.tmpl = null
-                        char.currentEquip = null
-                        char.equip.values.forEach { it.lock() }
-                        char.skills.forEach { it.specializeLevel = 0 }
+                        vm.accept(
+                            char.copy(
+                                currentTmpl = null,
+                                tmpl = null,
+                                currentEquip = null,
+                                equip = char.equip.mapValues { it.value.copy() },
+                                skills = char.skills.map { it.copy(specializeLevel = 0) }
+                            )
+                        )
                     }
                     if (char.level == maxLevel) {
-                        char.exp = 0
+                        vm.accept(char.copy(exp = 0))
                     }
                     Logger.d { "CharacterDetail" }
                     coroutineScope.launch {
@@ -280,10 +283,9 @@ fun CharacterDetailPage(
                                 char.copy(favorPoint = gameTable.getFavPointPercent(char.favorPoint))
                             )
                         }.onSuccess {
-                            
                             onSaved()
                         }.onFailure {
-                            
+
                         }
                     }
                 }) {

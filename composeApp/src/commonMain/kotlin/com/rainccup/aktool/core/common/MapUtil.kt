@@ -10,7 +10,7 @@ typealias ListMap = List<Map<String, Any?>>
 
 inline fun <reified T> Map<String, Any?>.getTyped(key: String): T? = this[key] as? T
 
-fun jsonToMap(element: JsonElement): Any? = when (element) {
+fun jsonToMap(element: JsonElement): Any = when (element) {
     is JsonObject -> element.mapValues { jsonToMap(it.value) }
     is JsonArray -> element.map { jsonToMap(it) }
     is JsonPrimitive -> when {

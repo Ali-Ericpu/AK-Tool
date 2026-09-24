@@ -2,6 +2,7 @@ package com.rainccup.aktool.core.network
 
 import com.rainccup.aktool.core.common.JsonUtil
 import io.ktor.client.HttpClient
+import io.ktor.client.HttpClientConfig
 import io.ktor.client.engine.HttpClientEngine
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.defaultRequest
@@ -16,7 +17,7 @@ fun createHttpClient(
     engine: HttpClientEngine? = null,
     expectSuccess: Boolean = true,
 ): HttpClient {
-    val builder: io.ktor.client.HttpClientConfig<*>.() -> Unit = {
+    val builder: HttpClientConfig<*>.() -> Unit = {
         this.expectSuccess = expectSuccess
         install(ContentNegotiation) {
             json(JsonUtil.json)

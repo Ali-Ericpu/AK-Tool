@@ -6,7 +6,6 @@ import com.rainccup.aktool.core.datastore.GameTableRepository
 import com.rainccup.aktool.core.model.Character
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlin.math.min
 
@@ -14,72 +13,74 @@ class CharacterDetailViewModel(
     private val gameTable: GameTableRepository,
     charInstId: String,
 ) : ViewModel() {
-    private val _charInstId = MutableStateFlow(charInstId)
-    val charInstId: StateFlow<String> = _charInstId.asStateFlow()
+    val charInstId: StateFlow<String>
+        field = MutableStateFlow(charInstId)
 
-    private val _char = MutableStateFlow(Character.placeholder())
-    val char: StateFlow<Character> = _char.asStateFlow()
+    val character: StateFlow<Character>
+        field = MutableStateFlow(Character.placeholder())
 
-    private val _maxEvoPhase = MutableStateFlow(2)
-    val maxEvoPhase: StateFlow<Int> = _maxEvoPhase.asStateFlow()
+    val maxEvoPhase: StateFlow<Int>
+        field = MutableStateFlow(2)
+    val maxLevel: StateFlow<Int>
+        field = MutableStateFlow(90)
 
-    private val _maxLevel = MutableStateFlow(90)
-    val maxLevel: StateFlow<Int> = _maxLevel.asStateFlow()
+    val maxSkillLevel: StateFlow<Int>
+        field = MutableStateFlow(7)
 
-    private val _maxSkillLevel = MutableStateFlow(7)
-    val maxSkillLevel: StateFlow<Int> = _maxSkillLevel.asStateFlow()
-
-    fun accept(character: Character) = viewModelScope.launch {
-        _char.emit(character)
+    fun accept(char: Character) = viewModelScope.launch {
+        character.emit(char)
     }
 
     fun changeEvoPhase(phase: Int) = viewModelScope.launch {
         var skillIndex = -1
-        val char = _char.value
-        val skills = char.skills.onEachIndexed { index, skill ->
-            if (phase >= index) {
-                skill.unlock = 1
+        val char = character.value
+        val skills = char.skills.mapIndexed { index, skill ->
+            val unlock = if (phase >= index) {
                 skillIndex = index
+                1
             } else {
-                skill.unlock = 0
+                0
             }
+            skill.copy(unlock = unlock)
         }.toList()
         var currentEquip = char.currentEquip
-        val equip = char.equip.onEach { (equipId, data) ->
+        val equip = char.equip.mapValues { (equipId, data) ->
             if (phase >= 2) {
-                data.unlock()
                 currentEquip = equipId
+                data.unlock()
             } else {
-                data.lock()
                 currentEquip = null
+                data.lock()
             }
-        }.toMutableMap()
-        val maxLevel = gameTable.getMaxCharLevel(char.charId, phase)
-        val maxSkillLevel = if (phase < 1) 4 else 7
-        _maxLevel.emit(maxLevel)
-        _maxSkillLevel.emit(maxSkillLevel)
-        _char.emit(
+        }
+        val level = gameTable.getMaxCharLevel(char.charId, phase)
+        val skillLevel = if (phase < 1) 4 else 7
+
+
+        maxLevel.emit(level)
+        maxSkillLevel.emit(skillLevel)
+        character.emit(
             char.copy(
                 evolvePhase = phase,
-                mainSkillLvl = min(maxSkillLevel, char.mainSkillLvl),
+                mainSkillLvl = min(maxSkillLevel.value, char.mainSkillLvl),
                 skills = skills,
                 defaultSkillIndex = skillIndex,
                 currentEquip = currentEquip,
                 equip = equip,
-                level = min(maxLevel, char.level),
+                level = min(maxLevel.value, char.level),
             )
         )
     }
 
     fun updateMaxEvoPhase(charId: String) = viewModelScope.launch {
-        _maxEvoPhase.emit(gameTable.getMaxCharEvoLevel(charId))
+        maxEvoPhase.emit(gameTable.getMaxCharEvoLevel(charId))
     }
 
     fun updateMaxLevel(charId: String, phase: Int) = viewModelScope.launch {
-        _maxLevel.emit(gameTable.getMaxCharLevel(charId, phase))
+        maxLevel.emit(gameTable.getMaxCharLevel(charId, phase))
     }
 
     fun updateMaxSkillLevel(phase: Int) = viewModelScope.launch {
-        _maxSkillLevel.emit(if (phase < 1) 4 else 7)
+        maxSkillLevel.emit(if (phase < 1) 4 else 7)
     }
 }

@@ -60,7 +60,6 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.layout
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
-import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -74,7 +73,6 @@ import kotlinx.coroutines.launch
 import com.rainccup.aktool.resources.Res
 import com.rainccup.aktool.resources.*
 import com.rainccup.aktool.core.datastore.GameTableRepository
-import com.rainccup.aktool.ui.character.CharPainter
 import com.rainccup.aktool.core.model.Character
 import com.rainccup.aktool.core.model.Profession
 import com.rainccup.aktool.ui.setting.BasicDialog
@@ -284,7 +282,7 @@ fun CharacterCard(
         2 -> Res.drawable.character_elite_2
         else -> Res.drawable.character_elite_0
     }
-    val charPainter = CharPainter.form(char.rank!!)
+    val charPainter = CharPainter.form(char.rarity!!)
     val profession = Profession.valueOf(char.profession!!)
     Box(
         modifier = modifier

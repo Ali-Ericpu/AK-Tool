@@ -43,10 +43,9 @@ import com.rainccup.aktool.core.model.Status
 import com.rainccup.aktool.core.model.SaveStatusRequest
 import com.rainccup.aktool.ui.setting.EditTextDialog
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomePage() {
-        val viewModel: HomeViewModel = koinViewModel()
+    val viewModel: HomeViewModel = koinViewModel()
     val isSplash by viewModel.isSplash.collectAsState()
     val isRefreshing by viewModel.isRefreshing.collectAsState()
     val status: Status by viewModel.status.collectAsState()
@@ -102,7 +101,8 @@ fun HomePage() {
                             },
                             onValueSave = {
                                 viewModel.updateStatus(
-                                    SaveStatusRequest(level = it.toInt()))
+                                    SaveStatusRequest(level = it.toInt())
+                                )
                             },
                             modifier = Modifier.weight(1f)
                         )
@@ -126,7 +126,8 @@ fun HomePage() {
                             error = { it.checkIntRange() },
                             onValueSave = {
                                 viewModel.updateStatus(
-                                    SaveStatusRequest(diamond = it.toInt()))
+                                    SaveStatusRequest(diamond = it.toInt())
+                                )
                             },
                             modifier = Modifier.weight(1f)
                         )
@@ -137,7 +138,8 @@ fun HomePage() {
                             error = { it.checkIntRange() },
                             onValueSave = {
                                 viewModel.updateStatus(
-                                    SaveStatusRequest(diamondShard = it.toInt()))
+                                    SaveStatusRequest(diamondShard = it.toInt())
+                                )
                             },
                             modifier = Modifier.weight(1f)
                         )
@@ -153,7 +155,8 @@ fun HomePage() {
                             },
                             onValueSave = {
                                 viewModel.updateStatus(
-                                    SaveStatusRequest(ap = it.toInt()))
+                                    SaveStatusRequest(ap = it.toInt())
+                                )
                             },
                             modifier = Modifier.weight(1f)
                         )
@@ -164,7 +167,8 @@ fun HomePage() {
                             error = { it.checkIntRange() },
                             onValueSave = {
                                 viewModel.updateStatus(
-                                    SaveStatusRequest(gold = it.toInt()))
+                                    SaveStatusRequest(gold = it.toInt())
+                                )
                             },
                             modifier = Modifier.weight(1f)
                         )
@@ -177,7 +181,8 @@ fun HomePage() {
                             error = { it.checkIntRange() },
                             onValueSave = {
                                 viewModel.updateStatus(
-                                    SaveStatusRequest(hggShard = it.toInt()))
+                                    SaveStatusRequest(hggShard = it.toInt())
+                                )
                             },
                             modifier = Modifier.weight(1f)
                         )
@@ -188,7 +193,8 @@ fun HomePage() {
                             error = { it.checkIntRange() },
                             onValueSave = {
                                 viewModel.updateStatus(
-                                    SaveStatusRequest(lggShard = it.toInt()))
+                                    SaveStatusRequest(lggShard = it.toInt())
+                                )
                             },
                             modifier = Modifier.weight(1f)
                         )
@@ -201,7 +207,8 @@ fun HomePage() {
                             error = { it.checkIntRange() },
                             onValueSave = {
                                 viewModel.updateStatus(
-                                    SaveStatusRequest(gachaTkt = it.toInt()))
+                                    SaveStatusRequest(gachaTkt = it.toInt())
+                                )
                             },
                             modifier = Modifier.weight(1f)
                         )
@@ -212,7 +219,8 @@ fun HomePage() {
                             error = { it.checkIntRange() },
                             onValueSave = {
                                 viewModel.updateStatus(
-                                    SaveStatusRequest(tenGachaTkt = it.toInt()))
+                                    SaveStatusRequest(tenGachaTkt = it.toInt())
+                                )
                             },
                             modifier = Modifier.weight(1f)
                         )
@@ -225,7 +233,8 @@ fun HomePage() {
                             error = { it.checkIntRange() },
                             onValueSave = {
                                 viewModel.updateStatus(
-                                    SaveStatusRequest(classicGachaTkt = it.toInt()))
+                                    SaveStatusRequest(classicGachaTkt = it.toInt())
+                                )
                             },
                             modifier = Modifier.weight(1f)
                         )
@@ -236,7 +245,8 @@ fun HomePage() {
                             error = { it.checkIntRange() },
                             onValueSave = {
                                 viewModel.updateStatus(
-                                    SaveStatusRequest(tenClassicGachaTkt = it.toInt()))
+                                    SaveStatusRequest(tenClassicGachaTkt = it.toInt())
+                                )
                             },
                             modifier = Modifier.weight(1f)
                         )
@@ -249,7 +259,8 @@ fun HomePage() {
                             error = { it.checkIntRange() },
                             onValueSave = {
                                 viewModel.updateStatus(
-                                    SaveStatusRequest(classicShard = it.toInt()))
+                                    SaveStatusRequest(classicShard = it.toInt())
+                                )
                             },
                             modifier = Modifier.weight(1f)
                         )
@@ -260,7 +271,8 @@ fun HomePage() {
                             error = { it.checkIntRange() },
                             onValueSave = {
                                 viewModel.updateStatus(
-                                    SaveStatusRequest(tryTkt = it.toInt()))
+                                    SaveStatusRequest(tryTkt = it.toInt())
+                                )
                             },
                             modifier = Modifier.weight(1f)
                         )
@@ -273,7 +285,8 @@ fun HomePage() {
                             error = { it.checkIntRange() },
                             onValueSave = {
                                 viewModel.updateStatus(
-                                    SaveStatusRequest(recTkt = it.toInt()))
+                                    SaveStatusRequest(recTkt = it.toInt())
+                                )
                             },
                             modifier = Modifier.weight(1f)
                         )
@@ -284,7 +297,8 @@ fun HomePage() {
                             error = { it.checkIntRange() },
                             onValueSave = {
                                 viewModel.updateStatus(
-                                    SaveStatusRequest(fniTkt = it.toInt()))
+                                    SaveStatusRequest(fniTkt = it.toInt())
+                                )
                             },
                             modifier = Modifier.weight(1f)
                         )

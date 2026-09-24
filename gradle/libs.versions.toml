@@ -1,30 +1,26 @@
 
 [versions]
 agp = "9.1.0"
-componentsResources = "1.12.1"
-foundation = "1.12.1"
 kotlin = "2.4.20"
 compose-multiplatform = "1.12.1"
-androidx-activityCompose = "1.12.4"
+androidx-activityCompose = "1.13.0"
 androidx-lifecycle = "2.11.0"
 koin = "4.2.2"
 ktor = "3.6.0"
 kermit = "2.2.0"
-kotlinx-serialization = "1.9.0"
-kotlinx-coroutines = "1.10.2"
-coil = "3.1.0"
+kotlinx-serialization = "1.11.0"
+kotlinx-coroutines = "1.11.0"
+coil = "3.6.3"
 material3 = "1.9.0"
-material = "1.9.0"
+material = "1.12.1"
 materialIconsExtended = "1.7.3"
-navigation3 = "1.2.0-alpha02"
+navigation3 = "1.2.0-beta01"
 navigation3-lifecycle = "2.11.0"
 junit = "4.13.2"
-runtime = "1.12.1"
-ui = "1.12.1"
 
 [libraries]
-compose-components-resources = { module = "org.jetbrains.compose.components:components-resources", version.ref = "componentsResources" }
-compose-foundation = { module = "org.jetbrains.compose.foundation:foundation", version.ref = "foundation" }
+compose-components-resources = { module = "org.jetbrains.compose.components:components-resources", version.ref = "compose-multiplatform" }
+compose-foundation = { module = "org.jetbrains.compose.foundation:foundation", version.ref = "compose-multiplatform" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }
 kotlinx-coroutines-swing = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-swing", version.ref = "kotlinx-coroutines" }
@@ -59,9 +55,9 @@ kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotl
 junit = { module = "junit:junit", version.ref = "junit" }
 compose-material-icons-extended = { module = "org.jetbrains.compose.material:material-icons-extended", version.ref = "materialIconsExtended" }
 compose-material3 = { module = "org.jetbrains.compose.material3:material3", version.ref = "material3" }
-compose-runtime = { module = "org.jetbrains.compose.runtime:runtime", version.ref = "runtime" }
-compose-ui = { module = "org.jetbrains.compose.ui:ui", version.ref = "ui" }
-compose-ui-tooling-preview = { module = "org.jetbrains.compose.ui:ui-tooling-preview", version.ref = "ui" }
+compose-runtime = { module = "org.jetbrains.compose.runtime:runtime", version.ref = "compose-multiplatform" }
+compose-ui = { module = "org.jetbrains.compose.ui:ui", version.ref = "compose-multiplatform" }
+compose-ui-tooling-preview = { module = "org.jetbrains.compose.ui:ui-tooling-preview", version.ref = "compose-multiplatform" }
 compose-material = { module = "org.jetbrains.compose.material:material", version.ref = "material" }
 constraintlayout-multiplatform = { module = "tech.annexflow.compose:constraintlayout-compose-multiplatform", version = "0.8.2" }
 

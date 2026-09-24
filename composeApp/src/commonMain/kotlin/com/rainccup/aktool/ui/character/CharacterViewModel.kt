@@ -19,6 +19,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlin.time.Duration.Companion.milliseconds
 
 class CharacterViewModel(
     private val admin: AdminRepository,
@@ -65,14 +66,18 @@ class CharacterViewModel(
                 }
                 result.data.forEach { (instId, char) ->
                     runCatching { gameTable.getCharacterData(char.charId) }.onSuccess {
-                        char.name = it["name"] as String
-                        char.profession = it["profession"] as String
-                        char.rank = (it["rarity"] as String).substringAfter("_").toInt()
-                        characterData[instId] = char
+                        val name = it["name"] as String
+                        val profession = it["profession"] as String
+                        val rarity = (it["rarity"] as String).substringAfter("_").toInt()
+                        characterData[instId] = char.copy(
+                            name = name,
+                            profession = profession,
+                            rarity = rarity
+                        )
                     }.onFailure { Logger.d { "Character_Init_CharData ${it.message}" } }
                 }
                 selectProfession(_profession.value)
-                delay(500)
+                delay(500.milliseconds)
             }.onFailure {
                 messenger.show(it.message ?: "error")
             }
