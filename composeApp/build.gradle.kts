@@ -106,3 +106,7 @@ compose.desktop {
         }
     }
 }
+
+compose.resources {
+    packageOfResClass = "com.rainccup.aktool.resources"
+}
