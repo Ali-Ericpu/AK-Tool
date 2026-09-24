@@ -1,16 +1,38 @@
-package com.rainccup.aktool.ui.setting
+﻿package com.rainccup.aktool.ui.setting
+import org.koin.compose.koinInject
 
+
+
+
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material3.BasicAlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -18,96 +40,373 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import org.jetbrains.compose.resources.stringResource
+import androidx.compose.ui.text.style.TextAlign
+
 import androidx.compose.ui.unit.dp
-import com.rainccup.aktool.core.datastore.ConfigRepository
-import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
+import kotlinx.coroutines.launch
+import com.rainccup.aktool.resources.Res
+import com.rainccup.aktool.resources.*
+import com.rainccup.aktool.config.LocalAppConfig
+import com.rainccup.aktool.core.network.HttpClientProvider
+import com.rainccup.aktool.ui.splash.CircleIconButton
+
+
+
 
 @Composable
-fun SettingPage(viewModel: SettingViewModel = koinViewModel()) {
-    val configRepository: ConfigRepository = koinInject()
-    val isUpdate by viewModel.isUpdateExcel.collectAsState()
-    var config by remember { mutableStateOf(configRepository.read()) }
+fun SettingPage() {
+    val config = LocalAppConfig.current.config
+    val onConfigChange = LocalAppConfig.current.onConfigChange
+    val viewModel: SettingViewModel = koinViewModel()
+    val isUpdateExcel by viewModel.isUpdateExcel.collectAsState()
+    val coroutineScope = rememberCoroutineScope()
+    val filePicker: com.rainccup.aktool.core.platform.FilePicker = koinInject()
+    val httpClientProvider: HttpClientProvider = koinInject()
+    LazyColumn(modifier = Modifier.alpha(0.9f)) {
+        item {
+            EditText(
+                value = config.serverUri,
+                label = stringResource(Res.string.server_uri),
+                hide = true,
+                onValueSave = {
+                    if (it.isNotBlank()) {
+                        httpClientProvider.recreate(it)
+                        onConfigChange(config.copy(serverUri = it))
+                    }
+                }
+            )
+            EditText(
+                value = config.uid,
+                label = stringResource(Res.string.uid),
+                onValueSave = { onConfigChange(config.copy(uid = it)) }
+            )
+            EditText(
+                value = config.adminKey,
+                label = stringResource(Res.string.admin_key),
+                hide = true,
+                onValueSave = { onConfigChange(config.copy(adminKey = it)) }
+            )
+            EditSwitch(
+                label = stringResource(Res.string.dark_mode),
+                state = config.darkMode,
+                onCheckedChange = { onConfigChange(config.copy(darkMode = it)) }
+            )
+            EditSwitch(
+                label = stringResource(Res.string.dynamic_color),
+                state = config.dynamicColor,
+                onCheckedChange = { onConfigChange(config.copy(dynamicColor = it)) }
+            )
+            EditSwitch(
+                label = stringResource(Res.string.custom_bg),
+                state = config.customBg,
+                onCheckedChange = { onConfigChange(config.copy(customBg = it)) }
+            )
+            TextButton(label = stringResource(Res.string.choose_bg)) {
+                filePicker.pickImage { path -> path?.let { onConfigChange(config.copy(bgPath = it)) } }
+            }
+            ProgressButton(
+                label = stringResource(Res.string.update_excel),
+                isUpdate = isUpdateExcel,
+                onClick = {
+                    if (config.serverUri.isEmpty()) {
+                        
+                    } else {
+                        coroutineScope.launch { viewModel.updateExcel(config.serverUri) }
+                    }
+                }
+            )
+        }
+    }
+}
 
-    Column(
+@Composable
+fun EditText(
+    value: String = "",
+    label: String = "",
+    hide: Boolean = false,
+    onValueSave: (String) -> Unit = { }
+) {
+    var dialogState by remember { mutableStateOf(false) }
+    Row(
         modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+            .padding(8.dp)
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .background(color = Color.LightGray)
+            .padding(8.dp)
+            .height(72.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceAround
     ) {
-        Text("设置", style = MaterialTheme.typography.headlineSmall)
+        OutlinedTextField(
+            singleLine = true,
+            readOnly = true,
+            value = if (hide) "*".repeat(value.length) else value,
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedTextColor = Color.Black,
+                unfocusedTextColor = Color.Black
+            ),
+            onValueChange = { },
+            label = { Text(text = label, color = Color.Black) },
+            modifier = Modifier
+                .weight(8f)
+                .padding(bottom = 4.dp)
+        )
+        Box(modifier = Modifier.weight(2f)) {
+            CircleIconButton(
+                icon = Icons.Default.Edit,
+                onClick = { dialogState = true },
+                modifier = Modifier.align(Alignment.CenterEnd)
+            )
+        }
+    }
 
+    if (dialogState) {
+        EditTextDialog(
+            value = value,
+            label = label,
+            onValueSave = {
+                dialogState = false
+                it?.let { onValueSave(it) }
+            }
+        )
+    }
+}
+
+@Composable
+fun EditTextDialog(
+    value: String = "",
+    label: String = "Test",
+    error: (String) -> Boolean = { false },
+    onValueSave: (String?) -> Unit = { }
+) {
+        var text by remember { mutableStateOf(value) }
+    val isError = error(text)
+    BasicDialog(
+        label = label,
+        error = isError,
+        onCancel = { onValueSave(null) },
+        onConfirm = {
+            if (isError) {
+                
+            } else {
+                onValueSave(text)
+            }
+        }
+    ) {
         OutlinedTextField(
-            value = config.serverUri,
-            onValueChange = { config = config.copy(serverUri = it) },
-            label = { Text("服务器链接") },
-            modifier = Modifier.fillMaxWidth(),
-            singleLine = true,
+            value = text,
+            maxLines = Int.MAX_VALUE,
+            isError = isError,
+            onValueChange = { text = it },
+            modifier = Modifier.fillMaxWidth()
         )
-        OutlinedTextField(
-            value = config.uid,
-            onValueChange = { config = config.copy(uid = it) },
-            label = { Text("UID") },
-            modifier = Modifier.fillMaxWidth(),
-            singleLine = true,
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun BasicDialog(
+    label: String = "Test",
+    error: Boolean = false,
+    onCancel: () -> Unit = { },
+    onConfirm: () -> Unit = { },
+    content: @Composable (ColumnScope.() -> Unit) = {}
+) {
+    BasicAlertDialog(
+        onDismissRequest = { onCancel() },
+        modifier = Modifier
+            .wrapContentSize()
+            .clip(RoundedCornerShape(12.dp))
+            .background(MaterialTheme.colorScheme.background)
+            .padding(16.dp)
+    ) {
+        Column(
+            verticalArrangement = Arrangement.SpaceBetween,
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Text(
+                text = label,
+                color = MaterialTheme.colorScheme.onBackground,
+                style = MaterialTheme.typography.displaySmall,
+                modifier = Modifier
+                    .align(Alignment.Start)
+                    .padding(bottom = 16.dp)
+                    .fillMaxWidth()
+            )
+            content()
+            ConfirmButtonRow(
+                error = error,
+                onCancel = { onCancel() },
+                onConfirm = { onConfirm() }
+            )
+        }
+    }
+}
+
+@Composable
+fun EditSwitch(
+    label: String,
+    state: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .padding(8.dp)
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .background(color = Color.LightGray)
+            .padding(8.dp)
+            .height(40.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(
+            text = label, color = Color.Black, modifier = Modifier
+                .padding(8.dp)
+                .fillMaxHeight()
         )
-        OutlinedTextField(
-            value = config.adminKey,
-            onValueChange = { config = config.copy(adminKey = it) },
-            label = { Text("Admin Key") },
-            modifier = Modifier.fillMaxWidth(),
-            singleLine = true,
+        Switch(
+            checked = state,
+            onCheckedChange = { onCheckedChange(it) }
         )
-        RowSwitch(
-            label = "暗黑模式",
-            checked = config.darkMode,
-            onCheckedChange = {
-                config = config.copy(darkMode = it)
-                configRepository.write(config)
-            },
+    }
+}
+
+@Composable
+fun TextButton(
+    label: String = "Test",
+    onClick: () -> Unit = { },
+) {
+    Row(
+        modifier = Modifier
+            .padding(8.dp)
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .background(color = Color.LightGray)
+            .padding(8.dp)
+            .height(40.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(
+            text = label, color = Color.Black, modifier = Modifier
+                .padding(8.dp)
+                .fillMaxHeight()
         )
-        RowSwitch(
-            label = "动态取色",
-            checked = config.dynamicColor,
-            onCheckedChange = {
-                config = config.copy(dynamicColor = it)
-                configRepository.write(config)
-            },
+        IconButton(
+            onClick = { onClick() },
+            colors = IconButtonDefaults.iconButtonColors(
+                contentColor = MaterialTheme.colorScheme.primary
+            )
+        ) {
+            Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, null)
+        }
+    }
+}
+
+@Composable
+fun ProgressButton(
+    label: String = "Test",
+    isUpdate: Boolean = true,
+    onClick: () -> Unit = { },
+) {
+    Row(
+        modifier = Modifier
+            .padding(8.dp)
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .background(color = Color.LightGray)
+            .padding(8.dp)
+            .height(40.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(
+            text = label,
+            color = Color.Black,
+            textAlign = TextAlign.Center,
+            modifier = Modifier
+                .padding(8.dp)
+                .fillMaxHeight()
         )
-        RowSwitch(
-            label = "使用自定义背景",
-            checked = config.customBg,
-            onCheckedChange = {
-                config = config.copy(customBg = it)
-                configRepository.write(config)
-            },
-        )
+        Box(
+            Modifier
+                .padding(end = 4.dp)
+                .size(40.dp)
+        ) {
+            if (isUpdate) {
+                CircularProgressIndicator()
+            } else {
+                IconButton(
+                    onClick = { onClick() },
+                    colors = IconButtonDefaults.iconButtonColors(
+                        contentColor = MaterialTheme.colorScheme.primary
+                    )
+                ) {
+                    Icon(Icons.Default.PlayArrow, null)
+                }
+            }
+        }
+
+    }
+}
+
+@Composable
+fun ConfirmButtonRow(
+    error: Boolean = false,
+    onCancel: () -> Unit = { },
+    onConfirm: () -> Unit = { }
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Absolute.Right,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 16.dp)
+    ) {
+        Button(
+            onClick = { onCancel() },
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color.Black.copy(alpha = 0f)
+            )
+        ) {
+            Text(
+                text = stringResource(Res.string.cancel),
+                color = MaterialTheme.colorScheme.onBackground,
+                style = MaterialTheme.typography.bodyLarge,
+            )
+        }
         Button(
             onClick = {
-                viewModel.saveConfig(config.serverUri, config.uid, config.adminKey)
-                config = configRepository.read()
+                onConfirm()
             },
-            modifier = Modifier.fillMaxWidth(),
-        ) { Text("保存") }
-
-        OutlinedButton(
-            onClick = { viewModel.updateExcel(config.serverUri) },
-            enabled = !isUpdate && config.serverUri.isNotBlank(),
-            modifier = Modifier.fillMaxWidth(),
-        ) { Text(if (isUpdate) "更新中..." else "更新资源") }
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color.Black.copy(alpha = 0f),
+                disabledContainerColor = Color.Black.copy(alpha = 0f)
+            )
+        ) {
+            Text(
+                text = stringResource(Res.string.confirm),
+                color = if (error) Color.Red else MaterialTheme.colorScheme.primary,
+                style = MaterialTheme.typography.bodyLarge,
+            )
+        }
     }
 }
 
-@Composable
-private fun RowSwitch(label: String, checked: Boolean, onCheckedChange: (Boolean) -> Unit) {
-    androidx.compose.foundation.layout.Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-    ) {
-        Text(label, style = MaterialTheme.typography.bodyLarge)
-        Switch(checked = checked, onCheckedChange = onCheckedChange)
-    }
-}
+
+
+
+
+
+

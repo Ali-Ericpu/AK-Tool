@@ -1,4 +1,4 @@
-package com.rainccup.aktool.ui.navigation
+﻿package com.rainccup.aktool.ui.navigation
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -61,10 +61,10 @@ fun AppNavHost() {
     val backStack = rememberNavBackStack(navConfig, AppRoute.Home)
     val tabs = remember {
         listOf(
-            TabMeta(AppRoute.Home, "主页", Icons.Default.Home),
-            TabMeta(AppRoute.Character, "干员", Icons.Default.AccountBox),
-            TabMeta(AppRoute.Extra, "更多", Icons.Default.Build),
-            TabMeta(AppRoute.Setting, "设置", Icons.Default.Settings),
+            TabMeta(AppRoute.Home, "涓婚〉", Icons.Default.Home),
+            TabMeta(AppRoute.Character, "骞插憳", Icons.Default.AccountBox),
+            TabMeta(AppRoute.Extra, "鏇村", Icons.Default.Build),
+            TabMeta(AppRoute.Setting, "璁剧疆", Icons.Default.Settings),
         )
     }
     val currentTop = backStack.lastOrNull()
@@ -88,10 +88,7 @@ fun AppNavHost() {
                     AppRoute.Extra -> NavEntry(key) { ExtraPage() }
                     AppRoute.Setting -> NavEntry(key) { SettingPage() }
                     is AppRoute.CharacterDetail -> NavEntry(key) {
-                        CharacterDetailPage(
-                            charInstId = key.charInstId,
-                            onSaved = { backStack.removeLastOrNull() },
-                        )
+                        CharacterDetailPage(charInstId = key.charInstId, onSaved = { backStack.removeLastOrNull() })
                     }
                     else -> NavEntry(key) { Text("Unknown") }
                 }
@@ -132,3 +129,4 @@ fun AppNavHost() {
         }
     }
 }
+

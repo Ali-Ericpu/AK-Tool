@@ -6,38 +6,58 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import coil3.compose.rememberAsyncImagePainter
+import com.rainccup.aktool.config.AppConfigContext
+import com.rainccup.aktool.config.LocalAppConfig
 import com.rainccup.aktool.core.datastore.ConfigRepository
+import com.rainccup.aktool.core.model.AppConfig
+import com.rainccup.aktool.core.network.HttpClientProvider
 import com.rainccup.aktool.ui.navigation.AppNavHost
 import com.rainccup.aktool.ui.splash.SplashPage
 import com.rainccup.aktool.ui.theme.AKToolTheme
+import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 
 @Composable
 fun App() {
     val configRepository: ConfigRepository = koinInject()
+    val httpClientProvider: HttpClientProvider = koinInject()
     var config by remember { mutableStateOf(configRepository.read()) }
+    val coroutineScope = rememberCoroutineScope()
 
     val darkMode = config.darkMode || isSystemInDarkTheme()
     AKToolTheme(darkTheme = darkMode) {
-        Surface(Modifier.fillMaxSize()) {
-            if (config.customBg && config.bgPath.isNotEmpty()) {
-                Image(
-                    painter = rememberAsyncImagePainter(config.bgPath),
-                    contentDescription = null,
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxHeight(),
-                )
+        CompositionLocalProvider(
+            LocalAppConfig provides AppConfigContext(config) { new ->
+                coroutineScope.launch {
+                    config = new
+                    configRepository.write(new)
+                    if (new.serverUri.isNotBlank()) {
+                        httpClientProvider.recreate(new.serverUri)
+                    }
+                }
             }
-            AppNavHost()
-            SplashPage()
+        ) {
+            Surface(Modifier.fillMaxSize()) {
+                if (config.customBg && config.bgPath.isNotEmpty()) {
+                    Image(
+                        painter = rememberAsyncImagePainter(config.bgPath),
+                        contentDescription = null,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxHeight(),
+                    )
+                }
+                AppNavHost()
+                SplashPage()
+            }
         }
     }
 }

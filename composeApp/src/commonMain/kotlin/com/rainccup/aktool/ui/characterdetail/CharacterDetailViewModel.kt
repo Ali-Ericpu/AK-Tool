@@ -12,8 +12,11 @@ import kotlin.math.min
 
 class CharacterDetailViewModel(
     private val gameTable: GameTableRepository,
-    val charInstId: String,
+    charInstId: String,
 ) : ViewModel() {
+    private val _charInstId = MutableStateFlow(charInstId)
+    val charInstId: StateFlow<String> = _charInstId.asStateFlow()
+
     private val _char = MutableStateFlow(Character.placeholder())
     val char: StateFlow<Character> = _char.asStateFlow()
 
