@@ -25,6 +25,9 @@ import com.rainccup.aktool.ui.splash.SplashPage
 import com.rainccup.aktool.ui.theme.AKToolTheme
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
+import top.yukonga.miuix.kmp.theme.ColorSchemeMode
+import top.yukonga.miuix.kmp.theme.MiuixTheme
+import top.yukonga.miuix.kmp.theme.ThemeController
 
 @Composable
 fun App() {
@@ -34,29 +37,38 @@ fun App() {
     val coroutineScope = rememberCoroutineScope()
 
     val darkMode = config.darkMode || isSystemInDarkTheme()
-    AKToolTheme(darkTheme = darkMode) {
-        CompositionLocalProvider(
-            LocalAppConfig provides AppConfigContext(config) { new ->
-                coroutineScope.launch {
-                    config = new
-                    configRepository.write(new)
-                    if (new.serverUri.isNotBlank()) {
-                        httpClientProvider.recreate(new.serverUri)
+    // spec S2 模式优先级：darkMode > dynamicColor > System
+    val colorMode = when {
+        config.darkMode -> ColorSchemeMode.Dark
+        config.dynamicColor -> ColorSchemeMode.MonetSystem
+        else -> ColorSchemeMode.System
+    }
+    val miuixController = remember(colorMode) { ThemeController(colorMode) }
+    MiuixTheme(controller = miuixController) {
+        AKToolTheme(darkTheme = darkMode) {
+            CompositionLocalProvider(
+                LocalAppConfig provides AppConfigContext(config) { new ->
+                    coroutineScope.launch {
+                        config = new
+                        configRepository.write(new)
+                        if (new.serverUri.isNotBlank()) {
+                            httpClientProvider.recreate(new.serverUri)
+                        }
                     }
                 }
-            }
-        ) {
-            Surface(Modifier.fillMaxSize()) {
-                if (config.customBg && config.bgPath.isNotEmpty()) {
-                    Image(
-                        painter = rememberAsyncImagePainter(config.bgPath),
-                        contentDescription = null,
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier.fillMaxHeight(),
-                    )
+            ) {
+                Surface(Modifier.fillMaxSize()) {
+                    if (config.customBg && config.bgPath.isNotEmpty()) {
+                        Image(
+                            painter = rememberAsyncImagePainter(config.bgPath),
+                            contentDescription = null,
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.fillMaxHeight(),
+                        )
+                    }
+                    AppNavHost()
+                    SplashPage()
                 }
-                AppNavHost()
-                SplashPage()
             }
         }
     }

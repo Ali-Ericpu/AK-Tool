@@ -7,18 +7,7 @@ import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import top.yukonga.miuix.kmp.theme.Colors
-
-private val DarkColorScheme = darkColorScheme(
-    primary = primaryDark,
-    secondary = secondaryDark,
-    tertiary = Pink80,
-)
-
-private val LightColorScheme = lightColorScheme(
-    primary = primaryLight,
-    secondary = secondaryLight,
-    tertiary = Pink40,
-)
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 /**
  * Miuix Colors -> Material3 ColorScheme。
@@ -126,9 +115,9 @@ fun AKToolTheme(
     dynamicColor: Boolean = false,
     content: @Composable () -> Unit,
 ) {
-    // dynamicColor intentionally unused in common: Desktop has no Material You.
+    // Miuix 负责配色模式；这里只把当前 Miuix 色板桥接给 Material3
     MaterialTheme(
-        colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme,
+        colorScheme = bridgeToMaterial3(MiuixTheme.colorScheme, darkTheme),
         typography = Typography,
         content = content,
     )
