@@ -1,7 +1,6 @@
-﻿package com.rainccup.aktool.ui.navigation
+package com.rainccup.aktool.ui.navigation
 
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material.icons.Icons
@@ -9,17 +8,10 @@ import androidx.compose.material.icons.filled.AccountBox
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.NavigationBarItemColors
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import androidx.navigation3.runtime.NavEntry
@@ -37,6 +29,9 @@ import androidx.savedstate.serialization.SavedStateConfiguration
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
 import kotlinx.serialization.modules.subclass
+import top.yukonga.miuix.kmp.basic.NavigationBar
+import top.yukonga.miuix.kmp.basic.NavigationBarItem
+import top.yukonga.miuix.kmp.basic.Scaffold
 
 private val navConfig = SavedStateConfiguration {
     serializersModule = SerializersModule {
@@ -76,12 +71,32 @@ fun AppNavHost() {
     }
     val currentTop = backStack.lastOrNull()
 
-    Column(Modifier.fillMaxSize()) {
+    Scaffold(
+        // 现有布局自行用 statusBarsPadding 处理顶部，Scaffold 不再叠加系统栏 inset
+        contentWindowInsets = WindowInsets(0.dp),
+        bottomBar = {
+            NavigationBar {
+                tabs.forEach { tab ->
+                    NavigationBarItem(
+                        selected = currentTop == tab.route,
+                        onClick = {
+                            if (currentTop != tab.route) {
+                                backStack.clear()
+                                backStack.add(tab.route)
+                            }
+                        },
+                        icon = tab.icon,
+                        label = tab.label,
+                    )
+                }
+            }
+        },
+    ) { paddingValues ->
         NavDisplay(
             backStack = backStack,
             onBack = { if (backStack.size > 1) backStack.removeLastOrNull() },
             modifier = Modifier
-                .weight(9f)
+                .padding(paddingValues)
                 .padding(12.dp)
                 .statusBarsPadding(),
             entryProvider = { key ->
@@ -101,39 +116,6 @@ fun AppNavHost() {
                 }
             },
         )
-        NavigationBar(Modifier.alpha(0.9f)) {
-            tabs.forEach { tab ->
-                val selected = currentTop == tab.route
-                val color =
-                    if (selected) MaterialTheme.colorScheme.primary else Color.Gray
-                NavigationBarItem(
-                    selected = selected,
-                    onClick = {
-                        if (currentTop != tab.route) {
-                            backStack.clear()
-                            backStack.add(tab.route)
-                        }
-                    },
-                    icon = {
-                        Icon(
-                            imageVector = tab.icon,
-                            contentDescription = tab.label,
-                            tint = color,
-                        )
-                    },
-                    label = { Text(tab.label, color = color) },
-                    colors = NavigationBarItemColors(
-                        selectedIconColor = color,
-                        selectedTextColor = color,
-                        selectedIndicatorColor = color.copy(alpha = 0f),
-                        unselectedIconColor = Color.LightGray,
-                        unselectedTextColor = Color.LightGray,
-                        disabledIconColor = Color.Gray,
-                        disabledTextColor = Color.Gray,
-                    ),
-                )
-            }
-        }
     }
 }
 
