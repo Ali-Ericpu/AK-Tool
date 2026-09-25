@@ -2,19 +2,29 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
-    alias(libs.plugins.android.application)
+    alias(libs.plugins.android.multiplatform.library)
     alias(libs.plugins.compose.multiplatform)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
 }
 
 kotlin {
-    androidTarget {
+    android {
+        namespace = "com.rainccup.aktool.shared"
+        compileSdk = 37
+        minSdk = 28
+        compilerOptions {
+            jvmTarget.set(JvmTarget.JVM_17)
+        }
+        androidResources {
+            enable = true
+        }
+    }
+    jvm("desktop") {
         compilerOptions {
             jvmTarget.set(JvmTarget.JVM_17)
         }
     }
-    jvm("desktop")
 
     sourceSets {
         commonMain.dependencies {
@@ -55,13 +65,10 @@ kotlin {
             implementation(libs.koin.test)
         }
         androidMain.dependencies {
-            implementation(libs.androidx.activity.compose)
             implementation(libs.ktor.client.cio)
         }
         val desktopMain by getting {
             dependencies {
-                implementation(compose.desktop.currentOs)
-                implementation(libs.kotlinx.coroutines.swing)
                 implementation(libs.ktor.client.cio)
             }
         }
@@ -69,45 +76,6 @@ kotlin {
             dependencies {
                 implementation(libs.junit)
             }
-        }
-    }
-}
-
-android {
-    namespace = "com.rainccup.aktool"
-    compileSdk = 37
-
-    defaultConfig {
-        applicationId = "com.rainccup.aktool"
-        minSdk = 28
-        targetSdk = 37
-        versionCode = 18
-        versionName = "1.5.6"
-    }
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
-    }
-    buildTypes {
-        release {
-            isMinifyEnabled = false
-            proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
-            )
-        }
-    }
-    packaging {
-        resources.excludes += "/META-INF/{AL2.0,LGPL2.1}"
-    }
-}
-
-compose.desktop {
-    application {
-        mainClass = "com.rainccup.aktool.MainKt"
-        nativeDistributions {
-            packageVersion = "1.5.6"
-            packageName = "AK Tool"
         }
     }
 }
