@@ -74,8 +74,9 @@ import com.rainccup.aktool.ui.character.CharacterViewModel
 import com.rainccup.aktool.ui.character.equipPainter
 import com.rainccup.aktool.ui.character.offsetPercent
 import com.rainccup.aktool.ui.character.skillPainter
-import com.rainccup.aktool.ui.setting.EditSwitch
-import com.rainccup.aktool.ui.splash.CircleIconButton
+import com.rainccup.aktool.core.designsystem.component.EditSwitch
+import com.rainccup.aktool.core.designsystem.component.CircleIconButton
+import com.rainccup.aktool.core.designsystem.component.IntRangeSlider
 import kotlin.math.max
 import kotlin.math.roundToInt
 import top.yukonga.miuix.kmp.basic.Button
@@ -317,28 +318,6 @@ fun CharacterDetailPage(
             }
         }
     }
-}
-
-@Composable
-fun IntRangeSlider(
-    value: Float = 10f,
-    start: Int = 0,
-    maxValue: Int = 99,
-    description: String = "Test",
-    modifier: Modifier = Modifier,
-    onValueChange: (Float) -> Unit = { },
-    onValueChangeFinished: (Int) -> Unit = { },
-) {
-    SliderPreference(
-        value = value,
-        onValueChange = onValueChange,
-        title = description,
-        valueText = value.roundToInt().toString(),
-        valueRange = start.toFloat()..maxValue.toFloat(),
-        steps = max(maxValue - start - 1, 0),
-        onValueChangeFinished = { onValueChangeFinished(value.roundToInt()) },
-        modifier = modifier,
-    )
 }
 
 @Composable

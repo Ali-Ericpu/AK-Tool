@@ -38,7 +38,7 @@ import com.rainccup.aktool.resources.Res
 import com.rainccup.aktool.resources.*
 import com.rainccup.aktool.core.model.Status
 import com.rainccup.aktool.core.model.SaveStatusRequest
-import com.rainccup.aktool.ui.setting.EditTextDialog
+import com.rainccup.aktool.core.designsystem.component.EditTextDialog
 import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.preference.ArrowPreference
 

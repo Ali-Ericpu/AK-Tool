@@ -1,6 +1,8 @@
 package com.rainccup.aktool.ui.character
 import org.koin.compose.koinInject
 
+import com.rainccup.aktool.core.designsystem.component.CharPainter
+import com.rainccup.aktool.core.designsystem.icon
 import com.rainccup.aktool.core.platform.platformUiScale
 import com.rainccup.aktool.core.platform.urlEncode
 
@@ -82,8 +84,8 @@ import com.rainccup.aktool.resources.*
 import com.rainccup.aktool.core.datastore.GameTableRepository
 import com.rainccup.aktool.core.model.Character
 import com.rainccup.aktool.core.model.Profession
-import com.rainccup.aktool.ui.setting.BasicDialog
-import com.rainccup.aktool.ui.setting.EditTextDialog
+import com.rainccup.aktool.core.designsystem.component.BasicDialog
+import com.rainccup.aktool.core.designsystem.component.EditTextDialog
 import com.rainccup.aktool.utils.replace
 import top.yukonga.miuix.kmp.basic.FloatingToolbar
 import top.yukonga.miuix.kmp.basic.IconButton as MiuixIconButton

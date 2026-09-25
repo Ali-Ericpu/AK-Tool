@@ -1,4 +1,4 @@
-package com.rainccup.aktool.ui.theme
+package com.rainccup.aktool.core.designsystem.theme
 
 import androidx.compose.material3.ColorScheme
 import top.yukonga.miuix.kmp.theme.darkColorScheme as miuixDarkColorScheme

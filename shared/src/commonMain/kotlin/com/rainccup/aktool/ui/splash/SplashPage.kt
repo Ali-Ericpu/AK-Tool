@@ -32,6 +32,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
+import com.rainccup.aktool.core.designsystem.component.CircleIconButton
 import com.rainccup.aktool.resources.Res
 import com.rainccup.aktool.resources.launch_logo
 import kotlinx.coroutines.delay
@@ -82,30 +83,5 @@ fun SplashPage(viewModel: SplashViewModel = koinViewModel()) {
     LaunchedEffect(Unit) {
         delay(2000)
         viewModel.closeSplash()
-    }
-}
-
-@Composable
-fun CircleIconButton(
-    icon: ImageVector,
-    onClick: () -> Unit,
-    size: Int = 40,
-    modifier: Modifier = Modifier,
-) {
-    IconButton(
-        onClick = onClick,
-        modifier = modifier
-            .padding(4.dp)
-            .size(size.dp),
-    ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = null,
-            modifier = Modifier
-                .clip(CircleShape)
-                .fillMaxSize()
-                .background(MaterialTheme.colorScheme.primary)
-                .padding(12.dp),
-        )
     }
 }

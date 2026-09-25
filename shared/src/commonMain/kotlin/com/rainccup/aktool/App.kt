@@ -21,7 +21,7 @@ import com.rainccup.aktool.core.model.AppConfig
 import com.rainccup.aktool.core.network.HttpClientProvider
 import com.rainccup.aktool.ui.navigation.AppNavHost
 import com.rainccup.aktool.ui.splash.SplashPage
-import com.rainccup.aktool.ui.theme.AKToolTheme
+import com.rainccup.aktool.core.designsystem.theme.AKToolTheme
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 import top.yukonga.miuix.kmp.basic.Surface

@@ -1,4 +1,4 @@
-package com.rainccup.aktool.ui.theme
+package com.rainccup.aktool.core.designsystem.theme
 
 import androidx.compose.ui.graphics.Color
 

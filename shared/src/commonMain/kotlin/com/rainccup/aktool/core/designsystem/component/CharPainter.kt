@@ -1,4 +1,4 @@
-package com.rainccup.aktool.ui.character
+package com.rainccup.aktool.core.designsystem.component
 
 import com.rainccup.aktool.resources.Res
 import com.rainccup.aktool.resources.character_charbg_1

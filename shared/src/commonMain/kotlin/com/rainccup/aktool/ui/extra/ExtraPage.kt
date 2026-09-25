@@ -83,9 +83,9 @@ import com.rainccup.aktool.resources.unlock_all_char
 import com.rainccup.aktool.resources.unlock_all_flags
 import com.rainccup.aktool.resources.unlock_all_stages
 import com.rainccup.aktool.resources.valid_code
-import com.rainccup.aktool.ui.characterdetail.IntRangeSlider
-import com.rainccup.aktool.ui.setting.BasicDialog
-import com.rainccup.aktool.ui.setting.ConfirmButtonRow
+import com.rainccup.aktool.core.designsystem.component.IntRangeSlider
+import com.rainccup.aktool.core.designsystem.component.BasicDialog
+import com.rainccup.aktool.core.designsystem.component.ConfirmButtonRow
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
