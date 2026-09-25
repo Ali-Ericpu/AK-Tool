@@ -40,7 +40,6 @@ import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
@@ -147,7 +146,7 @@ fun CharacterPage(onOpenDetail: (String) -> Unit) {
                             .offsetPercent(offsetPercentX = professionOffsetX)
                     ) {
                         item {
-                            IconButton(
+                            MiuixIconButton(
                                 onClick = {
                                     if (currentProfession == "ALL") {
                                         viewModel.changeSelectState(false)
@@ -230,7 +229,7 @@ fun CharacterPage(onOpenDetail: (String) -> Unit) {
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
             ) {
-                IconButton(
+                MiuixIconButton(
                     onClick = {
                         coroutineScope.launch {
                             if (gameTable.init()) {

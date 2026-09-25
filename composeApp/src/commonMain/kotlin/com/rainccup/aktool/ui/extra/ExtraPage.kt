@@ -28,7 +28,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
@@ -482,8 +481,8 @@ private fun ValidateCodeDialog(
         Column {
             Text(
                 text = stringResource(Res.string.valid_code),
-                color = MaterialTheme.colorScheme.onBackground,
-                style = MaterialTheme.typography.displaySmall,
+                color = MiuixTheme.colorScheme.onBackground,
+                style = MiuixTheme.textStyles.title1,
                 modifier = Modifier
                     .padding(bottom = 16.dp)
                     .fillMaxWidth()
@@ -513,7 +512,7 @@ private fun ValidateCodeDialog(
                                 .padding(bottom = 4.dp)
                                 .border(
                                     width = 1.dp,
-                                    color = MaterialTheme.colorScheme.primary,
+                                    color = MiuixTheme.colorScheme.primary,
                                     shape = RoundedCornerShape(12.dp)
                                 )
                                 .padding(4.dp)
