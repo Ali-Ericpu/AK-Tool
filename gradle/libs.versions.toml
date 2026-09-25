@@ -1,6 +1,6 @@
 
 [versions]
-agp = "9.1.0"
+agp = "9.4.1"
 kotlin = "2.4.20"
 compose-multiplatform = "1.12.1"
 androidx-activityCompose = "1.13.0"
@@ -66,7 +66,6 @@ miuix-preference = { module = "top.yukonga.miuix.kmp:miuix-preference", version.
 
 [plugins]
 kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
-kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 android-application = { id = "com.android.application", version.ref = "agp" }
