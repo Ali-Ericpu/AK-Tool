@@ -29,7 +29,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -64,9 +63,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.layout
-import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
-import co.touchlab.kermit.Logger
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.text.TextStyle
@@ -132,8 +129,8 @@ fun CharacterPage(onOpenDetail: (String) -> Unit) {
                     state = lazyGridState,
                     modifier = Modifier.fillMaxSize()
                 ) {
-                    itemsIndexed(charList) { index, char ->
-                        CharacterCard(char = char, diagnose = index == 0) {
+                    items(charList) { char ->
+                        CharacterCard(char = char) {
                             onOpenDetail(it.toString())
                         }
                     }
@@ -295,17 +292,8 @@ fun CharacterPage(onOpenDetail: (String) -> Unit) {
 fun CharacterCard(
     modifier: Modifier = Modifier,
     char: Character = Character.placeholder(),
-    diagnose: Boolean = false,
     onCharSelect: (Int) -> Unit = { }
 ) {
-    val density = LocalDensity.current
-    val diag: (String) -> Modifier = { tag ->
-        if (!diagnose) Modifier else Modifier.onGloballyPositioned { c ->
-            val w = c.size.width
-            val h = c.size.height
-            Logger.i { "DIAG $tag dp=${w / density.density}x${h / density.density} density=${density.density}" }
-        }
-    }
     val gameTable: GameTableRepository = koinInject()
     val evolvePhasePainter = when (char.evolvePhase) {
         0 -> Res.drawable.character_elite_0
@@ -332,7 +320,6 @@ fun CharacterCard(
                 .align(Alignment.BottomStart)
                 .offset(x = 4.dp, y = (-22).dp)
                 .size(100.dp, 182.dp)
-                .then(diag("charBg"))
         )
         // character portrait
         Image(
@@ -353,7 +340,6 @@ fun CharacterCard(
                 .align(Alignment.BottomStart)
                 .offset(x = 4.dp, y = (-22).dp)
                 .size(100.dp, 88.dp)
-                .then(diag("rarityLight"))
         )
         // upper hub
         Image(
@@ -402,7 +388,6 @@ fun CharacterCard(
                 .align(Alignment.BottomStart)
                 .offset(x = 4.dp, y = (-4).dp)
                 .height(24.dp)
-                .then(diag("starMark"))
         )
         // lower hub
         Image(
@@ -411,7 +396,6 @@ fun CharacterCard(
             modifier = Modifier
                 .align(Alignment.BottomStart)
                 .size(108.dp, 84.dp)
-                .then(diag("bottomHub"))
         )
         // evolve phase icon
         Image(
@@ -428,7 +412,6 @@ fun CharacterCard(
                 .align(Alignment.BottomStart)
                 .offset(x = 2.dp, y = (-18).dp)
                 .size(46.dp)
-                .then(diag("levelBg"))
         ) {
             Image(
                 painterResource(Res.drawable.character_level_bg), null,
@@ -471,7 +454,6 @@ fun CharacterCard(
                 .align(Alignment.BottomEnd)
                 .offset(x = (-8).dp, y = (-26).dp)
                 .size(26.dp)
-                .then(diag("skill"))
         )
         // equip icon, centred between the level badge and the skill icon
         char.currentEquip?.let { equipId ->
