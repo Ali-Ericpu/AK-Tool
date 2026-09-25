@@ -17,23 +17,18 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.BasicAlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
@@ -68,6 +63,9 @@ import com.rainccup.aktool.ui.setting.BasicDialog
 import com.rainccup.aktool.ui.setting.ConfirmButtonRow
 import kotlin.math.min
 import kotlin.math.roundToInt
+import top.yukonga.miuix.kmp.basic.IconButton
+import top.yukonga.miuix.kmp.basic.TextField
+import top.yukonga.miuix.kmp.overlay.OverlayDialog
 import top.yukonga.miuix.kmp.preference.ArrowPreference
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
@@ -205,7 +203,6 @@ fun RequestButton(
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun UnlockAllCharDialog(gameTable: GameTableRepository, onValueSave: (UnlockAllCharRequest?) -> Unit = {}) {
     var evolvePhase by remember { mutableFloatStateOf(2f) }
@@ -216,13 +213,10 @@ private fun UnlockAllCharDialog(gameTable: GameTableRepository, onValueSave: (Un
     var equipLevel by remember { mutableFloatStateOf(3f) }
     var potentialRank by remember { mutableFloatStateOf(5f) }
     var specializeLevel by remember { mutableFloatStateOf(3f) }
-    BasicAlertDialog(
+    OverlayDialog(
+        title = stringResource(Res.string.unlock_all_char),
+        show = true,
         onDismissRequest = { onValueSave(null) },
-        modifier = Modifier
-            .clip(RoundedCornerShape(16.dp))
-            .background(MaterialTheme.colorScheme.background)
-            .padding(8.dp)
-            .wrapContentSize()
     ) {
         Column {
             Row(horizontalArrangement = Arrangement.SpaceBetween) {
@@ -351,17 +345,17 @@ private fun AddFlushMessageDialog(onValueSave: (AddFlushMessageRequest?) -> Unit
             }
         }
     ) {
-        OutlinedTextField(
+        TextField(
             value = uid,
-            label = { Text(stringResource(Res.string.uid)) },
-            singleLine = true,
             onValueChange = { uid = it },
+            label = stringResource(Res.string.uid),
+            singleLine = true,
         )
-        OutlinedTextField(
+        TextField(
             value = message,
-            label = { Text(stringResource(Res.string.message)) },
-            maxLines = Int.MAX_VALUE,
             onValueChange = { message = it },
+            label = stringResource(Res.string.message),
+            maxLines = Int.MAX_VALUE,
         )
     }
 }
@@ -383,17 +377,17 @@ private fun ResetActivityDialog(onValueSave: (ResetActivityRequest?) -> Unit = {
             }
         }
     ) {
-        OutlinedTextField(
+        TextField(
             value = type,
-            label = { Text(stringResource(Res.string.act_type)) },
-            singleLine = true,
             onValueChange = { type = it },
-        )
-        OutlinedTextField(
-            value = id,
-            label = { Text(stringResource(Res.string.act_id)) },
+            label = stringResource(Res.string.act_type),
             singleLine = true,
+        )
+        TextField(
+            value = id,
             onValueChange = { id = it },
+            label = stringResource(Res.string.act_id),
+            singleLine = true,
         )
     }
 }
@@ -416,17 +410,17 @@ private fun GainItemDialog(onValueSave: (Item?) -> Unit = {}) {
             }
         }
     ) {
-        OutlinedTextField(
+        TextField(
             value = itemId,
-            label = { Text(stringResource(Res.string.item_id)) },
-            singleLine = true,
             onValueChange = { itemId = it },
+            label = stringResource(Res.string.item_id),
+            singleLine = true,
         )
-        OutlinedTextField(
+        TextField(
             value = itemType,
-            label = { Text(stringResource(Res.string.item_type)) },
-            maxLines = Int.MAX_VALUE,
             onValueChange = { itemType = it },
+            label = stringResource(Res.string.item_type),
+            maxLines = Int.MAX_VALUE,
         )
         IntRangeSlider(
             value = count,
@@ -434,13 +428,7 @@ private fun GainItemDialog(onValueSave: (Item?) -> Unit = {}) {
             maxValue = 99,
             description = stringResource(Res.string.count),
             onValueChange = { count = it },
-            modifier = Modifier
-                .padding(4.dp)
-                .border(
-                    width = 1.dp,
-                    color = MaterialTheme.colorScheme.onBackground,
-                    shape = RoundedCornerShape(12.dp)
-                )
+            modifier = Modifier.padding(4.dp)
         )
     }
 }
@@ -462,17 +450,17 @@ private fun RegisterAccountDialog(onValueSave: (RegisterAccountRequest?) -> Unit
             }
         }
     ) {
-        OutlinedTextField(
+        TextField(
             value = account,
-            label = { Text(stringResource(Res.string.account)) },
-            singleLine = true,
             onValueChange = { account = it },
-        )
-        OutlinedTextField(
-            value = password,
-            label = { Text(stringResource(Res.string.password)) },
+            label = stringResource(Res.string.account),
             singleLine = true,
+        )
+        TextField(
+            value = password,
             onValueChange = { password = it },
+            label = stringResource(Res.string.password),
+            singleLine = true,
         )
     }
 }
@@ -487,13 +475,9 @@ private fun ValidateCodeDialog(
 ) {
     val clipboard = koinInject<com.rainccup.aktool.core.platform.ClipboardPort>()
     LaunchedEffect(Unit) { onRefresh() }
-    BasicAlertDialog(
+    OverlayDialog(
+        show = true,
         onDismissRequest = { onExit() },
-        modifier = Modifier
-            .wrapContentSize()
-            .clip(RoundedCornerShape(12.dp))
-            .background(MaterialTheme.colorScheme.background)
-            .padding(16.dp)
     ) {
         Column {
             Text(
@@ -540,17 +524,15 @@ private fun ValidateCodeDialog(
                                 onClick = {
                                     clipboard.setText(code)
                                 },
-                                modifier = Modifier
-                                    .padding(4.dp)
-                                    .fillMaxHeight()
+                                modifier = Modifier.padding(4.dp)
                             ) {
                                 Icon(
                                     painter = painterResource(Res.drawable.baseline_copy),
                                     contentDescription = null,
                                     modifier = Modifier
+                                        .size(40.dp)
                                         .clip(CircleShape)
-                                        .fillMaxSize()
-                                        .background(MaterialTheme.colorScheme.primary)
+                                        .background(MiuixTheme.colorScheme.primary)
                                         .padding(12.dp)
                                 )
                             }
