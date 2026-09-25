@@ -88,8 +88,9 @@ import com.rainccup.aktool.core.model.Character
 import com.rainccup.aktool.core.model.Profession
 import com.rainccup.aktool.ui.setting.BasicDialog
 import com.rainccup.aktool.ui.setting.EditTextDialog
-import com.rainccup.aktool.ui.splash.CircleIconButton
 import com.rainccup.aktool.utils.replace
+import top.yukonga.miuix.kmp.basic.FloatingToolbar
+import top.yukonga.miuix.kmp.basic.IconButton as MiuixIconButton
 import top.yukonga.miuix.kmp.basic.InputField
 import top.yukonga.miuix.kmp.basic.SearchBar
 
@@ -198,31 +199,31 @@ fun CharacterPage(onOpenDetail: (String) -> Unit) {
                             }
                         }
                     }
-                    Column(modifier = Modifier.offsetPercent(offsetPercentX = menuOffsetX)) {
-                        CircleIconButton(
-                            icon = Icons.Default.Menu,
-                            onClick = { viewModel.changeSelectState(true) }
-                        )
-                        CircleIconButton(
-                            icon = Icons.Default.Add,
-                            onClick = { viewModel.changeGainCharState() }
-                        )
-                        CircleIconButton(
-                            icon = Icons.Default.Search,
-                            onClick = { viewModel.changeSearchState() }
-                        )
-                        CircleIconButton(
-                            icon = Icons.Default.Refresh,
-                            onClick = {
-                                coroutineScope.launch {
-                                    try {
-                                        refresh()
-                                    } catch (_: Exception) {
-                                        viewModel.closeAnimate()
+                    FloatingToolbar(modifier = Modifier.offsetPercent(offsetPercentX = menuOffsetX)) {
+                        Column {
+                            MiuixIconButton(onClick = { viewModel.changeSelectState(true) }) {
+                                Icon(Icons.Default.Menu, contentDescription = null)
+                            }
+                            MiuixIconButton(onClick = { viewModel.changeGainCharState() }) {
+                                Icon(Icons.Default.Add, contentDescription = null)
+                            }
+                            MiuixIconButton(onClick = { viewModel.changeSearchState() }) {
+                                Icon(Icons.Default.Search, contentDescription = null)
+                            }
+                            MiuixIconButton(
+                                onClick = {
+                                    coroutineScope.launch {
+                                        try {
+                                            refresh()
+                                        } catch (_: Exception) {
+                                            viewModel.closeAnimate()
+                                        }
                                     }
                                 }
+                            ) {
+                                Icon(Icons.Default.Refresh, contentDescription = null)
                             }
-                        )
+                        }
                     }
                 }
             }
