@@ -1,5 +1,4 @@
 package com.rainccup.aktool.ui.extra
-import org.koin.compose.koinInject
 
 
 import androidx.compose.animation.AnimatedVisibility
@@ -42,35 +41,66 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
-import androidx.compose.ui.graphics.Color
-import org.jetbrains.compose.resources.painterResource
-import org.jetbrains.compose.resources.stringResource
-
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import org.koin.compose.viewmodel.koinViewModel
-import com.rainccup.aktool.resources.Res
-import com.rainccup.aktool.resources.*
 import com.rainccup.aktool.core.datastore.GameTableRepository
-import com.rainccup.aktool.core.model.Item
 import com.rainccup.aktool.core.model.AddFlushMessageRequest
+import com.rainccup.aktool.core.model.Item
 import com.rainccup.aktool.core.model.RegisterAccountRequest
 import com.rainccup.aktool.core.model.ResetActivityRequest
 import com.rainccup.aktool.core.model.UnlockAllCharRequest
+import com.rainccup.aktool.resources.Res
+import com.rainccup.aktool.resources.account
+import com.rainccup.aktool.resources.act_id
+import com.rainccup.aktool.resources.act_type
+import com.rainccup.aktool.resources.add_flush_message
+import com.rainccup.aktool.resources.baseline_copy
+import com.rainccup.aktool.resources.copy_success
+import com.rainccup.aktool.resources.count
+import com.rainccup.aktool.resources.equip_lv
+import com.rainccup.aktool.resources.evp_phase
+import com.rainccup.aktool.resources.fav_pt
+import com.rainccup.aktool.resources.gain_item
+import com.rainccup.aktool.resources.icon
+import com.rainccup.aktool.resources.is_nothing
+import com.rainccup.aktool.resources.item
+import com.rainccup.aktool.resources.item_id
+import com.rainccup.aktool.resources.item_type
+import com.rainccup.aktool.resources.level
+import com.rainccup.aktool.resources.message
+import com.rainccup.aktool.resources.password
+import com.rainccup.aktool.resources.potential_rank
+import com.rainccup.aktool.resources.push_message
+import com.rainccup.aktool.resources.query_account
+import com.rainccup.aktool.resources.query_valid_code
+import com.rainccup.aktool.resources.register_acc
+import com.rainccup.aktool.resources.reset_act
+import com.rainccup.aktool.resources.reset_rlv2
+import com.rainccup.aktool.resources.skill_level
+import com.rainccup.aktool.resources.sp_skill_lv
+import com.rainccup.aktool.resources.uid
+import com.rainccup.aktool.resources.unlock_all_char
+import com.rainccup.aktool.resources.unlock_all_flags
+import com.rainccup.aktool.resources.unlock_all_stages
+import com.rainccup.aktool.resources.valid_code
 import com.rainccup.aktool.ui.characterdetail.IntRangeSlider
 import com.rainccup.aktool.ui.setting.BasicDialog
 import com.rainccup.aktool.ui.setting.ConfirmButtonRow
-import kotlin.math.min
-import kotlin.math.roundToInt
+import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.koinInject
+import org.koin.compose.viewmodel.koinViewModel
 import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.basic.TextField
 import top.yukonga.miuix.kmp.overlay.OverlayDialog
 import top.yukonga.miuix.kmp.preference.ArrowPreference
 import top.yukonga.miuix.kmp.theme.MiuixTheme
+import kotlin.math.min
+import kotlin.math.roundToInt
 
 @Composable
 fun ExtraPage() {
-            val viewModel: ExtraViewModel = koinViewModel()
+    val viewModel: ExtraViewModel = koinViewModel()
     val gameTable: GameTableRepository = koinInject()
     val showUnlockChar by viewModel.showUnlockChar.collectAsState()
     val showMessageDialog by viewModel.showMessageDialog.collectAsState()
@@ -203,7 +233,10 @@ fun RequestButton(
 }
 
 @Composable
-private fun UnlockAllCharDialog(gameTable: GameTableRepository, onValueSave: (UnlockAllCharRequest?) -> Unit = {}) {
+private fun UnlockAllCharDialog(
+    gameTable: GameTableRepository,
+    onValueSave: (UnlockAllCharRequest?) -> Unit = {}
+) {
     var evolvePhase by remember { mutableFloatStateOf(2f) }
     var level by remember { mutableFloatStateOf(90f) }
     var maxLevel by remember { mutableFloatStateOf(90f) }
@@ -329,7 +362,7 @@ private fun UnlockAllCharDialog(gameTable: GameTableRepository, onValueSave: (Un
 
 @Composable
 private fun AddFlushMessageDialog(onValueSave: (AddFlushMessageRequest?) -> Unit = {}) {
-        var uid by remember { mutableStateOf("ALL") }
+    var uid by remember { mutableStateOf("ALL") }
     var message by remember { mutableStateOf("") }
     val error = message.isEmpty()
     BasicDialog(
@@ -338,7 +371,7 @@ private fun AddFlushMessageDialog(onValueSave: (AddFlushMessageRequest?) -> Unit
         onCancel = { onValueSave(null) },
         onConfirm = {
             if (error) {
-                
+
             } else {
                 onValueSave(AddFlushMessageRequest(uid, message))
             }
@@ -361,7 +394,7 @@ private fun AddFlushMessageDialog(onValueSave: (AddFlushMessageRequest?) -> Unit
 
 @Composable
 private fun ResetActivityDialog(onValueSave: (ResetActivityRequest?) -> Unit = {}) {
-        var id by remember { mutableStateOf("") }
+    var id by remember { mutableStateOf("") }
     var type by remember { mutableStateOf("") }
     val error = id.isEmpty() || type.isEmpty()
     BasicDialog(
@@ -370,7 +403,7 @@ private fun ResetActivityDialog(onValueSave: (ResetActivityRequest?) -> Unit = {
         onCancel = { onValueSave(null) },
         onConfirm = {
             if (error) {
-                
+
             } else {
                 onValueSave(ResetActivityRequest(type, id))
             }
@@ -393,7 +426,7 @@ private fun ResetActivityDialog(onValueSave: (ResetActivityRequest?) -> Unit = {
 
 @Composable
 private fun GainItemDialog(onValueSave: (Item?) -> Unit = {}) {
-        var itemId by remember { mutableStateOf("") }
+    var itemId by remember { mutableStateOf("") }
     var itemType by remember { mutableStateOf("") }
     var count by remember { mutableFloatStateOf(1f) }
     val error = itemId.isEmpty() || itemType.isEmpty()
@@ -403,7 +436,7 @@ private fun GainItemDialog(onValueSave: (Item?) -> Unit = {}) {
         onCancel = { onValueSave(null) },
         onConfirm = {
             if (error) {
-                
+
             } else {
                 onValueSave(Item(itemId, itemType, count.roundToInt()))
             }
@@ -434,7 +467,7 @@ private fun GainItemDialog(onValueSave: (Item?) -> Unit = {}) {
 
 @Composable
 private fun RegisterAccountDialog(onValueSave: (RegisterAccountRequest?) -> Unit = {}) {
-        var account by remember { mutableStateOf("") }
+    var account by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     val error = account.toULongOrNull() == null || account.length > 11 || password.isEmpty()
     BasicDialog(
@@ -443,7 +476,7 @@ private fun RegisterAccountDialog(onValueSave: (RegisterAccountRequest?) -> Unit
         onCancel = { onValueSave(null) },
         onConfirm = {
             if (error) {
-                
+
             } else {
                 onValueSave(RegisterAccountRequest(account, password))
             }
