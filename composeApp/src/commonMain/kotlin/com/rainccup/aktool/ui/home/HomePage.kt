@@ -7,7 +7,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -354,7 +353,7 @@ fun StatusImage(id: org.jetbrains.compose.resources.DrawableResource) {
     Image(
         painter = painterResource(id),
         contentDescription = null,
-        modifier = Modifier.fillMaxHeight()
+        modifier = Modifier.size(28.dp)
     )
 }
 
