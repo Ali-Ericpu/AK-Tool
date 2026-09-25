@@ -1,4 +1,4 @@
-package com.rainccup.aktool.utils
+package com.rainccup.aktool.core.common
 
 fun <E> MutableCollection<E>.replace(elements: List<E>) = this.apply {
     clear()

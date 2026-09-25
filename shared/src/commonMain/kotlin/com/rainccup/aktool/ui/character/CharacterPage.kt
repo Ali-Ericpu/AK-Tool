@@ -81,12 +81,12 @@ import coil3.compose.rememberAsyncImagePainter
 import kotlinx.coroutines.launch
 import com.rainccup.aktool.resources.Res
 import com.rainccup.aktool.resources.*
-import com.rainccup.aktool.core.datastore.GameTableRepository
+import com.rainccup.aktool.core.data.datasource.GameTableRepository
 import com.rainccup.aktool.core.model.Character
 import com.rainccup.aktool.core.model.Profession
 import com.rainccup.aktool.core.designsystem.component.BasicDialog
 import com.rainccup.aktool.core.designsystem.component.EditTextDialog
-import com.rainccup.aktool.utils.replace
+import com.rainccup.aktool.core.common.replace
 import top.yukonga.miuix.kmp.basic.FloatingToolbar
 import top.yukonga.miuix.kmp.basic.IconButton as MiuixIconButton
 import top.yukonga.miuix.kmp.basic.InputField

@@ -43,7 +43,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.rainccup.aktool.core.datastore.GameTableRepository
+import com.rainccup.aktool.core.data.datasource.GameTableRepository
 import com.rainccup.aktool.core.model.AddFlushMessageRequest
 import com.rainccup.aktool.core.model.Item
 import com.rainccup.aktool.core.model.RegisterAccountRequest

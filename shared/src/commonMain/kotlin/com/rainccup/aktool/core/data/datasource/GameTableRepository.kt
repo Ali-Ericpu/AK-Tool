@@ -1,4 +1,4 @@
-package com.rainccup.aktool.core.datastore
+package com.rainccup.aktool.core.data.datasource
 
 import com.rainccup.aktool.core.common.decodeToMap
 import com.rainccup.aktool.core.network.ApiClient

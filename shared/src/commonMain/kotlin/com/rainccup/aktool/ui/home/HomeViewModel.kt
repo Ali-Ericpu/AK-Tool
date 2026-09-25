@@ -5,7 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.rainccup.aktool.core.model.SaveStatusRequest
 import com.rainccup.aktool.core.model.Status
 import com.rainccup.aktool.core.platform.Messenger
-import com.rainccup.aktool.core.repository.AdminRepository
+import com.rainccup.aktool.core.data.repository.AdminRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow

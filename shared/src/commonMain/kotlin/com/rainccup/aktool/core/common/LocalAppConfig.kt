@@ -1,4 +1,4 @@
-package com.rainccup.aktool.config
+package com.rainccup.aktool.core.common
 
 import androidx.compose.runtime.compositionLocalOf
 import com.rainccup.aktool.core.model.AppConfig

@@ -1,7 +1,7 @@
 package com.rainccup.aktool.di
 
-import com.rainccup.aktool.core.datastore.ConfigRepository
-import com.rainccup.aktool.core.datastore.GameTableRepository
+import com.rainccup.aktool.core.data.datasource.ConfigRepository
+import com.rainccup.aktool.core.data.datasource.GameTableRepository
 import com.rainccup.aktool.core.network.ApiClient
 import com.rainccup.aktool.core.network.HttpClientProvider
 import com.rainccup.aktool.core.network.NetworkConfig
@@ -9,8 +9,8 @@ import com.rainccup.aktool.core.platform.createAppPaths
 import com.rainccup.aktool.core.platform.createClipboard
 import com.rainccup.aktool.core.platform.createFilePicker
 import com.rainccup.aktool.core.platform.createPlatformTheme
-import com.rainccup.aktool.core.repository.AdminRepository
-import com.rainccup.aktool.core.repository.ConfigSource
+import com.rainccup.aktool.core.data.repository.AdminRepository
+import com.rainccup.aktool.core.data.repository.ConfigSource
 import org.koin.core.context.startKoin
 import org.koin.core.context.stopKoin
 import org.koin.test.KoinTest

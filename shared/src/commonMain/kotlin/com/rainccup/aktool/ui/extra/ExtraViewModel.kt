@@ -11,7 +11,7 @@ import com.rainccup.aktool.core.model.ResetActivityRequest
 import com.rainccup.aktool.core.model.UnlockAllCharRequest
 import com.rainccup.aktool.core.platform.ClipboardPort
 import com.rainccup.aktool.core.platform.Messenger
-import com.rainccup.aktool.core.repository.AdminRepository
+import com.rainccup.aktool.core.data.repository.AdminRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow

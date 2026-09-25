@@ -8,7 +8,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
-import com.rainccup.aktool.config.LocalAppConfig
+import com.rainccup.aktool.core.common.LocalAppConfig
 import com.rainccup.aktool.core.designsystem.component.ActionButton
 import com.rainccup.aktool.core.designsystem.component.EditSwitch
 import com.rainccup.aktool.core.designsystem.component.EditText

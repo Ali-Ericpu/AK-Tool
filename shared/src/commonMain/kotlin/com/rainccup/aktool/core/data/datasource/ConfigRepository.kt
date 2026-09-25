@@ -1,9 +1,9 @@
-package com.rainccup.aktool.core.datastore
+package com.rainccup.aktool.core.data.datasource
 
 import com.rainccup.aktool.core.common.JsonUtil
 import com.rainccup.aktool.core.model.AppConfig
 import com.rainccup.aktool.core.platform.AppPaths
-import com.rainccup.aktool.core.repository.ConfigSource
+import com.rainccup.aktool.core.data.repository.ConfigSource
 
 class ConfigRepository(private val paths: AppPaths) : ConfigSource {
     private val filePath: String

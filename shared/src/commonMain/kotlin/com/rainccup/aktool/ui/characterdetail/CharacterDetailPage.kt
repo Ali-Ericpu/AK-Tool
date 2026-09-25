@@ -66,7 +66,7 @@ import co.touchlab.kermit.Logger
 import kotlinx.coroutines.launch
 import com.rainccup.aktool.resources.Res
 import com.rainccup.aktool.resources.*
-import com.rainccup.aktool.core.datastore.GameTableRepository
+import com.rainccup.aktool.core.data.datasource.GameTableRepository
 import com.rainccup.aktool.core.model.Character
 import com.rainccup.aktool.core.platform.platformUiScale
 import com.rainccup.aktool.ui.character.CharacterCard

@@ -3,8 +3,8 @@ package com.rainccup.aktool.ui.setting
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import co.touchlab.kermit.Logger
-import com.rainccup.aktool.core.datastore.ConfigRepository
-import com.rainccup.aktool.core.datastore.GameTableRepository
+import com.rainccup.aktool.core.data.datasource.ConfigRepository
+import com.rainccup.aktool.core.data.datasource.GameTableRepository
 import com.rainccup.aktool.core.network.HttpClientProvider
 import com.rainccup.aktool.core.platform.Messenger
 import kotlinx.coroutines.flow.MutableStateFlow

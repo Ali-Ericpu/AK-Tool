@@ -1,4 +1,4 @@
-package com.rainccup.aktool.core.repository
+package com.rainccup.aktool.core.data.repository
 
 import com.rainccup.aktool.core.model.AppConfig
 import com.rainccup.aktool.core.network.ApiClient
