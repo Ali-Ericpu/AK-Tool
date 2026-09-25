@@ -172,6 +172,16 @@ class ArchitectureRuleTest {
             "ui.setting" to "core.platform",
             "ui.setting" to "resources",
             "ui.splash" to "resources",
+            "core.domain" to "core.data",
+            "core.domain" to "core.model",
+            "core.domain" to "core.network",
+            "di" to "core.domain",
+            "ui.character" to "core.domain",
+            "ui.characterdetail" to "core.domain",
+            "ui.extra" to "core.domain",
+            "ui.home" to "core.common",
+            "ui.home" to "core.domain",
+            "ui.setting" to "core.domain",
         )
     }
 }

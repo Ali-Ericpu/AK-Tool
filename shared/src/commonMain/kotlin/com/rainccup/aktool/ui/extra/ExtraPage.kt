@@ -86,6 +86,7 @@ import com.rainccup.aktool.resources.valid_code
 import com.rainccup.aktool.core.designsystem.component.IntRangeSlider
 import com.rainccup.aktool.core.designsystem.component.BasicDialog
 import com.rainccup.aktool.core.designsystem.component.ConfirmButtonRow
+import com.rainccup.aktool.core.domain.model.UnlockAllCharRules
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
@@ -258,19 +259,16 @@ private fun UnlockAllCharDialog(
                     description = stringResource(Res.string.evp_phase),
                     onValueChange = { evolvePhase = it },
                     onValueChangeFinished = {
-                        if (it < 1) {
-                            mainSkillLvl = min(4f, mainSkillLvl)
-                            specializeLevel = 0f
-                            equipLevel = 1f
-                        } else if (it < 2) {
-                            specializeLevel = 0f
-                        }
-                        maxLevel = when (it) {
-                            0 -> 50
-                            1 -> 80
-                            2 -> 90
-                            else -> 90
-                        }.toFloat()
+                        val effects = UnlockAllCharRules.onEvolvePhaseChanged(
+                            phase = it,
+                            mainSkillLvl = mainSkillLvl,
+                            specializeLevel = specializeLevel,
+                            equipLevel = equipLevel,
+                        )
+                        mainSkillLvl = effects.mainSkillLvl
+                        specializeLevel = effects.specializeLevel
+                        equipLevel = effects.equipLevel
+                        maxLevel = effects.maxLevel
                         if (level > maxLevel) {
                             level = maxLevel
                         }
@@ -295,9 +293,9 @@ private fun UnlockAllCharDialog(
                     description = stringResource(Res.string.skill_level),
                     onValueChange = { mainSkillLvl = it },
                     onValueChangeFinished = {
-                        if (evolvePhase.roundToInt() == 0 && it > 4) {
-                            mainSkillLvl = 4f
-                        }
+                        mainSkillLvl = UnlockAllCharRules
+                            .clampSkillLevel(evolvePhase.roundToInt(), it)
+                            .toFloat()
                     },
                     modifier = Modifier.weight(1f)
                 )
@@ -314,10 +312,7 @@ private fun UnlockAllCharDialog(
                 maxValue = 3,
                 description = stringResource(Res.string.sp_skill_lv),
                 onValueChange = {
-                    specializeLevel = it
-                    if (evolvePhase < 2f || mainSkillLvl < 7f) {
-                        specializeLevel = 0f
-                    }
+                    specializeLevel = UnlockAllCharRules.normalizeSpecializeLevel(evolvePhase, mainSkillLvl, it)
                 },
             )
             IntRangeSlider(
@@ -332,10 +327,7 @@ private fun UnlockAllCharDialog(
                 start = 1,
                 description = stringResource(Res.string.equip_lv),
                 onValueChange = {
-                    equipLevel = it
-                    if (evolvePhase < 2) {
-                        equipLevel = 1f
-                    }
+                    equipLevel = UnlockAllCharRules.normalizeEquipLevel(evolvePhase, it)
                 },
             )
             ConfirmButtonRow(

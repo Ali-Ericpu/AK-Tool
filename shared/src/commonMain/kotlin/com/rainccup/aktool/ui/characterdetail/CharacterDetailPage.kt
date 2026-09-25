@@ -268,43 +268,12 @@ fun CharacterDetailPage(
                         Text(stringResource(Res.string.cancel))
                     }
                     Button(onClick = {
-                        if (char.evolvePhase == 2) {
-                            if (char.equip.isNotEmpty()) {
-                                val first = char.equip.keys.first()
-                                if (char.currentEquip == null) {
-                                    vm.accept(char.copy(currentEquip = first))
-                                }
-                                char.equip.values.forEach {
-                                    if (it.locked == 1) {
-                                        it.unlock()
-                                    }
-                                }
-                            }
-                            if (char.skin == char.charId + "#1" &&
-                                gameTable.characterTable[char.charId]!!["displayNumber"] != null
-                            ) {
-                                vm.accept(char.copy(skin = char.charId + "#2"))
-                            }
-                        } else if (char.evolvePhase < 2) {
-                            vm.accept(
-                                char.copy(
-                                    currentTmpl = null,
-                                    tmpl = null,
-                                    currentEquip = null,
-                                    equip = char.equip.mapValues { it.value.copy() },
-                                    skills = char.skills.map { it.copy(specializeLevel = 0) }
-                                )
-                            )
-                        }
-                        if (char.level == maxLevel) {
-                            vm.accept(char.copy(exp = 0))
-                        }
+                        val ruled = vm.applySaveRules(char)
+                        vm.accept(ruled)
                         Logger.d { "CharacterDetail" }
                         coroutineScope.launch {
                             runCatching {
-                                charViewModel.changeCharData(
-                                    char.copy(favorPoint = gameTable.getFavPointPercent(char.favorPoint))
-                                )
+                                charViewModel.changeCharData(ruled)
                             }.onSuccess {
                                 onSaved()
                             }.onFailure {

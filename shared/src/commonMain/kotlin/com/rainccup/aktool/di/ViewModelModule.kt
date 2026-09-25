@@ -11,9 +11,13 @@ import org.koin.dsl.module
 
 val viewModelModule = module {
     viewModel { SplashViewModel() }
-    viewModel { HomeViewModel(get(), get()) }
-    viewModel { CharacterViewModel(get(), get(), get()) }
-    viewModel { (charInstId: String) -> CharacterDetailViewModel(get(), charInstId) }
-    viewModel { ExtraViewModel(get(), get(), get()) }
+    viewModel { HomeViewModel(get(), get(), get()) }
+    viewModel { CharacterViewModel(get(), get(), get(), get()) }
+    viewModel { (charInstId: String) -> CharacterDetailViewModel(get(), get(), get(), charInstId) }
+    viewModel {
+        ExtraViewModel(
+            get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(),
+        )
+    }
     viewModel { SettingViewModel(get(), get(), get(), get()) }
 }

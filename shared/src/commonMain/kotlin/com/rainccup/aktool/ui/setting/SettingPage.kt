@@ -77,11 +77,7 @@ fun SettingPage() {
                 label = stringResource(Res.string.update_excel),
                 isUpdate = isUpdateExcel,
                 onClick = {
-                    if (config.serverUri.isEmpty()) {
-                        
-                    } else {
-                        coroutineScope.launch { viewModel.updateExcel(config.serverUri) }
-                    }
+                    coroutineScope.launch { viewModel.updateExcel(config.serverUri) }
                 }
             )
         }

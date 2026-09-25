@@ -3,14 +3,12 @@ package com.rainccup.aktool.ui.character
 import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import co.touchlab.kermit.Logger
-import com.rainccup.aktool.core.data.datasource.GameTableRepository
+import com.rainccup.aktool.core.domain.model.CharacterFilter
+import com.rainccup.aktool.core.domain.usecase.character.GainCharacterUseCase
+import com.rainccup.aktool.core.domain.usecase.character.LoadCharactersUseCase
+import com.rainccup.aktool.core.domain.usecase.character.SaveCharacterUseCase
 import com.rainccup.aktool.core.model.Character
-import com.rainccup.aktool.core.model.GainItemRequest
-import com.rainccup.aktool.core.model.Item
-import com.rainccup.aktool.core.model.SaveCharRequest
 import com.rainccup.aktool.core.platform.Messenger
-import com.rainccup.aktool.core.data.repository.AdminRepository
 import com.rainccup.aktool.core.common.replace
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -22,8 +20,9 @@ import kotlinx.coroutines.withContext
 import kotlin.time.Duration.Companion.milliseconds
 
 class CharacterViewModel(
-    private val admin: AdminRepository,
-    private val gameTable: GameTableRepository,
+    private val loadCharacters: LoadCharactersUseCase,
+    private val saveCharacter: SaveCharacterUseCase,
+    private val gainCharacter: GainCharacterUseCase,
     private val messenger: Messenger,
 ) : ViewModel() {
     val characterData = mutableMapOf<String, Character>()
@@ -55,27 +54,10 @@ class CharacterViewModel(
             _loadAnimate.emit(true)
             characterData.clear()
             runCatching {
-                gameTable.characterTable.forEach { (charId, charData) ->
-                    if (charId.startsWith("char_") && charData["displayNumber"] != null) {
-                        charNameMap[charData["name"] as String] = charId
-                    }
-                }
-                val result = admin.syncCharacter()
-                if (result.data == null) {
-                    throw RuntimeException("数据异常")
-                }
-                result.data.forEach { (instId, char) ->
-                    runCatching { gameTable.getCharacterData(char.charId) }.onSuccess {
-                        val name = it["name"] as String
-                        val profession = it["profession"] as String
-                        val rarity = (it["rarity"] as String).substringAfter("_").toInt()
-                        characterData[instId] = char.copy(
-                            name = name,
-                            profession = profession,
-                            rarity = rarity
-                        )
-                    }.onFailure { Logger.d { "Character_Init_CharData ${it.message}" } }
-                }
+                val loaded = loadCharacters()
+                characterData.putAll(loaded.characters)
+                charNameMap.clear()
+                charNameMap.putAll(loaded.nameToId)
                 selectProfession(_profession.value)
                 delay(500.milliseconds)
             }.onFailure {
@@ -88,11 +70,7 @@ class CharacterViewModel(
     fun selectProfession(profession: String) = viewModelScope.launch {
         _profession.emit(profession)
         characterList.clear()
-        if (profession == "ALL") {
-            characterList.addAll(characterData.values)
-        } else {
-            characterList.addAll(characterData.values.filter { it.profession == profession })
-        }
+        characterList.addAll(CharacterFilter.byProfession(characterData.values, profession))
     }
 
     fun changeSelectState(state: Boolean) = viewModelScope.launch {
@@ -100,7 +78,7 @@ class CharacterViewModel(
     }
 
     suspend fun changeCharData(char: Character) = withContext(Dispatchers.Default) {
-        val result = admin.saveCharacter(SaveCharRequest(char.instId, char))
+        val result = saveCharacter(char)
         if (result.status != 0) {
             throw RuntimeException(result.msg)
         }
@@ -114,34 +92,22 @@ class CharacterViewModel(
     }
 
     suspend fun gainChar(charId: String) = withContext(Dispatchers.Default) {
-        val request = GainItemRequest(listOf(Item(charId, "CHAR", 1)))
-        val result = admin.gainItem(request)
-        if (result.status != 0) {
-            throw RuntimeException(result.msg)
-        }
+        gainCharacter(charId)
     }
 
     fun changeGainCharState() = viewModelScope.launch {
         _gainChar.emit(_gainChar.value.not())
     }
 
-    fun getSearchedCharList(charName: String): List<String> {
-        if (charName.isEmpty()) return emptyList()
-        val found = mutableListOf<String>()
-        for (name in charNameMap.keys) {
-            if (charName in name) {
-                found.add(name)
-            }
-            if (found.size == 10) break
-        }
-        return found
-    }
+    fun getSearchedCharList(charName: String): List<String> =
+        CharacterFilter.matches(charNameMap, charName)
 
     fun changeSearchState() = viewModelScope.launch {
         _isSearch.emit(_isSearch.value.not())
     }
 
-    fun getCharIdByCharName(charName: String): String = charNameMap[charName] ?: "ERROR"
+    fun getCharIdByCharName(charName: String): String =
+        CharacterFilter.idOf(charNameMap, charName)
 
     fun searchChar(charName: String) {
         characterData.values.find { it.name == charName }?.let {

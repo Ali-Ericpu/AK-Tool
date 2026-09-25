@@ -2,16 +2,24 @@ package com.rainccup.aktool.ui.extra
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.rainccup.aktool.core.domain.usecase.admin.AddFlushMessageUseCase
+import com.rainccup.aktool.core.domain.usecase.admin.GainItemUseCase
+import com.rainccup.aktool.core.domain.usecase.admin.QueryAccountByUidUseCase
+import com.rainccup.aktool.core.domain.usecase.admin.RegisterAccountUseCase
+import com.rainccup.aktool.core.domain.usecase.admin.ResetActivityUseCase
+import com.rainccup.aktool.core.domain.usecase.admin.ResetIntegratedStrategiesUseCase
+import com.rainccup.aktool.core.domain.usecase.admin.SyncValidCodeUseCase
+import com.rainccup.aktool.core.domain.usecase.admin.UnlockAllCharactersUseCase
+import com.rainccup.aktool.core.domain.usecase.admin.UnlockAllFlagsUseCase
+import com.rainccup.aktool.core.domain.usecase.admin.UnlockAllStagesUseCase
 import com.rainccup.aktool.core.model.AddFlushMessageRequest
 import com.rainccup.aktool.core.model.ApiResult
-import com.rainccup.aktool.core.model.GainItemRequest
 import com.rainccup.aktool.core.model.Item
 import com.rainccup.aktool.core.model.RegisterAccountRequest
 import com.rainccup.aktool.core.model.ResetActivityRequest
 import com.rainccup.aktool.core.model.UnlockAllCharRequest
 import com.rainccup.aktool.core.platform.ClipboardPort
 import com.rainccup.aktool.core.platform.Messenger
-import com.rainccup.aktool.core.data.repository.AdminRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -19,7 +27,16 @@ import kotlinx.coroutines.launch
 import kotlinx.serialization.json.JsonElement
 
 class ExtraViewModel(
-    private val admin: AdminRepository,
+    private val unlockAllCharactersUseCase: UnlockAllCharactersUseCase,
+    private val unlockAllStagesUseCase: UnlockAllStagesUseCase,
+    private val unlockAllFlagsUseCase: UnlockAllFlagsUseCase,
+    private val addFlushMessageUseCase: AddFlushMessageUseCase,
+    private val gainItemUseCase: GainItemUseCase,
+    private val resetActivityUseCase: ResetActivityUseCase,
+    private val registerAccountUseCase: RegisterAccountUseCase,
+    private val resetIntegratedStrategiesUseCase: ResetIntegratedStrategiesUseCase,
+    private val syncValidCodeUseCase: SyncValidCodeUseCase,
+    private val queryAccountByUidUseCase: QueryAccountByUidUseCase,
     private val messenger: Messenger,
     private val clipboard: ClipboardPort,
 ) : ViewModel() {
@@ -85,42 +102,41 @@ class ExtraViewModel(
     }
 
     fun unlockAllChar(body: UnlockAllCharRequest) = viewModelScope.launch {
-        doRequest { admin.unlockAllChar(body) }
+        doRequest { unlockAllCharactersUseCase(body) }
     }
 
     fun unlockAllStages() = viewModelScope.launch {
-        doRequest { admin.unlockAllStages() }
+        doRequest { unlockAllStagesUseCase() }
     }
 
     fun unlockAllFlags() = viewModelScope.launch {
-        doRequest { admin.unlockAllFlags() }
+        doRequest { unlockAllFlagsUseCase() }
     }
 
     fun addFlushMessage(body: AddFlushMessageRequest) = viewModelScope.launch {
-        doRequest { admin.addFlushMessage(body) }
+        doRequest { addFlushMessageUseCase(body) }
     }
 
     fun gainItem(body: Item) = viewModelScope.launch {
-        doRequest { admin.gainItem(GainItemRequest(listOf(body))) }
+        doRequest { gainItemUseCase(body) }
     }
 
     fun resetActivity(body: ResetActivityRequest) = viewModelScope.launch {
-        doRequest { admin.resetActivity(body) }
+        doRequest { resetActivityUseCase(body) }
     }
 
     fun registerAccount(body: RegisterAccountRequest) = viewModelScope.launch {
-        doRequest { admin.registerAccount(body) }
+        doRequest { registerAccountUseCase(body) }
     }
 
     fun resetRlv2() = viewModelScope.launch {
-        doRequest { admin.resetRlv2() }
+        doRequest { resetIntegratedStrategiesUseCase() }
     }
 
     fun syncValidCode() = viewModelScope.launch {
         _isConnecting.emit(true)
         runCatching {
-            val result = admin.syncValidCode()
-            validateCode = result.data ?: throw RuntimeException(result.msg)
+            validateCode = syncValidCodeUseCase()
         }.onFailure {
             messenger.show(it.message ?: "error")
         }
@@ -131,7 +147,7 @@ class ExtraViewModel(
 
     fun queryAccountByUID() = viewModelScope.launch {
         runCatching {
-            val account = admin.queryAccountByUID().data!!["account"]!!
+            val account = queryAccountByUidUseCase()
             clipboard.setText(account)
             messenger.show("复制成功 : $account")
         }.onFailure {

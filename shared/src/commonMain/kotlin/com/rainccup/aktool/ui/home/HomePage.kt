@@ -36,6 +36,7 @@ import androidx.compose.ui.unit.dp
 import org.koin.compose.viewmodel.koinViewModel
 import com.rainccup.aktool.resources.Res
 import com.rainccup.aktool.resources.*
+import com.rainccup.aktool.core.common.validation.checkIntRange
 import com.rainccup.aktool.core.model.Status
 import com.rainccup.aktool.core.model.SaveStatusRequest
 import com.rainccup.aktool.core.designsystem.component.EditTextDialog
@@ -307,11 +308,6 @@ fun HomePage() {
         }
 
     }
-}
-
-private fun String.checkIntRange(): Boolean {
-    val int = toIntOrNull()
-    return int == null || int !in 0..Int.MAX_VALUE
 }
 
 @Composable
