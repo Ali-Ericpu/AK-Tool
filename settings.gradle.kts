@@ -23,4 +23,4 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "AK Tool"
-include(":shared", ":androidApp")
+include(":shared", ":androidApp", ":desktopApp")
