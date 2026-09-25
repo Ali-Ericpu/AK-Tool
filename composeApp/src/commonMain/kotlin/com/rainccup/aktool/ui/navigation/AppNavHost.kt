@@ -10,6 +10,7 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -24,7 +25,10 @@ import com.rainccup.aktool.ui.home.HomePage
 import com.rainccup.aktool.ui.setting.SettingPage
 import com.rainccup.aktool.resources.Res
 import com.rainccup.aktool.resources.*
+import com.rainccup.aktool.core.message.MessageBus
+import kotlinx.coroutines.flow.collectLatest
 import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.koinInject
 import androidx.savedstate.serialization.SavedStateConfiguration
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
@@ -32,6 +36,8 @@ import kotlinx.serialization.modules.subclass
 import top.yukonga.miuix.kmp.basic.NavigationBar
 import top.yukonga.miuix.kmp.basic.NavigationBarItem
 import top.yukonga.miuix.kmp.basic.Scaffold
+import top.yukonga.miuix.kmp.basic.SnackbarHost
+import top.yukonga.miuix.kmp.basic.SnackbarHostState
 
 private val navConfig = SavedStateConfiguration {
     serializersModule = SerializersModule {
@@ -71,9 +77,16 @@ fun AppNavHost() {
     }
     val currentTop = backStack.lastOrNull()
 
+    val messageBus: MessageBus = koinInject()
+    val snackbarHostState = remember { SnackbarHostState() }
+    LaunchedEffect(messageBus) {
+        messageBus.messages.collectLatest { snackbarHostState.showSnackbar(it) }
+    }
+
     Scaffold(
         // 现有布局自行用 statusBarsPadding 处理顶部，Scaffold 不再叠加系统栏 inset
         contentWindowInsets = WindowInsets(0.dp),
+        snackbarHost = { SnackbarHost(state = snackbarHostState) },
         bottomBar = {
             NavigationBar {
                 tabs.forEach { tab ->
