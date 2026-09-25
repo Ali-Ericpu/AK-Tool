@@ -1,4 +1,4 @@
-﻿package com.rainccup.aktool.ui.characterdetail
+package com.rainccup.aktool.ui.characterdetail
 
 import org.koin.compose.koinInject
 
@@ -28,10 +28,6 @@ import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
-//noinspection UsingMaterialAndMaterial3Libraries
-import androidx.compose.material.Slider
-//noinspection UsingMaterialAndMaterial3Libraries
-import androidx.compose.material.SliderDefaults
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Lock
@@ -40,7 +36,6 @@ import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -84,6 +79,8 @@ import com.rainccup.aktool.ui.setting.EditSwitch
 import com.rainccup.aktool.ui.splash.CircleIconButton
 import kotlin.math.max
 import kotlin.math.roundToInt
+import top.yukonga.miuix.kmp.basic.IconButton
+import top.yukonga.miuix.kmp.preference.SliderPreference
 
 @Composable
 fun CharacterDetailPage(
@@ -328,54 +325,20 @@ fun IntRangeSlider(
     start: Int = 0,
     maxValue: Int = 99,
     description: String = "Test",
-    textColor: Color = Color.Black,
-    color: Color = Color.LightGray,
     modifier: Modifier = Modifier,
     onValueChange: (Float) -> Unit = { },
     onValueChangeFinished: (Int) -> Unit = { },
 ) {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
-        modifier = modifier
-            .padding(4.dp)
-            .clip(RoundedCornerShape(16.dp))
-            .background(color)
-    ) {
-        Row(
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier
-                .padding(start = 16.dp, top = 8.dp, end = 16.dp)
-                .fillMaxWidth()
-        ) {
-            Text(
-                text = description,
-                fontSize = 20.sp,
-                color = textColor,
-            )
-            Text(
-                text = value.roundToInt().toString(),
-                fontSize = 20.sp,
-                color = textColor,
-                textAlign = TextAlign.Center,
-            )
-        }
-        Slider(
-            value = value,
-            onValueChange = { onValueChange(it) },
-            onValueChangeFinished = { onValueChangeFinished(value.roundToInt()) },
-            valueRange = start.toFloat()..maxValue.toFloat(),
-            steps = max(maxValue - start - 1, 0),
-            colors = SliderDefaults.colors(
-                thumbColor = MaterialTheme.colorScheme.primary,
-                activeTrackColor = MaterialTheme.colorScheme.primary,
-                inactiveTickColor = Color.Unspecified,
-                activeTickColor = Color.Unspecified,
-            ),
-            modifier = Modifier.padding(start = 8.dp, end = 8.dp)
-        )
-    }
+    SliderPreference(
+        value = value,
+        onValueChange = onValueChange,
+        title = description,
+        valueText = value.roundToInt().toString(),
+        valueRange = start.toFloat()..maxValue.toFloat(),
+        steps = max(maxValue - start - 1, 0),
+        onValueChangeFinished = { onValueChangeFinished(value.roundToInt()) },
+        modifier = modifier,
+    )
 }
 
 @Composable

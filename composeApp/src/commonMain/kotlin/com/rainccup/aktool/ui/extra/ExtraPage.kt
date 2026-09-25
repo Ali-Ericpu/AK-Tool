@@ -444,8 +444,6 @@ private fun GainItemDialog(onValueSave: (Item?) -> Unit = {}) {
             value = count,
             start = 1,
             maxValue = 99,
-            textColor = MaterialTheme.colorScheme.onBackground,
-            color = Color.Unspecified,
             description = stringResource(Res.string.count),
             onValueChange = { count = it },
             modifier = Modifier
