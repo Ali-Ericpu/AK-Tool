@@ -42,6 +42,7 @@ import com.rainccup.aktool.resources.*
 import com.rainccup.aktool.core.model.Status
 import com.rainccup.aktool.core.model.SaveStatusRequest
 import com.rainccup.aktool.ui.setting.EditTextDialog
+import top.yukonga.miuix.kmp.preference.ArrowPreference
 
 @Composable
 fun HomePage() {
@@ -325,26 +326,14 @@ fun LabelTextField(
     modifier: Modifier = Modifier
 ) {
     var showDialog by remember { mutableStateOf(false) }
-    Row(
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier
-            .padding(8.dp)
-            .height(60.dp)
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
-            .background(Color.LightGray.copy(alpha = 0.9f))
-            .clickable { showDialog = !showDialog }
-            .padding(8.dp)
-            .then(modifier)
-    ) {
-        if (icon != null) {
-            icon()
-        } else {
-            Text(label, color = Color.Black)
-        }
-        Text(value, color = Color.Black)
-    }
+    ArrowPreference(
+        title = label,
+        endActions = { Text(text = value, color = Color.Black) },
+        startAction = icon,
+        onClick = { showDialog = !showDialog },
+        holdDownState = showDialog,
+        modifier = modifier,
+    )
     if (showDialog) {
         EditTextDialog(
             value = value,
