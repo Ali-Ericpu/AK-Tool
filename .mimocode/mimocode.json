@@ -13,7 +13,7 @@
         "gradlew.bat",
         "--quiet",
         "--console=plain",
-        ":composeApp:hotMcpServerDesktop"
+        ":shared:hotMcpServerDesktop"
       ]
     }
   }

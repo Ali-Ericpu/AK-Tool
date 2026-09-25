@@ -23,4 +23,4 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "AK Tool"
-include(":composeApp")
+include(":shared")

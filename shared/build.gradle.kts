@@ -69,6 +69,8 @@ kotlin {
         }
         val desktopMain by getting {
             dependencies {
+                implementation(compose.desktop.currentOs)
+                implementation(libs.kotlinx.coroutines.swing)
                 implementation(libs.ktor.client.cio)
             }
         }
@@ -76,6 +78,16 @@ kotlin {
             dependencies {
                 implementation(libs.junit)
             }
+        }
+    }
+}
+
+compose.desktop {
+    application {
+        mainClass = "com.rainccup.aktool.MainKt"
+        nativeDistributions {
+            packageVersion = "1.5.6"
+            packageName = "AK Tool"
         }
     }
 }
