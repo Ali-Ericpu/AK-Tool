@@ -1,8 +1,4 @@
-﻿package com.rainccup.aktool.ui.setting
-import org.koin.compose.koinInject
-
-
-
+package com.rainccup.aktool.ui.setting
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -20,11 +16,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.BasicAlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -32,9 +25,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
-import androidx.compose.material3.Switch
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -47,20 +37,29 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.text.style.TextAlign
-
 import androidx.compose.ui.unit.dp
-import org.koin.compose.viewmodel.koinViewModel
-import kotlinx.coroutines.launch
-import com.rainccup.aktool.resources.Res
-import com.rainccup.aktool.resources.*
 import com.rainccup.aktool.config.LocalAppConfig
 import com.rainccup.aktool.core.network.HttpClientProvider
-import com.rainccup.aktool.ui.splash.CircleIconButton
-
-
-
+import com.rainccup.aktool.resources.Res
+import com.rainccup.aktool.resources.admin_key
+import com.rainccup.aktool.resources.cancel
+import com.rainccup.aktool.resources.choose_bg
+import com.rainccup.aktool.resources.confirm
+import com.rainccup.aktool.resources.custom_bg
+import com.rainccup.aktool.resources.dark_mode
+import com.rainccup.aktool.resources.server_uri
+import com.rainccup.aktool.resources.uid
+import com.rainccup.aktool.resources.update_excel
+import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.koinInject
+import org.koin.compose.viewmodel.koinViewModel
+import top.yukonga.miuix.kmp.basic.Button
+import top.yukonga.miuix.kmp.basic.ButtonDefaults
+import top.yukonga.miuix.kmp.basic.Text
+import top.yukonga.miuix.kmp.preference.ArrowPreference
+import top.yukonga.miuix.kmp.preference.SwitchPreference
 
 @Composable
 fun SettingPage() {
@@ -131,39 +130,14 @@ fun EditText(
     onValueSave: (String) -> Unit = { }
 ) {
     var dialogState by remember { mutableStateOf(false) }
-    Row(
-        modifier = Modifier
-            .padding(8.dp)
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
-            .background(color = Color.LightGray)
-            .padding(8.dp)
-            .height(72.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceAround
-    ) {
-        OutlinedTextField(
-            singleLine = true,
-            readOnly = true,
-            value = if (hide) "*".repeat(value.length) else value,
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedTextColor = Color.Black,
-                unfocusedTextColor = Color.Black
-            ),
-            onValueChange = { },
-            label = { Text(text = label, color = Color.Black) },
-            modifier = Modifier
-                .weight(8f)
-                .padding(bottom = 4.dp)
-        )
-        Box(modifier = Modifier.weight(2f)) {
-            CircleIconButton(
-                icon = Icons.Default.Edit,
-                onClick = { dialogState = true },
-                modifier = Modifier.align(Alignment.CenterEnd)
-            )
-        }
-    }
+    ArrowPreference(
+        title = label,
+        endActions = {
+            Text(text = if (hide) "*".repeat(value.length) else value)
+        },
+        onClick = { dialogState = true },
+        holdDownState = dialogState,
+    )
 
     if (dialogState) {
         EditTextDialog(
@@ -254,27 +228,11 @@ fun EditSwitch(
     state: Boolean,
     onCheckedChange: (Boolean) -> Unit,
 ) {
-    Row(
-        modifier = Modifier
-            .padding(8.dp)
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
-            .background(color = Color.LightGray)
-            .padding(8.dp)
-            .height(40.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
-        Text(
-            text = label, color = Color.Black, modifier = Modifier
-                .padding(8.dp)
-                .fillMaxHeight()
-        )
-        Switch(
-            checked = state,
-            onCheckedChange = { onCheckedChange(it) }
-        )
-    }
+    SwitchPreference(
+        title = label,
+        checked = state,
+        onCheckedChange = { onCheckedChange(it) },
+    )
 }
 
 @Composable
@@ -369,10 +327,11 @@ fun ConfirmButtonRow(
             .fillMaxWidth()
             .padding(top = 16.dp)
     ) {
+
         Button(
             onClick = { onCancel() },
             colors = ButtonDefaults.buttonColors(
-                containerColor = Color.Black.copy(alpha = 0f)
+                color = Color.Black.copy(alpha = 0f)
             )
         ) {
             Text(
@@ -386,8 +345,8 @@ fun ConfirmButtonRow(
                 onConfirm()
             },
             colors = ButtonDefaults.buttonColors(
-                containerColor = Color.Black.copy(alpha = 0f),
-                disabledContainerColor = Color.Black.copy(alpha = 0f)
+                color = Color.Black.copy(alpha = 0f),
+                disabledColor = Color.Black.copy(alpha = 0f)
             )
         ) {
             Text(
