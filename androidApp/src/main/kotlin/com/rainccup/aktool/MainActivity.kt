@@ -7,8 +7,8 @@ import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import com.rainccup.aktool.core.platform.AndroidContextHolder
 import com.rainccup.aktool.core.platform.AndroidFilePickerBridge
-import com.rainccup.aktool.di.appModule
-import com.rainccup.aktool.di.viewModelModule
+import com.rainccup.aktool.app.App
+import com.rainccup.aktool.app.appModule
 import org.koin.core.context.GlobalContext
 import org.koin.core.context.startKoin
 
@@ -17,7 +17,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         AndroidContextHolder.appContext = applicationContext
         if (GlobalContext.getOrNull() == null) {
-            startKoin { modules(appModule, viewModelModule) }
+            startKoin { modules(appModule) }
         }
         setContent {
             val pickImage = rememberLauncherForActivityResult(

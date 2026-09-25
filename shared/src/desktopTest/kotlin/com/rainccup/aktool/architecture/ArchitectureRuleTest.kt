@@ -38,7 +38,7 @@ class ArchitectureRuleTest {
     }
 
     private fun isAllowed(from: String, to: String): Boolean =
-        from == to || allowedEdges.any { it.first == from && it.second == to }
+        from == to || to == "resources" || allowedEdges.any { it.first == from && it.second == to }
 
     private fun collectEdges(): List<Pair<String, String>> {
         val root = findRepoRoot() ?: return emptyList()
@@ -89,99 +89,108 @@ class ArchitectureRuleTest {
 
     private companion object {
         /**
-         * 允许的包间依赖边。
-         * 迁移期间 = 迁移前的现状（69 条，由 printCurrentEdges 生成）；T5 收紧到 NiA 目标态。
+         * 目标态依赖表（NiA 分层）：
+         * - feature → 只能依赖 domain / designsystem / model / navigation / common（数据来源必须经 use case）
+         * - core.domain → data / model / common
+         * - core.data → network / model / common / platform
+         * - core.designsystem → model / common
+         * - core.navigation → model
+         * - core.network / core.message / core.platform → model / common（message 另需 platform 以适配 Messenger 端口）
+         * - app → 全部（应用外壳聚合各层）
+         * `resources`（Compose 资源）对任何层开放，见 isAllowed。
+         *
+         * 三处**有意保留**的例外（均为实测后确认，不是遗漏）：
+         * 1. feature → core.platform：UI 直接使用平台端口（platformUiScale / urlEncode / Messenger /
+         *    ClipboardPort 是 expect/actual 声明，UI 必须直接用；core.platform 因此视为「UI 可用的端口层」）。
+         * 2. feature.characterdetail → feature.character：详情页复用干员页的卡片与画笔，并持有
+         *    CharacterViewModel 以便保存后刷新列表；改成回调/事件总线是后续工作。
+         * 3. core.common ↔ core.model 互引：core.common 的 LocalAppConfig 持有 AppConfig 模型，
+         *    反向那条仅来自测试（ModelSerializationTest 用 JsonUtil 验证序列化）。
          */
         val allowedEdges: Set<Pair<String, String>> = setOf(
+            "feature.character" to "core.common",
+            "feature.character" to "core.designsystem",
+            "feature.character" to "core.domain",
+            "feature.character" to "core.model",
+            "feature.character" to "core.navigation",
+            "feature.characterdetail" to "core.common",
+            "feature.characterdetail" to "core.designsystem",
+            "feature.characterdetail" to "core.domain",
+            "feature.characterdetail" to "core.model",
+            "feature.characterdetail" to "core.navigation",
+            "feature.extra" to "core.common",
+            "feature.extra" to "core.designsystem",
+            "feature.extra" to "core.domain",
+            "feature.extra" to "core.model",
+            "feature.extra" to "core.navigation",
+            "feature.home" to "core.common",
+            "feature.home" to "core.designsystem",
+            "feature.home" to "core.domain",
+            "feature.home" to "core.model",
+            "feature.home" to "core.navigation",
+            "feature.setting" to "core.common",
+            "feature.setting" to "core.designsystem",
+            "feature.setting" to "core.domain",
+            "feature.setting" to "core.model",
+            "feature.setting" to "core.navigation",
+            "feature.splash" to "core.common",
+            "feature.splash" to "core.designsystem",
+            "feature.splash" to "core.domain",
+            "feature.splash" to "core.model",
+            "feature.splash" to "core.navigation",
+
+            // 例外 1：UI 直接使用平台端口（expect/actual），见类注释
+            "feature.character" to "core.platform",
+            "feature.characterdetail" to "core.platform",
+            "feature.extra" to "core.platform",
+            "feature.home" to "core.platform",
+            "feature.setting" to "core.platform",
+            "feature.splash" to "core.platform",
+
+            // 例外 2：详情页复用干员页的卡片/画笔与 CharacterViewModel
+            "feature.characterdetail" to "feature.character",
+
+            "core.domain" to "core.common",
+            "core.domain" to "core.data",
+            "core.domain" to "core.model",
+
+            // 例外 3：core 内部互引，见类注释
             "core.common" to "core.model",
+            "core.model" to "core.common",
+
             "core.data" to "core.common",
-            "core.designsystem" to "core.model",
-            "core.designsystem" to "resources",
             "core.data" to "core.model",
             "core.data" to "core.network",
             "core.data" to "core.platform",
-            "core.data" to "core.data",
-            "core.message" to "core.platform",
-            "core.model" to "core.common",
-            "core.model" to "resources",
+
+            "core.designsystem" to "core.common",
+            "core.designsystem" to "core.model",
+
+            "core.navigation" to "core.model",
+
             "core.network" to "core.common",
             "core.network" to "core.model",
-            "core.data" to "core.model",
-            "core.data" to "core.network",
-            "di" to "core.data",
-            "di" to "core.message",
-            "di" to "core.network",
-            "di" to "core.platform",
-            "di" to "core.data",
-            "di" to "ui.character",
-            "di" to "ui.characterdetail",
-            "di" to "ui.extra",
-            "di" to "ui.home",
-            "di" to "ui.setting",
-            "di" to "ui.splash",
-            "root" to "core.common",
-            "root" to "core.designsystem",
-            "root" to "core.data",
-            "root" to "core.model",
-            "root" to "core.network",
-            "root" to "ui.navigation",
-            "root" to "ui.splash",
-            "root" to "ui.theme",
-            "ui.character" to "core.data",
-            "ui.character" to "core.designsystem",
-            "ui.characterdetail" to "core.designsystem",
-            "ui.extra" to "core.designsystem",
-            "ui.home" to "core.designsystem",
-            "ui.setting" to "core.designsystem",
-            "ui.splash" to "core.designsystem",
-            "ui.character" to "core.model",
-            "ui.character" to "core.platform",
-            "ui.character" to "core.data",
-            "ui.character" to "resources",
-            "ui.character" to "ui.setting",
-            "ui.character" to "core.common",
-            "ui.characterdetail" to "core.data",
-            "ui.characterdetail" to "core.model",
-            "ui.characterdetail" to "core.platform",
-            "ui.characterdetail" to "resources",
-            "ui.characterdetail" to "ui.character",
-            "ui.characterdetail" to "ui.setting",
-            "ui.characterdetail" to "ui.splash",
-            "ui.extra" to "core.data",
-            "ui.extra" to "core.model",
-            "ui.extra" to "core.platform",
-            "ui.extra" to "core.data",
-            "ui.extra" to "resources",
-            "ui.extra" to "ui.characterdetail",
-            "ui.extra" to "ui.setting",
-            "ui.home" to "core.model",
-            "ui.home" to "core.platform",
-            "ui.home" to "core.data",
-            "ui.home" to "resources",
-            "ui.home" to "ui.setting",
-            "ui.navigation" to "core.message",
-            "ui.navigation" to "resources",
-            "ui.navigation" to "ui.character",
-            "ui.navigation" to "ui.characterdetail",
-            "ui.navigation" to "ui.extra",
-            "ui.navigation" to "ui.home",
-            "ui.navigation" to "ui.setting",
-            "ui.setting" to "core.common",
-            "ui.setting" to "core.data",
-            "ui.setting" to "core.network",
-            "ui.setting" to "core.platform",
-            "ui.setting" to "resources",
-            "ui.splash" to "resources",
-            "core.domain" to "core.data",
-            "core.domain" to "core.model",
-            "core.domain" to "core.network",
-            "di" to "core.domain",
-            "ui.character" to "core.domain",
-            "ui.characterdetail" to "core.domain",
-            "ui.extra" to "core.domain",
-            "ui.home" to "core.common",
-            "ui.home" to "core.domain",
-            "ui.setting" to "core.domain",
+            "core.message" to "core.common",
+            "core.message" to "core.model",
+            "core.message" to "core.platform",
+            "core.platform" to "core.common",
+            "core.platform" to "core.model",
+
+            "app" to "core.common",
+            "app" to "core.data",
+            "app" to "core.designsystem",
+            "app" to "core.domain",
+            "app" to "core.message",
+            "app" to "core.model",
+            "app" to "core.navigation",
+            "app" to "core.network",
+            "app" to "core.platform",
+            "app" to "feature.character",
+            "app" to "feature.characterdetail",
+            "app" to "feature.extra",
+            "app" to "feature.home",
+            "app" to "feature.setting",
+            "app" to "feature.splash",
         )
     }
 }

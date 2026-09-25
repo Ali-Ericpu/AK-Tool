@@ -4,14 +4,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
-import com.rainccup.aktool.di.appModule
-import com.rainccup.aktool.di.viewModelModule
+import com.rainccup.aktool.app.App
+import com.rainccup.aktool.app.appModule
 import org.koin.core.context.GlobalContext
 import org.koin.core.context.startKoin
 
 fun main() {
     if (GlobalContext.getOrNull() == null) {
-        startKoin { modules(appModule, viewModelModule) }
+        startKoin { modules(appModule) }
     }
     application {
         Window(

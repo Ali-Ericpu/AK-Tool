@@ -1,24 +1,18 @@
 package com.rainccup.aktool.core.domain.usecase.config
 
-import com.rainccup.aktool.core.data.datasource.ConfigRepository
 import com.rainccup.aktool.core.data.datasource.GameTableRepository
+import com.rainccup.aktool.core.data.repository.ConfigStore
 import com.rainccup.aktool.core.model.AppConfig
-import com.rainccup.aktool.core.network.HttpClientProvider
 
 /** 设置页：配置读写与游戏资源表更新。 */
-class GetConfigUseCase(private val configRepository: ConfigRepository) {
-    operator fun invoke(): AppConfig = configRepository.read()
+class GetConfigUseCase(private val configStore: ConfigStore) {
+    operator fun invoke(): AppConfig = configStore.current()
 }
 
-class SaveConfigUseCase(
-    private val configRepository: ConfigRepository,
-    private val httpClientProvider: HttpClientProvider,
-) {
-    operator fun invoke(serverUri: String, uid: String, adminKey: String) {
-        val cfg = configRepository.read()
-        configRepository.write(cfg.copy(serverUri = serverUri, uid = uid, adminKey = adminKey))
-        httpClientProvider.recreate(serverUri.ifBlank { cfg.serverUri })
-    }
+class SaveConfigUseCase(private val configStore: ConfigStore) {
+    /** 写入配置并返回最终生效的 serverUri（空串时沿用旧值）。 */
+    operator fun invoke(serverUri: String, uid: String, adminKey: String): String =
+        configStore.save(serverUri, uid, adminKey)
 }
 
 /**
