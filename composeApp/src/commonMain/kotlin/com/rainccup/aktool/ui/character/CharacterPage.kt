@@ -43,7 +43,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
@@ -91,6 +90,8 @@ import com.rainccup.aktool.ui.setting.BasicDialog
 import com.rainccup.aktool.ui.setting.EditTextDialog
 import com.rainccup.aktool.ui.splash.CircleIconButton
 import com.rainccup.aktool.utils.replace
+import top.yukonga.miuix.kmp.basic.InputField
+import top.yukonga.miuix.kmp.basic.SearchBar
 
 import kotlin.math.roundToInt
 
@@ -536,44 +537,52 @@ fun SearchCharDialog(
         onCancel = { onConfirmKeyword(null) },
         onConfirm = { onConfirmKeyword(selectedKeyword) }
     ) {
-        OutlinedTextField(
-            value = keyword,
-            maxLines = Int.MAX_VALUE,
-            onValueChange = {
-                keyword = it
-                charNameList.replace(onKeywordType(keyword))
+        SearchBar(
+            inputField = {
+                InputField(
+                    query = keyword,
+                    onQueryChange = {
+                        keyword = it
+                        charNameList.replace(onKeywordType(keyword))
+                    },
+                    onSearch = { onConfirmKeyword(selectedKeyword) },
+                    expanded = keyword.isNotEmpty(),
+                    onExpandedChange = { },
+                    label = stringResource(Res.string.search),
+                )
             },
-            modifier = Modifier.fillMaxWidth()
-        )
-        FlowRow(
-            horizontalArrangement = Arrangement.SpaceAround,
-            verticalArrangement = Arrangement.Top,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 16.dp)
+            expanded = keyword.isNotEmpty(),
+            onExpandedChange = { },
         ) {
-            charNameList.forEach { word ->
-                val message = stringResource(Res.string.copy_success)
-                Box(
-                    modifier = Modifier
-                        .wrapContentSize()
-                        .padding(4.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(if (selectedKeyword == word) MaterialTheme.colorScheme.primary else Color.LightGray)
-                        .combinedClickable(
-                            enabled = true,
-                            onClick = {
-                                selectedKeyword = word
-                                keyword = word
-                            },
-                            onLongClick = {
-                                val charId = onSearchCharId(word)
-                                clipboard.setText(charId)
-                            }
-                        )
-                        .padding(8.dp)
-                ) {
-                    Text(text = word, color = Color.Black)
+            FlowRow(
+                horizontalArrangement = Arrangement.SpaceAround,
+                verticalArrangement = Arrangement.Top,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 16.dp)
+            ) {
+                charNameList.forEach { word ->
+                    Box(
+                        modifier = Modifier
+                            .wrapContentSize()
+                            .padding(4.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(if (selectedKeyword == word) MaterialTheme.colorScheme.primary else Color.LightGray)
+                            .combinedClickable(
+                                enabled = true,
+                                onClick = {
+                                    selectedKeyword = word
+                                    keyword = word
+                                },
+                                onLongClick = {
+                                    val charId = onSearchCharId(word)
+                                    clipboard.setText(charId)
+                                }
+                            )
+                            .padding(8.dp)
+                    ) {
+                        Text(text = word, color = Color.Black)
+                    }
                 }
             }
         }
