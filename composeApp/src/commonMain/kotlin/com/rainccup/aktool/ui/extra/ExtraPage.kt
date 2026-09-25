@@ -29,7 +29,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.BasicAlertDialog
-import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -55,7 +54,6 @@ import org.jetbrains.compose.resources.stringResource
 
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.DialogProperties
 import org.koin.compose.viewmodel.koinViewModel
 import com.rainccup.aktool.resources.Res
 import com.rainccup.aktool.resources.*
@@ -70,8 +68,9 @@ import com.rainccup.aktool.ui.setting.BasicDialog
 import com.rainccup.aktool.ui.setting.ConfirmButtonRow
 import kotlin.math.min
 import kotlin.math.roundToInt
+import top.yukonga.miuix.kmp.preference.ArrowPreference
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ExtraPage() {
             val viewModel: ExtraViewModel = koinViewModel()
@@ -86,7 +85,7 @@ fun ExtraPage() {
     Box(modifier = Modifier.fillMaxSize()) {
         LazyColumn(
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
+            verticalArrangement = Arrangement.Top,
             modifier = Modifier.fillMaxSize()
         ) {
 
@@ -130,12 +129,11 @@ fun ExtraPage() {
             enter = fadeIn(initialAlpha = 0.1f, animationSpec = tween(100)),
             exit = fadeOut(targetAlpha = 0f, animationSpec = tween(800))
         ) {
-            BasicAlertDialog(
-                onDismissRequest = {},
-                properties = DialogProperties(
-                    dismissOnBackPress = false,
-                    dismissOnClickOutside = false
-                )
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(MiuixTheme.colorScheme.windowDimming),
+                contentAlignment = Alignment.Center
             ) {
                 val rotate by rememberInfiniteTransition(label = "").animateFloat(
                     label = "",
@@ -148,11 +146,10 @@ fun ExtraPage() {
                 )
                 Icon(
                     painter = painterResource(Res.drawable.icon),
-                    null,
+                    contentDescription = null,
                     modifier = Modifier
                         .size(100.dp)
                         .rotate(rotate)
-                        .align(alignment = Alignment.Center)
                 )
             }
         }
@@ -202,19 +199,10 @@ fun RequestButton(
     text: String = "Test",
     onclick: () -> Unit = { }
 ) {
-    Button(
+    ArrowPreference(
+        title = text,
         onClick = onclick,
-        shape = RoundedCornerShape(16.dp),
-        modifier = Modifier
-            .padding(8.dp)
-            .fillMaxWidth()
-            .height(60.dp)
-    ) {
-        Text(
-            text = text,
-            color = Color.White
-        )
-    }
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
