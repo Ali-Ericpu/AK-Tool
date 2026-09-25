@@ -17,14 +17,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material3.BasicAlertDialog
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -58,6 +55,8 @@ import org.koin.compose.viewmodel.koinViewModel
 import top.yukonga.miuix.kmp.basic.Button
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
 import top.yukonga.miuix.kmp.basic.Text
+import top.yukonga.miuix.kmp.basic.TextField
+import top.yukonga.miuix.kmp.overlay.OverlayDialog
 import top.yukonga.miuix.kmp.preference.ArrowPreference
 import top.yukonga.miuix.kmp.preference.SwitchPreference
 
@@ -172,17 +171,15 @@ fun EditTextDialog(
             }
         }
     ) {
-        OutlinedTextField(
+        TextField(
             value = text,
-            maxLines = Int.MAX_VALUE,
-            isError = isError,
             onValueChange = { text = it },
-            modifier = Modifier.fillMaxWidth()
+            maxLines = Int.MAX_VALUE,
+            modifier = Modifier.fillMaxWidth(),
         )
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BasicDialog(
     label: String = "Test",
@@ -191,32 +188,20 @@ fun BasicDialog(
     onConfirm: () -> Unit = { },
     content: @Composable (ColumnScope.() -> Unit) = {}
 ) {
-    BasicAlertDialog(
+    OverlayDialog(
+        title = label,
+        show = true,
         onDismissRequest = { onCancel() },
-        modifier = Modifier
-            .wrapContentSize()
-            .clip(RoundedCornerShape(12.dp))
-            .background(MaterialTheme.colorScheme.background)
-            .padding(16.dp)
     ) {
         Column(
             verticalArrangement = Arrangement.SpaceBetween,
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Text(
-                text = label,
-                color = MaterialTheme.colorScheme.onBackground,
-                style = MaterialTheme.typography.displaySmall,
-                modifier = Modifier
-                    .align(Alignment.Start)
-                    .padding(bottom = 16.dp)
-                    .fillMaxWidth()
-            )
             content()
             ConfirmButtonRow(
                 error = error,
                 onCancel = { onCancel() },
-                onConfirm = { onConfirm() }
+                onConfirm = { onConfirm() },
             )
         }
     }
