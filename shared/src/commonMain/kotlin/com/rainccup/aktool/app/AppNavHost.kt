@@ -1,20 +1,28 @@
 package com.rainccup.aktool.app
 
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountBox
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
-import androidx.navigation3.runtime.NavEntry
+import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
+import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
+import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import androidx.savedstate.serialization.SavedStateConfiguration
 import com.rainccup.aktool.core.message.MessageBus
@@ -61,6 +69,7 @@ private data class TabMeta(
     val icon: ImageVector,
 )
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AppNavHost() {
     val backStack = rememberNavBackStack(navConfig, AppRoute.Home)
@@ -86,6 +95,17 @@ fun AppNavHost() {
 
     Scaffold(
         snackbarHost = { SnackbarHost(state = snackbarHostState) },
+        contentWindowInsets = WindowInsets(),
+        topBar = {
+            TopAppBar(
+                title = {
+                    Text(
+                        text = "AK TOOL",
+                        modifier = Modifier.padding(12.dp)
+                    )
+                },
+            )
+        },
         bottomBar = {
             NavigationBar {
                 tabs.forEach { tab ->
@@ -93,7 +113,6 @@ fun AppNavHost() {
                         selected = currentTop == tab.route,
                         onClick = {
                             if (currentTop != tab.route) {
-                                backStack.clear()
                                 backStack.add(tab.route)
                             }
                         },
@@ -110,20 +129,52 @@ fun AppNavHost() {
             modifier = Modifier
                 .padding(paddingValues)
                 .padding(12.dp),
-            entryProvider = { key ->
-                when (key) {
-                    AppRoute.Home -> NavEntry(key) { HomePage() }
-                    AppRoute.Character -> NavEntry(key) {
-                        CharacterPage(onOpenDetail = { id ->
-                            backStack.add(AppRoute.CharacterDetail(id))
-                        })
+            transitionSpec = {
+                slideInHorizontally(initialOffsetX = { it }) togetherWith
+                        slideOutHorizontally(targetOffsetX = { -it })
+            },
+            popTransitionSpec = {
+                slideInHorizontally(initialOffsetX = { -it }) togetherWith
+                        slideOutHorizontally(targetOffsetX = { it })
+            },
+            predictivePopTransitionSpec = {
+                slideInHorizontally(initialOffsetX = { -it }) togetherWith
+                        slideOutHorizontally(targetOffsetX = { it })
+            },
+            entryDecorators = listOf(
+                rememberSaveableStateHolderNavEntryDecorator(),
+                rememberViewModelStoreNavEntryDecorator(),
+            ),
+            entryProvider = entryProvider {
+                entry<AppRoute.Home> {
+                    HomePage()
+                }
+
+                entry<AppRoute.Character> {
+                    CharacterPage(it.char) { char ->
+                        backStack.add(AppRoute.CharacterDetail(char))
                     }
-                    AppRoute.Extra -> NavEntry(key) { ExtraPage() }
-                    AppRoute.Setting -> NavEntry(key) { SettingPage() }
-                    is AppRoute.CharacterDetail -> NavEntry(key) {
-                        CharacterDetailPage(charInstId = key.charInstId, onSaved = { backStack.removeLastOrNull() })
-                    }
-                    else -> NavEntry(key) { Text("Unknown") }
+                }
+
+                entry<AppRoute.Extra> {
+                    ExtraPage()
+                }
+
+                entry<AppRoute.Setting> {
+                    SettingPage()
+                }
+
+                entry<AppRoute.CharacterDetail> {
+                    CharacterDetailPage(
+                        character = it.char,
+                        onSaved = { char ->
+                            backStack.removeLastOrNull()
+                            val last = backStack.lastOrNull()
+                            if (last is AppRoute.Character) {
+                                last.char = char
+                            }
+                        }
+                    )
                 }
             },
         )

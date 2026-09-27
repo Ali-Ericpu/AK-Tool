@@ -3,25 +3,24 @@ package com.rainccup.aktool.feature.character.viewmodel
 import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.rainccup.aktool.core.common.replace
 import com.rainccup.aktool.core.domain.model.CharacterFilter
 import com.rainccup.aktool.core.domain.usecase.character.GainCharacterUseCase
 import com.rainccup.aktool.core.domain.usecase.character.LoadCharactersUseCase
-import com.rainccup.aktool.core.domain.usecase.character.SaveCharacterUseCase
 import com.rainccup.aktool.core.model.Character
 import com.rainccup.aktool.core.platform.Messenger
-import com.rainccup.aktool.core.common.replace
-import kotlinx.coroutines.Dispatchers
+import com.rainccup.aktool.resources.Res
+import com.rainccup.aktool.resources.game_table_init_fail
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import org.jetbrains.compose.resources.getString
 import kotlin.time.Duration.Companion.milliseconds
 
 class CharacterViewModel(
     private val loadCharacters: LoadCharactersUseCase,
-    private val saveCharacter: SaveCharacterUseCase,
     private val gainCharacter: GainCharacterUseCase,
     private val messenger: Messenger,
 ) : ViewModel() {
@@ -51,6 +50,10 @@ class CharacterViewModel(
 
     fun initCharData() = viewModelScope.launch {
         if (!loadAnimate.value) {
+            if (!loadCharacters.init()) {
+                messenger.show(getString(Res.string.game_table_init_fail))
+                return@launch
+            }
             _loadAnimate.emit(true)
             characterData.clear()
             runCatching {
@@ -67,6 +70,8 @@ class CharacterViewModel(
         }
     }
 
+    fun existChar(charId: String): Boolean = loadCharacters.existChar(charId)
+
     fun selectProfession(profession: String) = viewModelScope.launch {
         _profession.emit(profession)
         characterList.clear()
@@ -77,11 +82,7 @@ class CharacterViewModel(
         _isSelect.emit(state)
     }
 
-    suspend fun changeCharData(char: Character) = withContext(Dispatchers.Default) {
-        val result = saveCharacter(char)
-        if (result.status != 0) {
-            throw RuntimeException(result.msg)
-        }
+    fun updateCharData(char: Character) = viewModelScope.launch {
         characterData[char.instId.toString()] = char
         selectProfession(_profession.value)
     }
@@ -91,7 +92,7 @@ class CharacterViewModel(
         _loadAnimate.emit(false)
     }
 
-    suspend fun gainChar(charId: String) = withContext(Dispatchers.Default) {
+    fun gainChar(charId: String) = viewModelScope.launch {
         gainCharacter(charId)
     }
 

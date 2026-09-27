@@ -1,8 +1,9 @@
 package com.rainccup.aktool.feature.characterdetail.viewmodel
 
+import com.rainccup.aktool.core.model.Character
 import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
 
 val characterDetailModule = module {
-    viewModel { (charInstId: String) -> CharacterDetailViewModel(get(), get(), get(), charInstId) }
+    viewModel { (char: Character) -> CharacterDetailViewModel(get(), get(), get(), get(), char) }
 }

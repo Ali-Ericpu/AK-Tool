@@ -1,13 +1,17 @@
 package com.rainccup.aktool.core.model
 
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
 
 @Serializable
 data class Character(
     val instId: Int,
     val charId: String,
+    @Transient
     val name: String? = null,
+    @Transient
     val profession: String? = null,
+    @Transient
     val rarity: Int? = null,
     val favorPoint: Int,
     val potentialRank: Int,
@@ -36,6 +40,19 @@ data class Character(
             this.name != other.name -> this.name!!.compareTo(other.name!!)
             else -> 0
         }
+
+    fun new(): Character {
+        return copy(
+            skills = skills.map { it.copy() },
+            equip = equip.toMap(),
+            tmpl = tmpl?.mapValues { (_, template) ->
+                template.copy(
+                    skills = template.skills.map { it.copy() },
+                    equip = template.equip.toMap()
+                )
+            }
+        )
+    }
 
     companion object {
         fun placeholder() = Character(
@@ -86,5 +103,5 @@ data class TmplChar(
     val defaultSkillIndex: Int,
     val skills: List<Skill>,
     val currentEquip: String? = null,
-    val equip: MutableMap<String, Equip>,
+    val equip: Map<String, Equip>,
 )

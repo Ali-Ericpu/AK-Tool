@@ -2,6 +2,7 @@ package com.rainccup.aktool.core.designsystem.component
 
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.Icon
@@ -24,13 +25,19 @@ fun EditText(
     value: String = "",
     label: String = "",
     hide: Boolean = false,
+    singleLine: Boolean = false,
+    autoSize: TextAutoSize? = null,
     onValueSave: (String) -> Unit = { },
 ) {
     var dialogState by remember { mutableStateOf(false) }
     ArrowPreference(
         title = label,
         endActions = {
-            Text(text = if (hide) "*".repeat(value.length) else value)
+            Text(
+                text = if (hide) "*".repeat(value.length) else value,
+                maxLines = 1,
+                autoSize = autoSize
+            )
         },
         onClick = { dialogState = true },
         holdDownState = dialogState,
@@ -39,9 +46,10 @@ fun EditText(
         value = value,
         show = dialogState,
         title = label,
-        onValueSave = {
-            dialogState = false
+        singleLine = singleLine,
+        onConfirm = {
             it?.let { onValueSave(it) }
+            dialogState = false
         },
         modifier = modifier
     )

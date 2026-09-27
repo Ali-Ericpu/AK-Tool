@@ -20,10 +20,13 @@ import com.rainccup.aktool.core.model.ResetActivityRequest
 import com.rainccup.aktool.core.model.UnlockAllCharRequest
 import com.rainccup.aktool.core.platform.ClipboardPort
 import com.rainccup.aktool.core.platform.Messenger
+import com.rainccup.aktool.resources.Res
+import com.rainccup.aktool.resources.game_table_init_fail
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.JsonElement
+import org.jetbrains.compose.resources.getString
 
 class ExtraViewModel(
     private val unlockAllCharactersUseCase: UnlockAllCharactersUseCase,
@@ -66,7 +69,7 @@ class ExtraViewModel(
         if (showUnlockChar.value || unlockAllCharactersUseCase.init()) {
             showUnlockChar.emit(!showUnlockChar.value)
         } else {
-            messenger.show("数据缺失，请更新数据后再试")
+            messenger.show(getString(Res.string.game_table_init_fail))
         }
     }
 

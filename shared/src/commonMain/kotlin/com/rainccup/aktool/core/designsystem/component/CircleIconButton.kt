@@ -17,9 +17,9 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun CircleIconButton(
     icon: ImageVector,
-    onClick: () -> Unit,
-    size: Int = 40,
     modifier: Modifier = Modifier,
+    size: Int = 40,
+    onClick: () -> Unit,
 ) {
     IconButton(
         onClick = onClick,

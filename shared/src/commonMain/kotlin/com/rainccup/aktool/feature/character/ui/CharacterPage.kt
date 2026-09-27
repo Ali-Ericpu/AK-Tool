@@ -2,7 +2,6 @@ package com.rainccup.aktool.feature.character.ui
 
 
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -10,7 +9,6 @@ import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -20,6 +18,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -27,20 +26,21 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.NearMe
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
@@ -69,16 +69,17 @@ import coil3.compose.rememberAsyncImagePainter
 import com.rainccup.aktool.core.common.replace
 import com.rainccup.aktool.core.designsystem.component.BasicDialog
 import com.rainccup.aktool.core.designsystem.component.CharPainter
+import com.rainccup.aktool.core.designsystem.component.CircleIconButton
 import com.rainccup.aktool.core.designsystem.component.EditTextDialog
 import com.rainccup.aktool.core.designsystem.icon
 import com.rainccup.aktool.core.domain.GameTableQuery
 import com.rainccup.aktool.core.model.Character
 import com.rainccup.aktool.core.model.Profession
+import com.rainccup.aktool.core.platform.ClipboardPort
 import com.rainccup.aktool.core.platform.platformUiScale
 import com.rainccup.aktool.core.platform.urlEncode
 import com.rainccup.aktool.feature.character.viewmodel.CharacterViewModel
 import com.rainccup.aktool.resources.Res
-import com.rainccup.aktool.resources.baseline_start
 import com.rainccup.aktool.resources.char_id
 import com.rainccup.aktool.resources.character_default_skill_icon
 import com.rainccup.aktool.resources.character_elite_0
@@ -104,17 +105,18 @@ import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 import top.yukonga.miuix.kmp.basic.FloatingToolbar
+import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.basic.InputField
 import top.yukonga.miuix.kmp.basic.SearchBar
 import kotlin.math.roundToInt
-import top.yukonga.miuix.kmp.basic.IconButton as MiuixIconButton
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CharacterPage(onOpenDetail: (String) -> Unit) {
+fun CharacterPage(
+    updateChar: Character?,
+    onOpenDetail: (Character) -> Unit,
+) {
     val viewModel: CharacterViewModel = koinViewModel()
-    val gameTable: GameTableQuery = koinInject()
-        val charList = viewModel.charList()
+    val charList = viewModel.charList()
     val splash by viewModel.splash.collectAsState()
     val showLoadAnimate by viewModel.loadAnimate.collectAsState()
     val showGainCharDialog by viewModel.gainChar.collectAsState()
@@ -126,12 +128,16 @@ fun CharacterPage(onOpenDetail: (String) -> Unit) {
     val professionOffsetX by animateFloatAsState(if (selectProfession) 0f else 1.2f, label = "")
     val menuOffsetX by animateFloatAsState(if (!selectProfession) 0f else 1.5f, label = "")
     val lazyGridState = rememberLazyGridState()
-    val refresh: () -> Unit = { viewModel.initCharData() }
     val baseDensity = LocalDensity.current
     val uiScale = platformUiScale()
+    LaunchedEffect(updateChar) {
+        updateChar?.let { char ->
+            viewModel.updateCharData(char)
+        }
+    }
     PullToRefreshBox(
         isRefreshing = showLoadAnimate,
-        onRefresh = { refresh() },
+        onRefresh = viewModel::initCharData,
         modifier = Modifier.fillMaxSize()
     ) {
         CompositionLocalProvider(
@@ -147,93 +153,98 @@ fun CharacterPage(onOpenDetail: (String) -> Unit) {
                 ) {
                     items(charList) { char ->
                         CharacterCard(char = char) {
-                            onOpenDetail(it.toString())
+                            onOpenDetail(char)
                         }
                     }
                 }
                 Box(
                     modifier = Modifier
-                        .width(42.dp)
+                        .width(64.dp)
+                        .wrapContentHeight()
                         .align(Alignment.TopEnd)
                         .padding(top = 80.dp)
                 ) {
-                    LazyColumn(
+                    FloatingToolbar(
+                        color = Color.Black.copy(alpha = 0.9f),
                         modifier = Modifier
-                            .clip(RoundedCornerShape(8.dp))
+                            .wrapContentHeight()
                             .offsetPercent(offsetPercentX = professionOffsetX)
                     ) {
-                        item {
-                            MiuixIconButton(
-                                onClick = {
-                                    if (currentProfession == "ALL") {
-                                        viewModel.changeSelectState(false)
-                                    } else {
-                                        viewModel.selectProfession("ALL")
-                                        coroutineScope.launch { lazyGridState.scrollToItem(0) }
-                                    }
-                                },
-                                modifier = Modifier
-                                    .height(52.dp)
-                                    .fillMaxWidth()
-                                    .background(Color.Black.copy(alpha = 0.7f))
-                                    .align(alignment = Alignment.Center)
-                            ) {
-                                Text(
-                                    text = if (currentProfession == "ALL") "BACK" else "ALL",
-                                    textAlign = TextAlign.Center,
-                                    color = MaterialTheme.colorScheme.primary
-                                )
-                            }
-                        }
-                        items(professions) {
-                            Box(modifier = Modifier.fillMaxSize()) {
-                                Image(
-                                    painter = painterResource(it.icon),
-                                    contentDescription = it.name,
-                                    modifier = Modifier
-                                        .alpha(0.9f)
-                                        .height(42.dp)
-                                        .fillMaxWidth()
-                                        .clickable {
-                                            viewModel.selectProfession(it.name)
+                        LazyColumn(
+                            verticalArrangement = Arrangement.Top,
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            modifier = Modifier.padding(bottom = 4.dp).clip(RoundedCornerShape(50.dp))
+                        ) {
+                            item {
+                                IconButton(
+                                    onClick = {
+                                        if (currentProfession == "ALL") {
+                                            viewModel.changeSelectState(false)
+                                        } else {
+                                            viewModel.selectProfession("ALL")
                                             coroutineScope.launch { lazyGridState.scrollToItem(0) }
                                         }
-                                )
-                                if (currentProfession == it.name) {
-                                    Image(
-                                        painter = painterResource(Res.drawable.profession_select),
-                                        contentDescription = "select",
-                                        alignment = Alignment.CenterEnd,
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .height(42.dp)
+                                    },
+                                    modifier = Modifier
+                                        .height(48.dp)
+                                        .width(48.dp)
+                                        .align(alignment = Alignment.CenterEnd)
+                                        .padding(4.dp)
+                                ) {
+                                    Text(
+                                        text = if (currentProfession == "ALL") "BACK" else "ALL",
+                                        textAlign = TextAlign.Center,
+                                        maxLines = 1,
+                                        autoSize = TextAutoSize.StepBased(),
+                                        color = MaterialTheme.colorScheme.primary
                                     )
+                                }
+                            }
+                            items(professions) {
+                                Box(
+                                    contentAlignment = Alignment.CenterEnd,
+                                    modifier = Modifier.fillMaxSize()
+                                ) {
+                                    Image(
+                                        painter = painterResource(it.icon),
+                                        contentDescription = it.name,
+                                        contentScale = ContentScale.Crop,
+                                        modifier = Modifier
+                                            .alpha(0.8f)
+                                            .height(42.dp)
+                                            .clickable {
+                                                viewModel.selectProfession(it.name)
+                                                coroutineScope.launch { lazyGridState.scrollToItem(0) }
+                                            }
+                                    )
+                                    if (currentProfession == it.name) {
+                                        Image(
+                                            painter = painterResource(Res.drawable.profession_select),
+                                            contentDescription = "select",
+                                            alignment = Alignment.CenterEnd,
+                                            modifier = Modifier.height(42.dp)
+                                        )
+                                    }
                                 }
                             }
                         }
                     }
-                    FloatingToolbar(modifier = Modifier.offsetPercent(offsetPercentX = menuOffsetX)) {
-                        Column {
-                            MiuixIconButton(onClick = { viewModel.changeSelectState(true) }) {
+                    FloatingToolbar(
+                        modifier = Modifier.offsetPercent(offsetPercentX = menuOffsetX)
+                    ) {
+                        Column(modifier = Modifier) {
+                            IconButton(
+                                onClick = { viewModel.changeSelectState(true) }
+                            ) {
                                 Icon(Icons.Default.Menu, contentDescription = null)
                             }
-                            MiuixIconButton(onClick = { viewModel.changeGainCharState() }) {
+                            IconButton(onClick = viewModel::changeGainCharState) {
                                 Icon(Icons.Default.Add, contentDescription = null)
                             }
-                            MiuixIconButton(onClick = { viewModel.changeSearchState() }) {
+                            IconButton(onClick = viewModel::changeSearchState) {
                                 Icon(Icons.Default.Search, contentDescription = null)
                             }
-                            MiuixIconButton(
-                                onClick = {
-                                    coroutineScope.launch {
-                                        try {
-                                            refresh()
-                                        } catch (_: Exception) {
-                                            viewModel.closeAnimate()
-                                        }
-                                    }
-                                }
-                            ) {
+                            IconButton(onClick = viewModel::initCharData) {
                                 Icon(Icons.Default.Refresh, contentDescription = null)
                             }
                         }
@@ -246,43 +257,27 @@ fun CharacterPage(onOpenDetail: (String) -> Unit) {
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
             ) {
-                MiuixIconButton(
-                    onClick = {
-                        coroutineScope.launch {
-                            if (gameTable.init()) {
-                                refresh()
-                            }
-                        }
-                    },
+                CircleIconButton(
+                    icon = Icons.Default.NearMe,
+                    size = 72,
+                    onClick = viewModel::initCharData,
                     modifier = Modifier
                         .padding(4.dp)
-                        .size(72.dp)
-                ) {
-                    Icon(
-                        painter = painterResource(Res.drawable.baseline_start),
-                        contentDescription = null,
-                        modifier = Modifier
-                            .clip(CircleShape)
-                            .fillMaxSize()
-                            .background(MaterialTheme.colorScheme.primary)
-                            .padding(16.dp)
-                    )
-                }
+                )
             }
         }
     }
     EditTextDialog(
         title = stringResource(Res.string.char_id),
         show = showGainCharDialog,
-        error = { !it.startsWith("char_") || gameTable.characterTable[it] == null },
-        onValueSave = { charId ->
+        error = { !it.startsWith("char_") || viewModel.existChar(it) },
+        onConfirm = { charId ->
             charId?.let {
                 coroutineScope.launch {
                     runCatching {
                         viewModel.gainChar(charId)
                     }.onSuccess {
-
-                        refresh()
+                        viewModel.initCharData()
                     }.onFailure {
 
                     }
@@ -518,7 +513,6 @@ fun CharacterCard(
     }
 }
 
-@OptIn(ExperimentalLayoutApi::class, ExperimentalFoundationApi::class)
 @Composable
 fun SearchCharDialog(
     show: Boolean,
@@ -526,7 +520,7 @@ fun SearchCharDialog(
     onSearchCharId: (String) -> String = { "" },
     onConfirmKeyword: (String?) -> Unit = { }
 ) {
-    val clipboard = koinInject<com.rainccup.aktool.core.platform.ClipboardPort>()
+    val clipboard = koinInject<ClipboardPort>()
     var keyword by remember { mutableStateOf("") }
     val charNameList = remember { mutableStateListOf<String>() }
     var selectedKeyword by remember { mutableStateOf("") }

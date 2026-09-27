@@ -20,7 +20,7 @@ class UnlockAllCharactersUseCase(
     private val admin: AdminRepository,
     private val gameTableRepository: GameTableRepository
 ) {
-    fun init(): Boolean = gameTableRepository.init()
+    suspend fun init(): Boolean = gameTableRepository.init()
     suspend operator fun invoke(body: UnlockAllCharRequest): ApiResult<JsonElement?> =
         admin.unlockAllChar(body.copy(favorPoint = gameTableRepository.getRealFavPoint(body.favorPoint)))
 }

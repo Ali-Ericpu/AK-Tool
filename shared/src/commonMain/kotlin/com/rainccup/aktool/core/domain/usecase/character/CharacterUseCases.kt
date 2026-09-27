@@ -16,6 +16,10 @@ class LoadCharactersUseCase(
     private val admin: AdminRepository,
     private val gameTable: GameTableRepository,
 ) {
+    suspend fun init(): Boolean = gameTable.init()
+
+    fun existChar(charId: String): Boolean = gameTable.characterTable[charId] == null
+
     suspend operator fun invoke(): LoadedCharacters {
         val nameToId = mutableMapOf<String, String>()
         gameTable.characterTable.forEach { (charId, charData) ->
@@ -104,6 +108,9 @@ class GainCharacterUseCase(private val admin: AdminRepository) {
 
 /** 精英等级变更时的派生字段重置（原 CharacterDetailViewModel.changeEvoPhase）。 */
 class ChangeEvolvePhaseUseCase(private val gameTable: GameTableRepository) {
+
+    fun getFavPointPercent(favPoint: Int): Int = gameTable.getFavPointPercent(favPoint)
+
     operator fun invoke(char: Character, phase: Int): EvolvePhaseChange {
         var skillIndex = -1
         val skills = char.skills.mapIndexed { index, skill ->

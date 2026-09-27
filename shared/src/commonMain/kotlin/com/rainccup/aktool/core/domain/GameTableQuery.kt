@@ -14,7 +14,7 @@ class GameTableQuery(private val repository: GameTableRepository) {
     val characterTable: Map<String, Map<String, Any?>>
         get() = repository.characterTable
 
-    fun init(): Boolean = repository.init()
+//    fun init(): Boolean = repository.init()
 
     fun getCharacterData(charId: String): Map<String, Any?> = repository.getCharacterData(charId)
 

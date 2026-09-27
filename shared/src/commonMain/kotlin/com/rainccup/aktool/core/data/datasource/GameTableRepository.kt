@@ -3,6 +3,8 @@ package com.rainccup.aktool.core.data.datasource
 import com.rainccup.aktool.core.common.decodeToMap
 import com.rainccup.aktool.core.network.ApiClient
 import com.rainccup.aktool.core.platform.AppPaths
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 class GameTableRepository(
     private val paths: AppPaths,
@@ -16,14 +18,16 @@ class GameTableRepository(
     private var favorTable: Map<String, Any?> = emptyMap()
     private var uniequipTable: Map<String, Any?> = emptyMap()
 
-    fun init(): Boolean {
+    suspend fun init(): Boolean {
         if (characterTable.isNotEmpty() && favorTable.isNotEmpty()) return true
         val missing = jsonFiles.any { !fileExists("${paths.dataDir}/excel/$it") }
         if (missing) return false
-        characterTable = castMap(decodeToMap(readFileText("${paths.dataDir}/excel/${jsonFiles[0]}")!!))
-        favorTable = decodeToMap(readFileText("${paths.dataDir}/excel/${jsonFiles[1]}")!!)
-        uniequipTable = decodeToMap(readFileText("${paths.dataDir}/excel/${jsonFiles[2]}")!!)
-        return true
+        return withContext(Dispatchers.IO) {
+            characterTable = castMap(decodeToMap(readFileText("${paths.dataDir}/excel/${jsonFiles[0]}")!!))
+            favorTable = decodeToMap(readFileText("${paths.dataDir}/excel/${jsonFiles[1]}")!!)
+            uniequipTable = decodeToMap(readFileText("${paths.dataDir}/excel/${jsonFiles[2]}")!!)
+            true
+        }
     }
 
     suspend fun refresh(uri: String) {

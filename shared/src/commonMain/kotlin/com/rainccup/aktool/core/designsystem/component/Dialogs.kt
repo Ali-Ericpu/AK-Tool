@@ -65,7 +65,9 @@ fun EditTextDialog(
     value: String = "",
     title: String = "Title",
     error: (String) -> Boolean = { false },
-    onValueSave: (String?) -> Unit = { }
+    singleLine: Boolean = false,
+    onConfirm: (String?) -> Unit = { },
+    onCancel: () -> Unit = { onConfirm(null) }
 ) {
     var text by remember { mutableStateOf(value) }
     val isError = error(text)
@@ -73,19 +75,19 @@ fun EditTextDialog(
         title = title,
         show = show,
         error = isError,
-        onCancel = { onValueSave(null) },
+        onCancel = onCancel,
         onConfirm = {
             if (isError) {
 
             } else {
-                onValueSave(text)
+                onConfirm(text)
             }
         }
     ) {
         TextField(
             value = text,
             onValueChange = { text = it },
-            maxLines = Int.MAX_VALUE,
+            singleLine = singleLine,
             modifier = modifier.fillMaxWidth(),
         )
     }

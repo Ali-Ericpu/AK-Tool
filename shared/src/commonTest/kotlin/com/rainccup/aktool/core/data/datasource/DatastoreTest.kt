@@ -8,10 +8,10 @@ import com.rainccup.aktool.core.platform.AppPaths
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respond
 import io.ktor.http.HttpStatusCode
+import kotlinx.coroutines.runBlocking
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
-import kotlin.test.assertTrue
 
 class GameTableRepositoryTest {
 
@@ -38,7 +38,7 @@ class GameTableRepositoryTest {
     @Test
     fun init_returnsFalseWhenMissing() {
         val repo = GameTableRepository(FakePaths, api())
-        assertFalse(repo.init())
+        assertFalse(runBlocking{ repo.init() })
     }
 
     private fun api(): ApiClient {

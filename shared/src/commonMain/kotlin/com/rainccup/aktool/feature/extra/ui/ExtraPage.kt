@@ -1,15 +1,6 @@
 package com.rainccup.aktool.feature.extra.ui
 
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -29,7 +20,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -39,7 +29,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.rainccup.aktool.core.designsystem.component.BasicDialog
@@ -66,7 +55,6 @@ import com.rainccup.aktool.resources.equip_lv
 import com.rainccup.aktool.resources.evp_phase
 import com.rainccup.aktool.resources.fav_pt
 import com.rainccup.aktool.resources.gain_item
-import com.rainccup.aktool.resources.icon
 import com.rainccup.aktool.resources.is_nothing
 import com.rainccup.aktool.resources.item
 import com.rainccup.aktool.resources.item_id
@@ -155,35 +143,6 @@ fun ExtraPage() {
                 ArrowPreference(
                     title = stringResource(Res.string.query_account),
                     onClick = viewModel::queryAccountByUID
-                )
-            }
-        }
-        AnimatedVisibility(
-            visible = isConnecting && !showValidCodeDialog,
-            enter = fadeIn(initialAlpha = 0.1f, animationSpec = tween(100)),
-            exit = fadeOut(targetAlpha = 0f, animationSpec = tween(800))
-        ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(MiuixTheme.colorScheme.windowDimming),
-                contentAlignment = Alignment.Center
-            ) {
-                val rotate by rememberInfiniteTransition(label = "").animateFloat(
-                    label = "",
-                    initialValue = 0f,
-                    targetValue = 360f,
-                    animationSpec = infiniteRepeatable(
-                        animation = tween(800, easing = LinearEasing),
-                        repeatMode = RepeatMode.Restart
-                    )
-                )
-                Icon(
-                    painter = painterResource(Res.drawable.icon),
-                    contentDescription = null,
-                    modifier = Modifier
-                        .size(100.dp)
-                        .rotate(rotate)
                 )
             }
         }
@@ -510,7 +469,9 @@ private fun ValidateCodeDialog(
     onExit: () -> Unit = { }
 ) {
     val clipboard = koinInject<ClipboardPort>()
-    LaunchedEffect(Unit) { onRefresh() }
+    if (show) {
+        onRefresh()
+    }
     OverlayDialog(
         show = show,
         onDismissRequest = { onExit() },

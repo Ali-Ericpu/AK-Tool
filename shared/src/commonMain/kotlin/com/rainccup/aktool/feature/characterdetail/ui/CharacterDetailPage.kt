@@ -27,10 +27,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -42,7 +40,6 @@ import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
-import co.touchlab.kermit.Logger
 import com.rainccup.aktool.core.designsystem.component.IntRangeSlider
 import com.rainccup.aktool.core.domain.GameTableQuery
 import com.rainccup.aktool.core.model.Character
@@ -50,7 +47,6 @@ import com.rainccup.aktool.core.platform.platformUiScale
 import com.rainccup.aktool.feature.character.ui.CharacterCard
 import com.rainccup.aktool.feature.character.ui.equipPainter
 import com.rainccup.aktool.feature.character.ui.skillPainter
-import com.rainccup.aktool.feature.character.viewmodel.CharacterViewModel
 import com.rainccup.aktool.feature.characterdetail.viewmodel.CharacterDetailViewModel
 import com.rainccup.aktool.resources.Res
 import com.rainccup.aktool.resources.cancel
@@ -68,7 +64,6 @@ import com.rainccup.aktool.resources.potential_rank
 import com.rainccup.aktool.resources.save
 import com.rainccup.aktool.resources.skill_level
 import com.rainccup.aktool.resources.star_mark
-import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
@@ -80,31 +75,14 @@ import top.yukonga.miuix.kmp.preference.SwitchPreference
 
 @Composable
 fun CharacterDetailPage(
-    charInstId: String,
-    onSaved: () -> Unit,
-    vm: CharacterDetailViewModel = koinViewModel { parametersOf(charInstId) },
-    charViewModel: CharacterViewModel = koinViewModel(),
+    character: Character,
+    onSaved: (Character?) -> Unit,
+    vm: CharacterDetailViewModel = koinViewModel { parametersOf(character.new()) },
 ) {
-    val gameTable: GameTableQuery = koinInject()
-    val character = charViewModel.characterData[charInstId] ?: run {
-        onSaved()
-        Character.placeholder()
-    }
-    LaunchedEffect(Unit) {
-        val copy = character.copy(
-            favorPoint = gameTable.getFavPointPercent(character.favorPoint),
-            skills = character.skills.map { it.copy() }
-        )
-        vm.updateMaxEvoPhase(copy.charId)
-        vm.updateMaxSkillLevel(copy.evolvePhase)
-        vm.updateMaxLevel(copy.charId, copy.evolvePhase)
-        vm.accept(copy)
-    }
     val char by vm.character.collectAsState()
     val maxLevel by vm.maxLevel.collectAsState()
     val maxSkillLevel by vm.maxSkillLevel.collectAsState()
     val maxEvoPhase by vm.maxEvoPhase.collectAsState()
-    val coroutineScope = rememberCoroutineScope()
     val baseDensity = LocalDensity.current
     val uiScale = platformUiScale()
     LazyColumn(
@@ -258,22 +236,14 @@ fun CharacterDetailPage(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Button(onClick = { onSaved() }) {
+                    Button(onClick = { onSaved(null) }) {
                         Text(stringResource(Res.string.cancel))
                     }
                     Button(onClick = {
                         val ruled = vm.applySaveRules(char)
                         vm.accept(ruled)
-                        Logger.d { "CharacterDetail" }
-                        coroutineScope.launch {
-                            runCatching {
-                                charViewModel.changeCharData(ruled)
-                            }.onSuccess {
-                                onSaved()
-                            }.onFailure {
-
-                            }
-                        }
+                        vm.saveCharData(ruled)
+                        onSaved(ruled)
                     }) {
                         Text(stringResource(Res.string.save))
                     }
