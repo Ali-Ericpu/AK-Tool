@@ -19,7 +19,6 @@ class SettingViewModel(
 
     fun updateExcel(uri: String) {
         viewModelScope.launch {
-            messenger.show(uri)
             _isUpdateExcel.emit(true)
             runCatching { updateGameTableUseCase(uri) }.onSuccess { updated ->
                 if (updated) messenger.show("更新成功")
