@@ -1,5 +1,6 @@
 package com.rainccup.aktool.core.domain.usecase.admin
 
+import com.rainccup.aktool.core.data.datasource.GameTableRepository
 import com.rainccup.aktool.core.data.repository.AdminRepository
 import com.rainccup.aktool.core.model.AddFlushMessageRequest
 import com.rainccup.aktool.core.model.ApiResult
@@ -15,9 +16,13 @@ import kotlinx.serialization.json.JsonElement
  * 加载态、成功/失败提示（Messenger）仍由 ViewModel 负责，use case 不碰 UI。
  */
 
-class UnlockAllCharactersUseCase(private val admin: AdminRepository) {
+class UnlockAllCharactersUseCase(
+    private val admin: AdminRepository,
+    private val gameTableRepository: GameTableRepository
+) {
+    fun init(): Boolean = gameTableRepository.init()
     suspend operator fun invoke(body: UnlockAllCharRequest): ApiResult<JsonElement?> =
-        admin.unlockAllChar(body)
+        admin.unlockAllChar(body.copy(favorPoint = gameTableRepository.getRealFavPoint(body.favorPoint)))
 }
 
 class UnlockAllStagesUseCase(private val admin: AdminRepository) {

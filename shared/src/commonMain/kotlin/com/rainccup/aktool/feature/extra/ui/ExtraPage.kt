@@ -25,7 +25,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
@@ -33,7 +32,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -43,18 +42,24 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.rainccup.aktool.core.domain.GameTableQuery
+import com.rainccup.aktool.core.designsystem.component.BasicDialog
+import com.rainccup.aktool.core.designsystem.component.ConfirmButtonRow
+import com.rainccup.aktool.core.designsystem.component.IntRangeSlider
+import com.rainccup.aktool.core.domain.model.UnlockAllCharRules
 import com.rainccup.aktool.core.model.AddFlushMessageRequest
 import com.rainccup.aktool.core.model.Item
 import com.rainccup.aktool.core.model.RegisterAccountRequest
 import com.rainccup.aktool.core.model.ResetActivityRequest
 import com.rainccup.aktool.core.model.UnlockAllCharRequest
+import com.rainccup.aktool.core.platform.ClipboardPort
+import com.rainccup.aktool.feature.extra.viewmodel.ExtraViewModel
 import com.rainccup.aktool.resources.Res
 import com.rainccup.aktool.resources.account
 import com.rainccup.aktool.resources.act_id
 import com.rainccup.aktool.resources.act_type
 import com.rainccup.aktool.resources.add_flush_message
 import com.rainccup.aktool.resources.baseline_copy
+import com.rainccup.aktool.resources.content_invalid
 import com.rainccup.aktool.resources.copy_success
 import com.rainccup.aktool.resources.count
 import com.rainccup.aktool.resources.equip_lv
@@ -83,11 +88,6 @@ import com.rainccup.aktool.resources.unlock_all_char
 import com.rainccup.aktool.resources.unlock_all_flags
 import com.rainccup.aktool.resources.unlock_all_stages
 import com.rainccup.aktool.resources.valid_code
-import com.rainccup.aktool.core.designsystem.component.IntRangeSlider
-import com.rainccup.aktool.core.designsystem.component.BasicDialog
-import com.rainccup.aktool.core.designsystem.component.ConfirmButtonRow
-import com.rainccup.aktool.feature.extra.viewmodel.ExtraViewModel
-import com.rainccup.aktool.core.domain.model.UnlockAllCharRules
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
@@ -97,13 +97,10 @@ import top.yukonga.miuix.kmp.basic.TextField
 import top.yukonga.miuix.kmp.overlay.OverlayDialog
 import top.yukonga.miuix.kmp.preference.ArrowPreference
 import top.yukonga.miuix.kmp.theme.MiuixTheme
-import kotlin.math.min
-import kotlin.math.roundToInt
 
 @Composable
 fun ExtraPage() {
     val viewModel: ExtraViewModel = koinViewModel()
-    val gameTable: GameTableQuery = koinInject()
     val showUnlockChar by viewModel.showUnlockChar.collectAsState()
     val showMessageDialog by viewModel.showMessageDialog.collectAsState()
     val showItemDialog by viewModel.showItemDialog.collectAsState()
@@ -119,38 +116,46 @@ fun ExtraPage() {
         ) {
 
             item {
-                RequestButton(stringResource(Res.string.register_acc)) {
-                    viewModel.changeAccountState()
-                }
-                RequestButton(stringResource(Res.string.unlock_all_char)) {
-                    if (gameTable.init()) {
-                        viewModel.changeUnlockCharState()
-                    }
-                }
-                RequestButton(stringResource(Res.string.unlock_all_stages)) {
-                    viewModel.unlockAllStages()
-                }
-                RequestButton(stringResource(Res.string.unlock_all_flags)) {
-                    viewModel.unlockAllFlags()
-                }
-                RequestButton(stringResource(Res.string.add_flush_message)) {
-                    viewModel.changeMessageState()
-                }
-                RequestButton(stringResource(Res.string.gain_item)) {
-                    viewModel.changeItemState()
-                }
-                RequestButton(stringResource(Res.string.reset_act)) {
-                    viewModel.changeActivityState()
-                }
-                RequestButton(stringResource(Res.string.query_valid_code)) {
-                    viewModel.changeValidCodeState()
-                }
-                RequestButton(stringResource(Res.string.reset_rlv2)) {
-                    viewModel.resetRlv2()
-                }
-                RequestButton(stringResource(Res.string.query_account)) {
-                    viewModel.queryAccountByUID()
-                }
+                ArrowPreference(
+                    title = stringResource(Res.string.register_acc),
+                    onClick = viewModel::changeAccountState
+                )
+                ArrowPreference(
+                    title = stringResource(Res.string.unlock_all_char),
+                    onClick =viewModel::changeUnlockCharState
+                )
+                ArrowPreference(
+                    title = stringResource(Res.string.unlock_all_stages),
+                    onClick = viewModel::unlockAllStages
+                )
+                ArrowPreference(
+                    title = stringResource(Res.string.unlock_all_flags),
+                    onClick = viewModel::unlockAllFlags
+                )
+                ArrowPreference(
+                    title = stringResource(Res.string.add_flush_message),
+                    onClick = viewModel::changeMessageState
+                )
+                ArrowPreference(
+                    title = stringResource(Res.string.gain_item),
+                    onClick = viewModel::changeItemState
+                )
+                ArrowPreference(
+                    title = stringResource(Res.string.reset_act),
+                    onClick = viewModel::changeActivityState
+                )
+                ArrowPreference(
+                    title = stringResource(Res.string.query_valid_code),
+                    onClick = viewModel::changeValidCodeState
+                )
+                ArrowPreference(
+                    title = stringResource(Res.string.reset_rlv2),
+                    onClick = viewModel::resetRlv2
+                )
+                ArrowPreference(
+                    title = stringResource(Res.string.query_account),
+                    onClick = viewModel::queryAccountByUID
+                )
             }
         }
         AnimatedVisibility(
@@ -183,73 +188,51 @@ fun ExtraPage() {
             }
         }
     }
-    if (showUnlockChar) {
-        UnlockAllCharDialog(gameTable) {
-            it?.let { viewModel.unlockAllChar(it) }
-            viewModel.changeUnlockCharState()
-        }
+    UnlockAllCharDialog(showUnlockChar) {
+        it?.let { viewModel.unlockAllChar(it) }
+        viewModel.changeUnlockCharState()
     }
-    if (showMessageDialog) {
-        AddFlushMessageDialog {
-            it?.let { viewModel.addFlushMessage(it) }
-            viewModel.changeMessageState()
-        }
+    AddFlushMessageDialog(showMessageDialog) {
+        it?.let { viewModel.addFlushMessage(it) }
+        viewModel.changeMessageState()
     }
-    if (showItemDialog) {
-        GainItemDialog {
-            it?.let { viewModel.gainItem(it) }
-            viewModel.changeItemState()
-        }
+    GainItemDialog(showItemDialog) {
+        it?.let { viewModel.gainItem(it) }
+        viewModel.changeItemState()
     }
-    if (showActivityDialog) {
-        ResetActivityDialog {
-            it?.let { viewModel.resetActivity(it) }
-            viewModel.changeActivityState()
-        }
+    ResetActivityDialog(showActivityDialog) {
+        it?.let { viewModel.resetActivity(it) }
+        viewModel.changeActivityState()
     }
-    if (showAccountDialog) {
-        RegisterAccountDialog {
-            it?.let { viewModel.registerAccount(it) }
-            viewModel.changeAccountState()
-        }
+    RegisterAccountDialog(showAccountDialog) {
+        it?.let { viewModel.registerAccount(it) }
+        viewModel.changeAccountState()
     }
-    if (showValidCodeDialog) {
-        ValidateCodeDialog(
-            isRefreshing = isConnecting,
-            validateCode = viewModel.validateCodeList(),
-            onRefresh = { viewModel.syncValidCode() },
-            onExit = { viewModel.changeValidCodeState() }
-        )
-    }
-}
-
-@Composable
-fun RequestButton(
-    text: String = "Test",
-    onclick: () -> Unit = { }
-) {
-    ArrowPreference(
-        title = text,
-        onClick = onclick,
+    ValidateCodeDialog(
+        show = showValidCodeDialog,
+        isRefreshing = isConnecting,
+        validateCode = viewModel.validateCodeList(),
+        onRefresh = viewModel::syncValidCode,
+        onExit = viewModel::changeValidCodeState
     )
 }
 
 @Composable
 private fun UnlockAllCharDialog(
-    gameTable: GameTableQuery,
+    show: Boolean,
     onValueSave: (UnlockAllCharRequest?) -> Unit = {}
 ) {
-    var evolvePhase by remember { mutableFloatStateOf(2f) }
-    var level by remember { mutableFloatStateOf(90f) }
-    var maxLevel by remember { mutableFloatStateOf(90f) }
-    var favorPoint by remember { mutableFloatStateOf(200f) }
-    var mainSkillLvl by remember { mutableFloatStateOf(7f) }
-    var equipLevel by remember { mutableFloatStateOf(3f) }
-    var potentialRank by remember { mutableFloatStateOf(5f) }
-    var specializeLevel by remember { mutableFloatStateOf(3f) }
+    var evolvePhase by remember { mutableIntStateOf(2) }
+    var level by remember { mutableIntStateOf(90) }
+    var maxLevel by remember { mutableIntStateOf(90) }
+    var favorPoint by remember { mutableIntStateOf(200) }
+    var mainSkillLvl by remember { mutableIntStateOf(7) }
+    var equipLevel by remember { mutableIntStateOf(3) }
+    var potentialRank by remember { mutableIntStateOf(5) }
+    var specializeLevel by remember { mutableIntStateOf(3) }
     OverlayDialog(
         title = stringResource(Res.string.unlock_all_char),
-        show = true,
+        show = show,
         onDismissRequest = { onValueSave(null) },
     ) {
         Column {
@@ -258,7 +241,7 @@ private fun UnlockAllCharDialog(
                     value = evolvePhase,
                     maxValue = 2,
                     description = stringResource(Res.string.evp_phase),
-                    onValueChange = { evolvePhase = it },
+//                    onValueChange = { evolvePhase = it },
                     onValueChangeFinished = {
                         val effects = UnlockAllCharRules.onEvolvePhaseChanged(
                             phase = it,
@@ -281,8 +264,11 @@ private fun UnlockAllCharDialog(
                     maxValue = 90,
                     start = 1,
                     description = stringResource(Res.string.level),
-                    onValueChange = { level = it },
-                    onValueChangeFinished = { if (it > maxLevel) level = maxLevel },
+//                    onValueChange = { level = it },
+                    onValueChangeFinished = {
+                        level = it
+                        if (it > maxLevel) level = maxLevel
+                    },
                     modifier = Modifier.weight(1f)
                 )
             }
@@ -292,11 +278,8 @@ private fun UnlockAllCharDialog(
                     maxValue = 7,
                     start = 1,
                     description = stringResource(Res.string.skill_level),
-                    onValueChange = { mainSkillLvl = it },
                     onValueChangeFinished = {
-                        mainSkillLvl = UnlockAllCharRules
-                            .clampSkillLevel(evolvePhase.roundToInt(), it)
-                            .toFloat()
+                        mainSkillLvl = UnlockAllCharRules.clampSkillLevel(evolvePhase, it)
                     },
                     modifier = Modifier.weight(1f)
                 )
@@ -304,7 +287,7 @@ private fun UnlockAllCharDialog(
                     value = potentialRank,
                     maxValue = 5,
                     description = stringResource(Res.string.potential_rank),
-                    onValueChange = { potentialRank = it },
+                    onValueChangeFinished = { potentialRank = it },
                     modifier = Modifier.weight(1f)
                 )
             }
@@ -312,22 +295,23 @@ private fun UnlockAllCharDialog(
                 value = specializeLevel,
                 maxValue = 3,
                 description = stringResource(Res.string.sp_skill_lv),
-                onValueChange = {
-                    specializeLevel = UnlockAllCharRules.normalizeSpecializeLevel(evolvePhase, mainSkillLvl, it)
+                onValueChangeFinished = {
+                    specializeLevel =
+                        UnlockAllCharRules.normalizeSpecializeLevel(evolvePhase, mainSkillLvl, it)
                 },
             )
             IntRangeSlider(
                 value = favorPoint,
                 maxValue = 200,
                 description = stringResource(Res.string.fav_pt),
-                onValueChange = { favorPoint = it }
+                onValueChangeFinished = { favorPoint = it }
             )
             IntRangeSlider(
                 value = equipLevel,
                 maxValue = 3,
                 start = 1,
                 description = stringResource(Res.string.equip_lv),
-                onValueChange = {
+                onValueChangeFinished = {
                     equipLevel = UnlockAllCharRules.normalizeEquipLevel(evolvePhase, it)
                 },
             )
@@ -336,13 +320,13 @@ private fun UnlockAllCharDialog(
                 onConfirm = {
                     onValueSave(
                         UnlockAllCharRequest(
-                            favorPoint = gameTable.getRealFavPoint(favorPoint.roundToInt()),
-                            potentialRank = potentialRank.roundToInt(),
-                            specializeLevel = specializeLevel.roundToInt(),
-                            mainSkillLvl = mainSkillLvl.roundToInt(),
-                            evolvePhase = evolvePhase.roundToInt(),
-                            level = level.roundToInt(),
-                            equipLevel = equipLevel.roundToInt(),
+                            favorPoint = favorPoint,
+                            potentialRank = potentialRank,
+                            specializeLevel = specializeLevel,
+                            mainSkillLvl = mainSkillLvl,
+                            evolvePhase = evolvePhase,
+                            level = level,
+                            equipLevel = equipLevel,
                             enableRogueChar = false
                         )
                     )
@@ -354,13 +338,19 @@ private fun UnlockAllCharDialog(
 
 
 @Composable
-private fun AddFlushMessageDialog(onValueSave: (AddFlushMessageRequest?) -> Unit = {}) {
+private fun AddFlushMessageDialog(
+    show: Boolean,
+    onValueSave: (AddFlushMessageRequest?) -> Unit = {}
+) {
     var uid by remember { mutableStateOf("ALL") }
     var message by remember { mutableStateOf("") }
-    val error = message.isEmpty()
+    val error = message.isEmpty() || uid.isEmpty()
     BasicDialog(
+        show = show,
         error = error,
-        label = stringResource(Res.string.push_message),
+        summary = if (error) stringResource(Res.string.content_invalid) else null,
+        summaryColor = if (error) MiuixTheme.colorScheme.error else MiuixTheme.colorScheme.onBackground,
+        title = stringResource(Res.string.push_message),
         onCancel = { onValueSave(null) },
         onConfirm = {
             if (error) {
@@ -375,6 +365,7 @@ private fun AddFlushMessageDialog(onValueSave: (AddFlushMessageRequest?) -> Unit
             onValueChange = { uid = it },
             label = stringResource(Res.string.uid),
             singleLine = true,
+            modifier = Modifier.padding(bottom = 16.dp)
         )
         TextField(
             value = message,
@@ -386,13 +377,19 @@ private fun AddFlushMessageDialog(onValueSave: (AddFlushMessageRequest?) -> Unit
 }
 
 @Composable
-private fun ResetActivityDialog(onValueSave: (ResetActivityRequest?) -> Unit = {}) {
+private fun ResetActivityDialog(
+    show: Boolean,
+    onValueSave: (ResetActivityRequest?) -> Unit = {}
+) {
     var id by remember { mutableStateOf("") }
     var type by remember { mutableStateOf("") }
     val error = id.isEmpty() || type.isEmpty()
     BasicDialog(
+        show = show,
         error = error,
-        label = stringResource(Res.string.reset_act),
+        summary = if (error) stringResource(Res.string.content_invalid) else null,
+        summaryColor = if (error) MiuixTheme.colorScheme.error else MiuixTheme.colorScheme.onBackground,
+        title = stringResource(Res.string.reset_act),
         onCancel = { onValueSave(null) },
         onConfirm = {
             if (error) {
@@ -407,6 +404,7 @@ private fun ResetActivityDialog(onValueSave: (ResetActivityRequest?) -> Unit = {
             onValueChange = { type = it },
             label = stringResource(Res.string.act_type),
             singleLine = true,
+            modifier = Modifier.padding(bottom = 16.dp)
         )
         TextField(
             value = id,
@@ -418,20 +416,26 @@ private fun ResetActivityDialog(onValueSave: (ResetActivityRequest?) -> Unit = {
 }
 
 @Composable
-private fun GainItemDialog(onValueSave: (Item?) -> Unit = {}) {
+private fun GainItemDialog(
+    show: Boolean,
+    onValueSave: (Item?) -> Unit = {}
+) {
     var itemId by remember { mutableStateOf("") }
     var itemType by remember { mutableStateOf("") }
-    var count by remember { mutableFloatStateOf(1f) }
+    var count by remember { mutableIntStateOf(1) }
     val error = itemId.isEmpty() || itemType.isEmpty()
     BasicDialog(
+        title = stringResource(Res.string.item),
+        show = show,
+        summary = if (error) stringResource(Res.string.content_invalid) else null,
+        summaryColor = if (error) MiuixTheme.colorScheme.error else MiuixTheme.colorScheme.onBackground,
         error = error,
-        label = stringResource(Res.string.item),
         onCancel = { onValueSave(null) },
         onConfirm = {
             if (error) {
 
             } else {
-                onValueSave(Item(itemId, itemType, count.roundToInt()))
+                onValueSave(Item(itemId, itemType, count))
             }
         }
     ) {
@@ -440,6 +444,7 @@ private fun GainItemDialog(onValueSave: (Item?) -> Unit = {}) {
             onValueChange = { itemId = it },
             label = stringResource(Res.string.item_id),
             singleLine = true,
+            modifier = Modifier.padding(bottom = 16.dp)
         )
         TextField(
             value = itemType,
@@ -452,20 +457,25 @@ private fun GainItemDialog(onValueSave: (Item?) -> Unit = {}) {
             start = 1,
             maxValue = 99,
             description = stringResource(Res.string.count),
-            onValueChange = { count = it },
-            modifier = Modifier.padding(4.dp)
+            onValueChangeFinished = { count = it },
         )
     }
 }
 
 @Composable
-private fun RegisterAccountDialog(onValueSave: (RegisterAccountRequest?) -> Unit = {}) {
+private fun RegisterAccountDialog(
+    show: Boolean,
+    onValueSave: (RegisterAccountRequest?) -> Unit = {}
+) {
     var account by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     val error = account.toULongOrNull() == null || account.length > 11 || password.isEmpty()
     BasicDialog(
+        show = show,
+        title = stringResource(Res.string.register_acc),
         error = error,
-        label = stringResource(Res.string.register_acc),
+        summary = if (error) stringResource(Res.string.content_invalid) else null,
+        summaryColor = if (error) MiuixTheme.colorScheme.error else MiuixTheme.colorScheme.onBackground,
         onCancel = { onValueSave(null) },
         onConfirm = {
             if (error) {
@@ -480,6 +490,7 @@ private fun RegisterAccountDialog(onValueSave: (RegisterAccountRequest?) -> Unit
             onValueChange = { account = it },
             label = stringResource(Res.string.account),
             singleLine = true,
+            modifier = Modifier.padding(bottom = 16.dp)
         )
         TextField(
             value = password,
@@ -490,18 +501,18 @@ private fun RegisterAccountDialog(onValueSave: (RegisterAccountRequest?) -> Unit
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ValidateCodeDialog(
+    show: Boolean,
     isRefreshing: Boolean = false,
     validateCode: List<Pair<String, String>> = listOf(),
     onRefresh: () -> Unit = { },
     onExit: () -> Unit = { }
 ) {
-    val clipboard = koinInject<com.rainccup.aktool.core.platform.ClipboardPort>()
+    val clipboard = koinInject<ClipboardPort>()
     LaunchedEffect(Unit) { onRefresh() }
     OverlayDialog(
-        show = true,
+        show = show,
         onDismissRequest = { onExit() },
     ) {
         Column {
@@ -546,9 +557,7 @@ private fun ValidateCodeDialog(
                             val message = stringResource(Res.string.copy_success)
                             Text(account, fontSize = 24.sp)
                             IconButton(
-                                onClick = {
-                                    clipboard.setText(code)
-                                },
+                                onClick = { clipboard.setText(code) },
                                 modifier = Modifier.padding(4.dp)
                             ) {
                                 Icon(

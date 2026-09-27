@@ -1,11 +1,4 @@
 package com.rainccup.aktool.feature.character.ui
-import org.koin.compose.koinInject
-
-import com.rainccup.aktool.core.designsystem.component.CharPainter
-import com.rainccup.aktool.feature.character.viewmodel.CharacterViewModel
-import com.rainccup.aktool.core.designsystem.icon
-import com.rainccup.aktool.core.platform.platformUiScale
-import com.rainccup.aktool.core.platform.urlEncode
 
 
 import androidx.compose.animation.core.animateFloatAsState
@@ -60,40 +53,61 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalDensity
-import org.jetbrains.compose.resources.painterResource
-import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
-
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import org.koin.compose.viewmodel.koinViewModel
 import coil3.compose.rememberAsyncImagePainter
-import kotlinx.coroutines.launch
-import com.rainccup.aktool.resources.Res
-import com.rainccup.aktool.resources.*
+import com.rainccup.aktool.core.common.replace
+import com.rainccup.aktool.core.designsystem.component.BasicDialog
+import com.rainccup.aktool.core.designsystem.component.CharPainter
+import com.rainccup.aktool.core.designsystem.component.EditTextDialog
+import com.rainccup.aktool.core.designsystem.icon
 import com.rainccup.aktool.core.domain.GameTableQuery
 import com.rainccup.aktool.core.model.Character
 import com.rainccup.aktool.core.model.Profession
-import com.rainccup.aktool.core.designsystem.component.BasicDialog
-import com.rainccup.aktool.core.designsystem.component.EditTextDialog
-import com.rainccup.aktool.core.common.replace
+import com.rainccup.aktool.core.platform.platformUiScale
+import com.rainccup.aktool.core.platform.urlEncode
+import com.rainccup.aktool.feature.character.viewmodel.CharacterViewModel
+import com.rainccup.aktool.resources.Res
+import com.rainccup.aktool.resources.baseline_start
+import com.rainccup.aktool.resources.char_id
+import com.rainccup.aktool.resources.character_default_skill_icon
+import com.rainccup.aktool.resources.character_elite_0
+import com.rainccup.aktool.resources.character_elite_1
+import com.rainccup.aktool.resources.character_elite_2
+import com.rainccup.aktool.resources.character_elite_bg
+import com.rainccup.aktool.resources.character_empty_skill
+import com.rainccup.aktool.resources.character_level_bg
+import com.rainccup.aktool.resources.character_potential_1
+import com.rainccup.aktool.resources.character_potential_2
+import com.rainccup.aktool.resources.character_potential_3
+import com.rainccup.aktool.resources.character_potential_4
+import com.rainccup.aktool.resources.character_potential_5
+import com.rainccup.aktool.resources.character_star_mark
+import com.rainccup.aktool.resources.character_star_mark_edit
+import com.rainccup.aktool.resources.equip_bg
+import com.rainccup.aktool.resources.lv
+import com.rainccup.aktool.resources.profession_select
+import com.rainccup.aktool.resources.search
+import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.koinInject
+import org.koin.compose.viewmodel.koinViewModel
 import top.yukonga.miuix.kmp.basic.FloatingToolbar
-import top.yukonga.miuix.kmp.basic.IconButton as MiuixIconButton
 import top.yukonga.miuix.kmp.basic.InputField
 import top.yukonga.miuix.kmp.basic.SearchBar
-
 import kotlin.math.roundToInt
+import top.yukonga.miuix.kmp.basic.IconButton as MiuixIconButton
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -139,7 +153,7 @@ fun CharacterPage(onOpenDetail: (String) -> Unit) {
                 }
                 Box(
                     modifier = Modifier
-                        .width(52.dp)
+                        .width(42.dp)
                         .align(Alignment.TopEnd)
                         .padding(top = 80.dp)
                 ) {
@@ -178,7 +192,7 @@ fun CharacterPage(onOpenDetail: (String) -> Unit) {
                                     contentDescription = it.name,
                                     modifier = Modifier
                                         .alpha(0.9f)
-                                        .height(52.dp)
+                                        .height(42.dp)
                                         .fillMaxWidth()
                                         .clickable {
                                             viewModel.selectProfession(it.name)
@@ -192,7 +206,7 @@ fun CharacterPage(onOpenDetail: (String) -> Unit) {
                                         alignment = Alignment.CenterEnd,
                                         modifier = Modifier
                                             .fillMaxWidth()
-                                            .height(52.dp)
+                                            .height(42.dp)
                                     )
                                 }
                             }
@@ -257,35 +271,33 @@ fun CharacterPage(onOpenDetail: (String) -> Unit) {
             }
         }
     }
-    if (showGainCharDialog) {
-        EditTextDialog(
-            label = stringResource(Res.string.char_id),
-            error = { !it.startsWith("char_") || gameTable.characterTable[it] == null },
-            onValueSave = { charId ->
-                charId?.let {
-                    coroutineScope.launch {
-                        runCatching {
-                            viewModel.gainChar(charId)
-                        }.onSuccess {
-                            
-                            refresh()
-                        }.onFailure {
-                            
-                        }
+    EditTextDialog(
+        title = stringResource(Res.string.char_id),
+        show = showGainCharDialog,
+        error = { !it.startsWith("char_") || gameTable.characterTable[it] == null },
+        onValueSave = { charId ->
+            charId?.let {
+                coroutineScope.launch {
+                    runCatching {
+                        viewModel.gainChar(charId)
+                    }.onSuccess {
+
+                        refresh()
+                    }.onFailure {
+
                     }
                 }
-                viewModel.changeGainCharState()
             }
-        )
-    }
-    if (showSearchDialog) {
-        SearchCharDialog(
-            onKeywordType = { viewModel.getSearchedCharList(it) },
-            onSearchCharId = { viewModel.getCharIdByCharName(it) }
-        ) {
-            it?.let { viewModel.searchChar(it) }
-            viewModel.changeSearchState()
+            viewModel.changeGainCharState()
         }
+    )
+    SearchCharDialog(
+        show = showSearchDialog,
+        onKeywordType = viewModel::getSearchedCharList,
+        onSearchCharId = viewModel::getCharIdByCharName
+    ) {
+        it?.let { viewModel.searchChar(it) }
+        viewModel.changeSearchState()
     }
 
 }
@@ -509,6 +521,7 @@ fun CharacterCard(
 @OptIn(ExperimentalLayoutApi::class, ExperimentalFoundationApi::class)
 @Composable
 fun SearchCharDialog(
+    show: Boolean,
     onKeywordType: (String) -> List<String> = { listOf() },
     onSearchCharId: (String) -> String = { "" },
     onConfirmKeyword: (String?) -> Unit = { }
@@ -518,7 +531,8 @@ fun SearchCharDialog(
     val charNameList = remember { mutableStateListOf<String>() }
     var selectedKeyword by remember { mutableStateOf("") }
     BasicDialog(
-        label = stringResource(Res.string.search),
+        show = show,
+        title = stringResource(Res.string.search),
         onCancel = { onConfirmKeyword(null) },
         onConfirm = { onConfirmKeyword(selectedKeyword) }
     ) {

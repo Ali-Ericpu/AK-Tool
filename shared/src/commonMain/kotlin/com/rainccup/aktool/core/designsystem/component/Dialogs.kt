@@ -20,34 +20,39 @@ import com.rainccup.aktool.resources.cancel
 import com.rainccup.aktool.resources.confirm
 import org.jetbrains.compose.resources.stringResource
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
-import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.TextButton
 import top.yukonga.miuix.kmp.basic.TextField
+import top.yukonga.miuix.kmp.layout.DialogDefaults
 import top.yukonga.miuix.kmp.overlay.OverlayDialog
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 @Composable
 fun BasicDialog(
-    label: String = "Test",
+    title: String,
+    show: Boolean,
+    summary: String? = null,
+    summaryColor: Color = DialogDefaults.summaryColor(),
     error: Boolean = false,
     onCancel: () -> Unit = { },
     onConfirm: () -> Unit = { },
     content: @Composable (ColumnScope.() -> Unit) = {}
 ) {
     OverlayDialog(
-        title = label,
-        show = true,
-        onDismissRequest = { onCancel() },
+        title = title,
+        summary = summary,
+        summaryColor = summaryColor,
+        show = show,
+        onDismissRequest = onCancel,
     ) {
         Column(
-            verticalArrangement = Arrangement.SpaceBetween,
+            verticalArrangement = Arrangement.SpaceAround,
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             content()
             ConfirmButtonRow(
                 error = error,
-                onCancel = { onCancel() },
-                onConfirm = { onConfirm() },
+                onCancel = onCancel,
+                onConfirm = onConfirm,
             )
         }
     }
@@ -55,15 +60,18 @@ fun BasicDialog(
 
 @Composable
 fun EditTextDialog(
+    show: Boolean,
+    modifier: Modifier = Modifier,
     value: String = "",
-    label: String = "Test",
+    title: String = "Title",
     error: (String) -> Boolean = { false },
     onValueSave: (String?) -> Unit = { }
 ) {
     var text by remember { mutableStateOf(value) }
     val isError = error(text)
     BasicDialog(
-        label = label,
+        title = title,
+        show = show,
         error = isError,
         onCancel = { onValueSave(null) },
         onConfirm = {
@@ -78,7 +86,7 @@ fun EditTextDialog(
             value = text,
             onValueChange = { text = it },
             maxLines = Int.MAX_VALUE,
-            modifier = Modifier.fillMaxWidth(),
+            modifier = modifier.fillMaxWidth(),
         )
     }
 }
@@ -100,6 +108,7 @@ fun ConfirmButtonRow(
             text = stringResource(Res.string.cancel),
             onClick = onCancel,
             colors = ButtonDefaults.textButtonColors(
+                color = Color.Transparent,
                 textColor = MiuixTheme.colorScheme.onBackground,
             ),
         )
@@ -107,6 +116,7 @@ fun ConfirmButtonRow(
             text = stringResource(Res.string.confirm),
             onClick = onConfirm,
             colors = ButtonDefaults.textButtonColors(
+                color = Color.Transparent,
                 textColor = if (error) Color.Red else MiuixTheme.colorScheme.primary,
             ),
         )

@@ -1,8 +1,6 @@
 package com.rainccup.aktool.app
 
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountBox
 import androidx.compose.material.icons.filled.Build
@@ -18,22 +16,24 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
+import androidx.savedstate.serialization.SavedStateConfiguration
+import com.rainccup.aktool.core.message.MessageBus
+import com.rainccup.aktool.core.navigation.AppRoute
 import com.rainccup.aktool.feature.character.ui.CharacterPage
 import com.rainccup.aktool.feature.characterdetail.ui.CharacterDetailPage
 import com.rainccup.aktool.feature.extra.ui.ExtraPage
 import com.rainccup.aktool.feature.home.ui.HomePage
 import com.rainccup.aktool.feature.setting.ui.SettingPage
 import com.rainccup.aktool.resources.Res
-import com.rainccup.aktool.resources.*
-import com.rainccup.aktool.core.message.MessageBus
-import com.rainccup.aktool.core.navigation.AppRoute
+import com.rainccup.aktool.resources.character
+import com.rainccup.aktool.resources.extra
+import com.rainccup.aktool.resources.home
+import com.rainccup.aktool.resources.setting
 import kotlinx.coroutines.flow.collectLatest
-import org.jetbrains.compose.resources.stringResource
-import org.koin.compose.koinInject
-import androidx.savedstate.serialization.SavedStateConfiguration
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
-import kotlinx.serialization.modules.subclass
+import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.koinInject
 import top.yukonga.miuix.kmp.basic.NavigationBar
 import top.yukonga.miuix.kmp.basic.NavigationBarItem
 import top.yukonga.miuix.kmp.basic.Scaffold
@@ -85,8 +85,6 @@ fun AppNavHost() {
     }
 
     Scaffold(
-        // 现有布局自行用 statusBarsPadding 处理顶部，Scaffold 不再叠加系统栏 inset
-        contentWindowInsets = WindowInsets(0.dp),
         snackbarHost = { SnackbarHost(state = snackbarHostState) },
         bottomBar = {
             NavigationBar {
@@ -111,8 +109,7 @@ fun AppNavHost() {
             onBack = { if (backStack.size > 1) backStack.removeLastOrNull() },
             modifier = Modifier
                 .padding(paddingValues)
-                .padding(12.dp)
-                .statusBarsPadding(),
+                .padding(12.dp),
             entryProvider = { key ->
                 when (key) {
                     AppRoute.Home -> NavEntry(key) { HomePage() }

@@ -1,7 +1,5 @@
 package com.rainccup.aktool.feature.characterdetail.ui
 
-import org.koin.compose.koinInject
-
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -10,30 +8,20 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.requiredHeight
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -45,44 +33,50 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
-import org.jetbrains.compose.resources.painterResource
-import org.jetbrains.compose.resources.stringResource
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Density
-
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
-import androidx.lifecycle.viewmodel.compose.viewModel
-import org.koin.compose.viewmodel.koinViewModel
-import org.koin.core.parameter.parametersOf
 import co.touchlab.kermit.Logger
-import kotlinx.coroutines.launch
-import com.rainccup.aktool.resources.Res
-import com.rainccup.aktool.resources.*
+import com.rainccup.aktool.core.designsystem.component.IntRangeSlider
 import com.rainccup.aktool.core.domain.GameTableQuery
 import com.rainccup.aktool.core.model.Character
 import com.rainccup.aktool.core.platform.platformUiScale
 import com.rainccup.aktool.feature.character.ui.CharacterCard
-import com.rainccup.aktool.feature.character.viewmodel.CharacterViewModel
 import com.rainccup.aktool.feature.character.ui.equipPainter
-import com.rainccup.aktool.feature.character.ui.offsetPercent
 import com.rainccup.aktool.feature.character.ui.skillPainter
-import com.rainccup.aktool.core.designsystem.component.EditSwitch
-import com.rainccup.aktool.core.designsystem.component.CircleIconButton
+import com.rainccup.aktool.feature.character.viewmodel.CharacterViewModel
 import com.rainccup.aktool.feature.characterdetail.viewmodel.CharacterDetailViewModel
-import com.rainccup.aktool.core.designsystem.component.IntRangeSlider
-import kotlin.math.max
-import kotlin.math.roundToInt
+import com.rainccup.aktool.resources.Res
+import com.rainccup.aktool.resources.cancel
+import com.rainccup.aktool.resources.character_locked_skill
+import com.rainccup.aktool.resources.character_skill_selected
+import com.rainccup.aktool.resources.character_special_skill_0
+import com.rainccup.aktool.resources.character_special_skill_1
+import com.rainccup.aktool.resources.character_special_skill_2
+import com.rainccup.aktool.resources.character_special_skill_3
+import com.rainccup.aktool.resources.equip
+import com.rainccup.aktool.resources.evp_phase
+import com.rainccup.aktool.resources.fav_pt
+import com.rainccup.aktool.resources.level
+import com.rainccup.aktool.resources.potential_rank
+import com.rainccup.aktool.resources.save
+import com.rainccup.aktool.resources.skill_level
+import com.rainccup.aktool.resources.star_mark
+import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.koinInject
+import org.koin.compose.viewmodel.koinViewModel
+import org.koin.core.parameter.parametersOf
 import top.yukonga.miuix.kmp.basic.Button
 import top.yukonga.miuix.kmp.basic.IconButton
-import top.yukonga.miuix.kmp.preference.SliderPreference
+import top.yukonga.miuix.kmp.preference.SwitchPreference
 
 @Composable
 fun CharacterDetailPage(
@@ -116,7 +110,6 @@ fun CharacterDetailPage(
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .alpha(0.95f)
     ) {
         item {
             CompositionLocalProvider(
@@ -133,38 +126,38 @@ fun CharacterDetailPage(
                         modifier = Modifier.height(220.dp)
                     ) {
                         IntRangeSlider(
-                            value = char.potentialRank.toFloat(),
+                            value = char.potentialRank,
                             start = 0,
                             maxValue = 5,
                             description = stringResource(Res.string.potential_rank),
-                            onValueChange = { vm.accept(char.copy(potentialRank = it.roundToInt())) },
+                            onValueChangeFinished = { vm.accept(char.copy(potentialRank = it)) },
                             modifier = Modifier.weight(1f)
                         )
                         IntRangeSlider(
-                            value = char.favorPoint.toFloat(),
+                            value = char.favorPoint,
                             start = 0,
                             maxValue = 200,
                             description = stringResource(Res.string.fav_pt),
-                            onValueChange = { vm.accept(char.copy(favorPoint = it.roundToInt())) },
+                            onValueChangeFinished = { vm.accept(char.copy(favorPoint = it)) },
                             modifier = Modifier.weight(1f)
                         )
                     }
                 }
                 Row(modifier = Modifier.fillMaxWidth()) {
                     IntRangeSlider(
-                        value = char.evolvePhase.toFloat(),
+                        value = char.evolvePhase,
                         start = 0,
                         maxValue = maxEvoPhase,
                         description = stringResource(Res.string.evp_phase),
-                        onValueChange = { vm.changeEvoPhase(it.roundToInt()) },
+                        onValueChangeFinished = { vm.changeEvoPhase(it) },
                         modifier = Modifier.weight(1f)
                     )
                     IntRangeSlider(
-                        value = char.level.toFloat(),
+                        value = char.level,
                         start = 1,
                         maxValue = maxLevel,
                         description = stringResource(Res.string.level),
-                        onValueChange = { vm.accept(char.copy(level = it.roundToInt())) },
+                        onValueChangeFinished = { vm.accept(char.copy(level = it)) },
                         modifier = Modifier.weight(1f)
                     )
                 }
@@ -177,11 +170,11 @@ fun CharacterDetailPage(
                             .background(Color.LightGray)
                     ) {
                         IntRangeSlider(
-                            value = char.mainSkillLvl.toFloat(),
+                            value = char.mainSkillLvl,
                             start = 1,
                             maxValue = maxSkillLevel,
                             description = stringResource(Res.string.skill_level),
-                            onValueChange = { vm.accept(char.copy(mainSkillLvl = it.roundToInt())) },
+                            onValueChangeFinished = { vm.accept(char.copy(mainSkillLvl = it)) },
                         )
                         LazyRow(
                             horizontalArrangement = Arrangement.SpaceAround,
@@ -255,9 +248,9 @@ fun CharacterDetailPage(
                         }
                     }
                 }
-                EditSwitch(
-                    label = stringResource(Res.string.star_mark),
-                    state = char.starMark == 1,
+                SwitchPreference(
+                    title = stringResource(Res.string.star_mark),
+                    checked = char.starMark == 1,
                     onCheckedChange = { vm.accept(char.copy(starMark = if (it) 1 else 0)) },
                 )
                 Row(

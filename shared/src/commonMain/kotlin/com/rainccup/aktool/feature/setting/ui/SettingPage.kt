@@ -1,19 +1,21 @@
 package com.rainccup.aktool.feature.setting.ui
 
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.autofill.ContentType
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.platform.LocalAutofillManager
+import androidx.compose.ui.semantics.contentType
+import androidx.compose.ui.semantics.semantics
 import com.rainccup.aktool.core.common.LocalAppConfig
 import com.rainccup.aktool.core.designsystem.component.ActionButton
-import com.rainccup.aktool.feature.setting.viewmodel.SettingViewModel
-import com.rainccup.aktool.core.designsystem.component.EditSwitch
 import com.rainccup.aktool.core.designsystem.component.EditText
 import com.rainccup.aktool.core.designsystem.component.ProgressActionButton
+import com.rainccup.aktool.feature.setting.viewmodel.SettingViewModel
 import com.rainccup.aktool.resources.Res
 import com.rainccup.aktool.resources.admin_key
 import com.rainccup.aktool.resources.choose_bg
@@ -26,6 +28,7 @@ import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
+import top.yukonga.miuix.kmp.preference.SwitchPreference
 
 @Composable
 fun SettingPage() {
@@ -35,6 +38,7 @@ fun SettingPage() {
     val isUpdateExcel by viewModel.isUpdateExcel.collectAsState()
     val coroutineScope = rememberCoroutineScope()
     val filePicker: com.rainccup.aktool.core.platform.FilePicker = koinInject()
+    val autofillManager = LocalAutofillManager.current
     LazyColumn(modifier = Modifier.alpha(0.9f)) {
         item {
             EditText(
@@ -56,16 +60,22 @@ fun SettingPage() {
                 value = config.adminKey,
                 label = stringResource(Res.string.admin_key),
                 hide = true,
-                onValueSave = { onConfigChange(config.copy(adminKey = it)) }
+                onValueSave = {
+                    autofillManager?.commit()
+                    onConfigChange(config.copy(adminKey = it))
+                },
+                modifier = Modifier.semantics {
+                    contentType = ContentType.Password
+                }
             )
-            EditSwitch(
-                label = stringResource(Res.string.dark_mode),
-                state = config.darkMode,
+            SwitchPreference(
+                title = stringResource(Res.string.dark_mode),
+                checked = config.darkMode,
                 onCheckedChange = { onConfigChange(config.copy(darkMode = it)) }
             )
-            EditSwitch(
-                label = stringResource(Res.string.custom_bg),
-                state = config.customBg,
+            SwitchPreference(
+                title = stringResource(Res.string.custom_bg),
+                checked = config.customBg,
                 onCheckedChange = { onConfigChange(config.copy(customBg = it)) }
             )
             ActionButton(label = stringResource(Res.string.choose_bg)) {

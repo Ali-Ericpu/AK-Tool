@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!--
+        NoActionBar：应用自身的 Compose 界面没有 topAppBar（见 AppNavHost 的 Scaffold），
+        若用系统默认主题会额外出现一条原生 ActionBar（应用名标题栏），与内容叠加表现为溢出。
+        与 P5 前旧模块的 res/values/themes.xml 保持一致。
+
+        windowLightStatusBar：撤掉 ActionBar 后，状态栏区域改由应用内容透出（浅色底），
+        需要深色状态栏图标，否则图标与背景同为浅色而看不清。
+    -->
+    <style name="Theme.AKTool" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowLightStatusBar">true</item>
+    </style>
+</resources>

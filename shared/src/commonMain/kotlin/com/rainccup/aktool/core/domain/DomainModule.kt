@@ -30,7 +30,7 @@ val domainModule = module {
     factory { ChangeEvolvePhaseUseCase(get()) }
     factory { GetCharacterLimitsUseCase(get()) }
 
-    factory { UnlockAllCharactersUseCase(get()) }
+    factory { UnlockAllCharactersUseCase(get(), get()) }
     factory { UnlockAllStagesUseCase(get()) }
     factory { UnlockAllFlagsUseCase(get()) }
     factory { AddFlushMessageUseCase(get()) }

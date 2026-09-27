@@ -22,7 +22,6 @@ import com.rainccup.aktool.core.platform.ClipboardPort
 import com.rainccup.aktool.core.platform.Messenger
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.JsonElement
 
@@ -40,55 +39,59 @@ class ExtraViewModel(
     private val messenger: Messenger,
     private val clipboard: ClipboardPort,
 ) : ViewModel() {
-    private val _showUnlockChar = MutableStateFlow(false)
-    val showUnlockChar: StateFlow<Boolean> = _showUnlockChar.asStateFlow()
+    val showUnlockChar: StateFlow<Boolean>
+        field = MutableStateFlow(false)
 
-    private val _showMessageDialog = MutableStateFlow(false)
-    val showMessageDialog: StateFlow<Boolean> = _showMessageDialog.asStateFlow()
+    val showMessageDialog: StateFlow<Boolean>
+        field = MutableStateFlow(false)
 
-    private val _showItemDialog = MutableStateFlow(false)
-    val showItemDialog: StateFlow<Boolean> = _showItemDialog.asStateFlow()
+    val showItemDialog: StateFlow<Boolean>
+        field = MutableStateFlow(false)
 
-    private val _showActivityDialog = MutableStateFlow(false)
-    val showActivityDialog: StateFlow<Boolean> = _showActivityDialog.asStateFlow()
+    val showActivityDialog: StateFlow<Boolean>
+        field = MutableStateFlow(false)
 
-    private val _showAccountDialog = MutableStateFlow(false)
-    val showAccountDialog: StateFlow<Boolean> = _showAccountDialog.asStateFlow()
+    val showAccountDialog: StateFlow<Boolean>
+        field = MutableStateFlow(false)
 
-    private val _showValidCodeDialog = MutableStateFlow(false)
-    val showValidCodeDialog: StateFlow<Boolean> = _showValidCodeDialog.asStateFlow()
+    val showValidCodeDialog: StateFlow<Boolean>
+        field = MutableStateFlow(false)
 
-    private val _isConnecting = MutableStateFlow(false)
-    val isConnecting: StateFlow<Boolean> = _isConnecting.asStateFlow()
+    val isConnecting: StateFlow<Boolean>
+        field = MutableStateFlow(false)
 
     private var validateCode = mapOf<String, String>()
 
     fun changeUnlockCharState() = viewModelScope.launch {
-        _showUnlockChar.emit(_showUnlockChar.value.not())
+        if (showUnlockChar.value || unlockAllCharactersUseCase.init()) {
+            showUnlockChar.emit(!showUnlockChar.value)
+        } else {
+            messenger.show("数据缺失，请更新数据后再试")
+        }
     }
 
     fun changeMessageState() = viewModelScope.launch {
-        _showMessageDialog.emit(_showMessageDialog.value.not())
+        showMessageDialog.emit(!showMessageDialog.value)
     }
 
     fun changeItemState() = viewModelScope.launch {
-        _showItemDialog.emit(_showItemDialog.value.not())
+        showItemDialog.emit(!showItemDialog.value)
     }
 
     fun changeActivityState() = viewModelScope.launch {
-        _showActivityDialog.emit(_showActivityDialog.value.not())
+        showActivityDialog.emit(!showActivityDialog.value)
     }
 
     fun changeAccountState() = viewModelScope.launch {
-        _showAccountDialog.emit(_showAccountDialog.value.not())
+        showAccountDialog.emit(!showAccountDialog.value)
     }
 
     fun changeValidCodeState() = viewModelScope.launch {
-        _showValidCodeDialog.emit(_showValidCodeDialog.value.not())
+        showValidCodeDialog.emit(!showValidCodeDialog.value)
     }
 
     private suspend fun doRequest(request: suspend () -> ApiResult<JsonElement?>) {
-        _isConnecting.emit(true)
+        isConnecting.emit(true)
         try {
             val result = request()
             if (result.status != 0) {
@@ -98,7 +101,7 @@ class ExtraViewModel(
         } catch (e: Exception) {
             messenger.show(e.message ?: "error")
         }
-        _isConnecting.emit(false)
+        isConnecting.emit(false)
     }
 
     fun unlockAllChar(body: UnlockAllCharRequest) = viewModelScope.launch {
@@ -134,13 +137,13 @@ class ExtraViewModel(
     }
 
     fun syncValidCode() = viewModelScope.launch {
-        _isConnecting.emit(true)
+        isConnecting.emit(true)
         runCatching {
             validateCode = syncValidCodeUseCase()
         }.onFailure {
             messenger.show(it.message ?: "error")
         }
-        _isConnecting.emit(false)
+        isConnecting.emit(false)
     }
 
     fun validateCodeList(): List<Pair<String, String>> = validateCode.toList()

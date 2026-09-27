@@ -16,15 +16,15 @@ import top.yukonga.miuix.kmp.basic.Button
 import top.yukonga.miuix.kmp.basic.CircularProgressIndicator
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.preference.ArrowPreference
-import top.yukonga.miuix.kmp.preference.SwitchPreference
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 @Composable
 fun EditText(
+    modifier: Modifier = Modifier,
     value: String = "",
     label: String = "",
     hide: Boolean = false,
-    onValueSave: (String) -> Unit = { }
+    onValueSave: (String) -> Unit = { },
 ) {
     var dialogState by remember { mutableStateOf(false) }
     ArrowPreference(
@@ -35,29 +35,15 @@ fun EditText(
         onClick = { dialogState = true },
         holdDownState = dialogState,
     )
-
-    if (dialogState) {
-        EditTextDialog(
-            value = value,
-            label = label,
-            onValueSave = {
-                dialogState = false
-                it?.let { onValueSave(it) }
-            }
-        )
-    }
-}
-
-@Composable
-fun EditSwitch(
-    label: String,
-    state: Boolean,
-    onCheckedChange: (Boolean) -> Unit,
-) {
-    SwitchPreference(
+    EditTextDialog(
+        value = value,
+        show = dialogState,
         title = label,
-        checked = state,
-        onCheckedChange = { onCheckedChange(it) },
+        onValueSave = {
+            dialogState = false
+            it?.let { onValueSave(it) }
+        },
+        modifier = modifier
     )
 }
 

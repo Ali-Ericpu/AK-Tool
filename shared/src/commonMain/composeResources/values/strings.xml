@@ -71,4 +71,5 @@
     <string name="equip">模组</string>
     <string name="reset_rlv2">重置集成战略状态</string>
     <string name="query_account">查询账号</string>
+    <string name="content_invalid">内容不合法</string>
 </resources>

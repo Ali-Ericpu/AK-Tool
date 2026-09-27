@@ -3,18 +3,13 @@ package com.rainccup.aktool.feature.home.ui
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -29,18 +24,48 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
+import com.rainccup.aktool.core.common.validation.checkIntRange
+import com.rainccup.aktool.core.designsystem.component.EditTextDialog
+import com.rainccup.aktool.core.model.SaveStatusRequest
+import com.rainccup.aktool.core.model.Status
+import com.rainccup.aktool.feature.home.viewmodel.HomeViewModel
+import com.rainccup.aktool.resources.Res
+import com.rainccup.aktool.resources.ap
+import com.rainccup.aktool.resources.baseline_home_start
+import com.rainccup.aktool.resources.cls_gacha_tkt
+import com.rainccup.aktool.resources.cls_shard
+import com.rainccup.aktool.resources.cls_ten_gacha_tkt
+import com.rainccup.aktool.resources.diamond
+import com.rainccup.aktool.resources.diamond_shard
+import com.rainccup.aktool.resources.fni_tkt
+import com.rainccup.aktool.resources.gacha_tkt
+import com.rainccup.aktool.resources.gold
+import com.rainccup.aktool.resources.hgg_shard
+import com.rainccup.aktool.resources.level
+import com.rainccup.aktool.resources.lgg_shard
+import com.rainccup.aktool.resources.nick_name
+import com.rainccup.aktool.resources.nick_num
+import com.rainccup.aktool.resources.rec_tkt
+import com.rainccup.aktool.resources.status_ap
+import com.rainccup.aktool.resources.status_classic_gacha
+import com.rainccup.aktool.resources.status_classic_gacha_10
+import com.rainccup.aktool.resources.status_classic_normal_ticket
+import com.rainccup.aktool.resources.status_diamond
+import com.rainccup.aktool.resources.status_diamond_shd
+import com.rainccup.aktool.resources.status_gold
+import com.rainccup.aktool.resources.status_hgg_shd
+import com.rainccup.aktool.resources.status_lgg_shd
+import com.rainccup.aktool.resources.status_tkt_gacha
+import com.rainccup.aktool.resources.status_tkt_gacha_10
+import com.rainccup.aktool.resources.status_tkt_inst_fin
+import com.rainccup.aktool.resources.status_tkt_recruit
+import com.rainccup.aktool.resources.status_tkt_try
+import com.rainccup.aktool.resources.ten_gacha_tkt
+import com.rainccup.aktool.resources.try_tkt
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
-
-import androidx.compose.ui.unit.dp
 import org.koin.compose.viewmodel.koinViewModel
-import com.rainccup.aktool.resources.Res
-import com.rainccup.aktool.resources.*
-import com.rainccup.aktool.core.common.validation.checkIntRange
-import com.rainccup.aktool.feature.home.viewmodel.HomeViewModel
-import com.rainccup.aktool.core.model.Status
-import com.rainccup.aktool.core.model.SaveStatusRequest
-import com.rainccup.aktool.core.designsystem.component.EditTextDialog
 import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.preference.ArrowPreference
 
@@ -313,12 +338,12 @@ fun HomePage() {
 
 @Composable
 fun LabelTextField(
-    value: String = "Test",
+    value: String,
+    modifier: Modifier = Modifier,
     icon: @Composable (() -> Unit)? = null,
     label: String = "Test",
     error: (String) -> Boolean = { false },
-    onValueSave: (String) -> Unit = {},
-    modifier: Modifier = Modifier
+    onValueSave: (String) -> Unit = {}
 ) {
     var showDialog by remember { mutableStateOf(false) }
     ArrowPreference(
@@ -329,19 +354,16 @@ fun LabelTextField(
         holdDownState = showDialog,
         modifier = modifier,
     )
-    if (showDialog) {
-        EditTextDialog(
-            value = value,
-            label = label,
-            error = error,
-            onValueSave = {
-                it?.let {
-                    onValueSave(it)
-                }
-                showDialog = !showDialog
-            }
-        )
-    }
+    EditTextDialog(
+        value = value,
+        show = showDialog,
+        title = label,
+        error = error,
+        onValueSave = {
+            it?.let { onValueSave(it) }
+            showDialog = !showDialog
+        }
+    )
 }
 
 @Composable
