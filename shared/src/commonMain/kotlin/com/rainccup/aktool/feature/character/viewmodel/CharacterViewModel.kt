@@ -90,8 +90,15 @@ class CharacterViewModel(
         _loadAnimate.emit(false)
     }
 
+    /**
+     * 补发干员。异常必须在这里报告：gainCharacter 由本协程启动，
+     * 调用方无法用 runCatching 捕获（页面原先就是这么写的，那个 catch 永远是空的）。
+     * 成功后刷新列表。
+     */
     fun gainChar(charId: String) = viewModelScope.launch {
-        useCase.gainCharacter(charId)
+        runCatching { useCase.gainCharacter(charId) }
+            .onSuccess { initCharData() }
+            .onFailure { messenger.show(it.message ?: "error") }
     }
 
     fun changeGainCharState() = viewModelScope.launch {

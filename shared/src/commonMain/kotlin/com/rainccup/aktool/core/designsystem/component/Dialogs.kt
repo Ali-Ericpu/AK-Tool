@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -18,6 +19,7 @@ import androidx.compose.ui.unit.dp
 import com.rainccup.aktool.resources.Res
 import com.rainccup.aktool.resources.cancel
 import com.rainccup.aktool.resources.confirm
+import com.rainccup.aktool.resources.content_invalid
 import org.jetbrains.compose.resources.stringResource
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
 import top.yukonga.miuix.kmp.basic.TextButton
@@ -74,12 +76,14 @@ fun EditTextDialog(
     BasicDialog(
         title = title,
         show = show,
+        // 校验不通过时给出可见原因，而不是让「确定」静默失效
+        summary = if (isError) stringResource(Res.string.content_invalid) else null,
+        summaryColor = MaterialTheme.colorScheme.error,
         error = isError,
         onCancel = onCancel,
         onConfirm = {
-            if (isError) {
-
-            } else {
+            // 非法输入不提交、也不关闭弹窗：红色提示让用户继续修改。
+            if (!isError) {
                 onConfirm(text)
             }
         }

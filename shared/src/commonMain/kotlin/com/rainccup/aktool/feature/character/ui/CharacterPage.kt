@@ -272,17 +272,8 @@ fun CharacterPage(
         show = showGainCharDialog,
         error = { !it.startsWith("char_") || viewModel.existChar(it) },
         onConfirm = { charId ->
-            charId?.let {
-                coroutineScope.launch {
-                    runCatching {
-                        viewModel.gainChar(charId)
-                    }.onSuccess {
-                        viewModel.initCharData()
-                    }.onFailure {
-
-                    }
-                }
-            }
+            // 校验失败时 EditTextDialog 不会回调 onConfirm，所以这里 charId 必然非空。
+            charId?.let { viewModel.gainChar(it) }
             viewModel.changeGainCharState()
         }
     )

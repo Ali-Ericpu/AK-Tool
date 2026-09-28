@@ -25,7 +25,8 @@ class AdminRepositoryTest {
             override fun current(): AppConfig = AppConfig(uid = "U1", adminKey = "A1")
         }
         val repo = AdminRepository(api, fakeConfig, net)
-        runCatching { repo.syncStatus() }
+        // MockEngine 返回 200，这里不会抛异常；原先套在外面的 runCatching 是无效的。
+        repo.syncStatus()
         assertEquals("U1", seenUid)
     }
 }
