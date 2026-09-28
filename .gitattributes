@@ -1,0 +1,28 @@
+# Normalize all text files to LF *in the repository*.
+#
+# The working tree legitimately mixes CRLF and LF (core.autocrlf=true on Windows,
+# LF from editors elsewhere). Since git normalizes text on commit either way, this
+# rule changes nothing about the stored history - it just makes the normalization
+# explicit and stops new files from being committed with mixed line endings.
+#
+# Deliberately no `eol=crlf`: that would renormalize the ~34 text files that are
+# currently LF on disk and produce a large line-ending-only diff.
+* text=auto
+
+# Windows launchers must keep CRLF in the working tree to stay runnable.
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# Binary assets: never diff, never merge.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.gif binary
+*.jar binary
+*.apk binary
+*.keystore binary
+*.jks binary
+*.ttf binary
+*.otf binary
+*.zip binary
