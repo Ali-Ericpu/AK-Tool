@@ -66,6 +66,7 @@ import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.rememberAsyncImagePainter
+import com.rainccup.aktool.core.common.LocalImageConfig
 import com.rainccup.aktool.core.common.replace
 import com.rainccup.aktool.core.designsystem.component.BasicDialog
 import com.rainccup.aktool.core.designsystem.component.CharPainter
@@ -75,7 +76,6 @@ import com.rainccup.aktool.core.designsystem.icon
 import com.rainccup.aktool.core.domain.GameTableQuery
 import com.rainccup.aktool.core.model.Character
 import com.rainccup.aktool.core.model.Profession
-import com.rainccup.aktool.core.platform.ClipboardPort
 import com.rainccup.aktool.core.platform.platformUiScale
 import com.rainccup.aktool.core.platform.urlEncode
 import com.rainccup.aktool.feature.character.viewmodel.CharacterViewModel
@@ -116,7 +116,7 @@ fun CharacterPage(
     onOpenDetail: (Character) -> Unit,
 ) {
     val viewModel: CharacterViewModel = koinViewModel()
-    val charList = viewModel.charList()
+    val charList = viewModel.characters
     val splash by viewModel.splash.collectAsState()
     val showLoadAnimate by viewModel.loadAnimate.collectAsState()
     val showGainCharDialog by viewModel.gainChar.collectAsState()
@@ -151,7 +151,7 @@ fun CharacterPage(
                     state = lazyGridState,
                     modifier = Modifier.fillMaxSize()
                 ) {
-                    items(charList) { char ->
+                    items(charList, key = { it.instId }) { char ->
                         CharacterCard(char = char) {
                             onOpenDetail(char)
                         }
@@ -165,7 +165,7 @@ fun CharacterPage(
                         .padding(top = 80.dp)
                 ) {
                     FloatingToolbar(
-                        color = Color.Black.copy(alpha = 0.9f),
+                        color = Color.Unspecified,
                         modifier = Modifier
                             .wrapContentHeight()
                             .offsetPercent(offsetPercentX = professionOffsetX)
@@ -173,7 +173,7 @@ fun CharacterPage(
                         LazyColumn(
                             verticalArrangement = Arrangement.Top,
                             horizontalAlignment = Alignment.CenterHorizontally,
-                            modifier = Modifier.padding(bottom = 4.dp).clip(RoundedCornerShape(50.dp))
+                            modifier = Modifier.clip(RoundedCornerShape(32.dp))
                         ) {
                             item {
                                 IconButton(
@@ -188,6 +188,7 @@ fun CharacterPage(
                                     modifier = Modifier
                                         .height(48.dp)
                                         .width(48.dp)
+                                        .background(Color.Black.copy(alpha = 0.8f))
                                         .align(alignment = Alignment.CenterEnd)
                                         .padding(4.dp)
                                 ) {
@@ -280,11 +281,14 @@ fun CharacterPage(
     SearchCharDialog(
         show = showSearchDialog,
         onKeywordType = viewModel::getSearchedCharList,
-        onSearchCharId = viewModel::getCharIdByCharName
-    ) {
-        it?.let { viewModel.searchChar(it) }
-        viewModel.changeSearchState()
-    }
+        onPickName = viewModel::searchChar,
+        onCopyCharId = viewModel::copyCharId,
+        onConfirmKeyword = { keyword ->
+            keyword?.let { viewModel.searchChar(it) }
+            viewModel.changeSearchState()
+        },
+        onCancel = viewModel::changeSearchState,
+    )
 
 }
 
@@ -295,14 +299,15 @@ fun CharacterCard(
     onCharSelect: (Int) -> Unit = { }
 ) {
     val gameTable: GameTableQuery = koinInject()
+    val rarity = char.rarity
+    val profession = char.profession?.let { runCatching { Profession.valueOf(it) }.getOrNull() }
     val evolvePhasePainter = when (char.evolvePhase) {
         0 -> Res.drawable.character_elite_0
         1 -> Res.drawable.character_elite_1
         2 -> Res.drawable.character_elite_2
         else -> Res.drawable.character_elite_0
     }
-    val charPainter = CharPainter.form(char.rarity!!)
-    val profession = Profession.valueOf(char.profession!!)
+    val charPainter = CharPainter.form(rarity ?: 1)
     Box(
         modifier = modifier
             .height(228.dp)
@@ -351,14 +356,16 @@ fun CharacterCard(
                 .offset(x = 4.dp, y = 4.dp)
                 .size(50.dp, 24.dp)
         )
-        // profession icon
-        Image(
-            painterResource(profession.icon), null,
-            modifier = Modifier
-                .align(Alignment.TopStart)
-                .offset(x = 8.dp, y = 8.dp)
-                .size(18.dp)
-        )
+        // profession icon（缺 profession 时不渲染）
+        if (profession != null) {
+            Image(
+                painterResource(profession.icon), null,
+                modifier = Modifier
+                    .align(Alignment.TopStart)
+                    .offset(x = 8.dp, y = 8.dp)
+                    .size(18.dp)
+            )
+        }
         // rarity stars
         Image(
             painterResource(charPainter.rarityPainter), null,
@@ -433,19 +440,15 @@ fun CharacterCard(
                     .padding(top = 2.dp)
             )
         }
-        // skill icon
+        // skill icon：模板技能可能缺失，这里逐层安全取值
         val skill = char.skills.getOrNull(char.defaultSkillIndex)
-        val skillPainter = if (skill == null) {
-            if (char.currentTmpl == null) {
-                painterResource(Res.drawable.character_empty_skill)
-            } else {
-                val tmplChar = char.tmpl!![char.currentTmpl]
-                val tmplSkill = tmplChar?.skills?.getOrNull(tmplChar.defaultSkillIndex)
-                if (tmplSkill == null) painterResource(Res.drawable.character_empty_skill)
-                else skillPainter(tmplSkill.skillId)
-            }
-        } else {
-            skillPainter(skill.skillId)
+        val templateSkill = char.currentTmpl
+            ?.let { templateId -> char.tmpl?.get(templateId) }
+            ?.let { template -> template.skills.getOrNull(template.defaultSkillIndex) }
+        val skillPainter = when {
+            skill != null -> skillPainter(skill.skillId)
+            templateSkill != null -> skillPainter(templateSkill.skillId)
+            else -> painterResource(Res.drawable.character_empty_skill)
         }
         Image(
             painter = skillPainter,
@@ -455,7 +458,6 @@ fun CharacterCard(
                 .offset(x = (-8).dp, y = (-26).dp)
                 .size(26.dp)
         )
-        // equip icon, centred between the level badge and the skill icon
         char.currentEquip?.let { equipId ->
             Image(
                 painter = equipPainter(gameTable.getEquipType(equipId)),
@@ -507,29 +509,33 @@ fun CharacterCard(
 @Composable
 fun SearchCharDialog(
     show: Boolean,
-    onKeywordType: (String) -> List<String> = { listOf() },
-    onSearchCharId: (String) -> String = { "" },
-    onConfirmKeyword: (String?) -> Unit = { }
+    onKeywordType: (String) -> List<String> = { emptyList() },
+    onPickName: (String) -> Unit = { },
+    onCopyCharId: (String) -> Unit = { },
+    onConfirmKeyword: (String?) -> Unit = { },
+    onCancel: () -> Unit = { onConfirmKeyword(null) },
 ) {
-    val clipboard = koinInject<ClipboardPort>()
-    var keyword by remember { mutableStateOf("") }
-    val charNameList = remember { mutableStateListOf<String>() }
-    var selectedKeyword by remember { mutableStateOf("") }
+    var keyword by remember(show) { mutableStateOf("") }
+    var selectedKeyword by remember(show) { mutableStateOf("") }
+    val charNameList = remember(show) { mutableStateListOf<String>() }
+
+    // 关键词变化时刷新建议；查询用刚输入的新值。
+    LaunchedEffect(keyword) {
+        charNameList.replace(onKeywordType(keyword))
+    }
+
     BasicDialog(
         show = show,
         title = stringResource(Res.string.search),
-        onCancel = { onConfirmKeyword(null) },
-        onConfirm = { onConfirmKeyword(selectedKeyword) }
+        onCancel = onCancel,
+        onConfirm = { onConfirmKeyword(selectedKeyword.ifEmpty { null }) }
     ) {
         SearchBar(
             inputField = {
                 InputField(
                     query = keyword,
-                    onQueryChange = {
-                        keyword = it
-                        charNameList.replace(onKeywordType(keyword))
-                    },
-                    onSearch = { onConfirmKeyword(selectedKeyword) },
+                    onQueryChange = { keyword = it },
+                    onSearch = { onConfirmKeyword(keyword.ifEmpty { null }) },
                     expanded = keyword.isNotEmpty(),
                     onExpandedChange = { },
                     label = stringResource(Res.string.search),
@@ -546,22 +552,23 @@ fun SearchCharDialog(
                     .padding(top = 16.dp)
             ) {
                 charNameList.forEach { word ->
+                    val selected = selectedKeyword == word
                     Box(
                         modifier = Modifier
                             .wrapContentSize()
                             .padding(4.dp)
                             .clip(RoundedCornerShape(12.dp))
-                            .background(if (selectedKeyword == word) MaterialTheme.colorScheme.primary else Color.LightGray)
+                            .background(
+                                if (selected) MaterialTheme.colorScheme.primary
+                                else Color.LightGray
+                            )
                             .combinedClickable(
                                 enabled = true,
                                 onClick = {
                                     selectedKeyword = word
-                                    keyword = word
+                                    onPickName(word)
                                 },
-                                onLongClick = {
-                                    val charId = onSearchCharId(word)
-                                    clipboard.setText(charId)
-                                }
+                                onLongClick = { onCopyCharId(word) }
                             )
                             .padding(8.dp)
                     ) {
@@ -586,16 +593,14 @@ fun Modifier.offsetPercent(offsetPercentX: Float = 0f, offsetPercentY: Float = 0
 @Composable
 fun portraitPainter(skinId: String): Painter {
     val encode = urlEncode(skinId)
-    val imageUrl = "https://web.hycdn.cn/arknights/game/assets/char_skin/portrait/$encode.png"
-    return rememberAsyncImagePainter(model = imageUrl)
+    return rememberAsyncImagePainter(model = LocalImageConfig.current.portrait + encode + ".png")
 }
 
 @Composable
 fun skillPainter(skillId: String): Painter {
     val encode = urlEncode(skillId)
-    val imageUrl = "https://web.hycdn.cn/arknights/game/assets/char_skill/$encode.png"
     return rememberAsyncImagePainter(
-        model = imageUrl,
+        model = LocalImageConfig.current.skill + encode + ".png",
         placeholder = painterResource(Res.drawable.character_default_skill_icon),
         error = painterResource(Res.drawable.character_default_skill_icon),
     )
@@ -603,8 +608,7 @@ fun skillPainter(skillId: String): Painter {
 
 @Composable
 fun equipPainter(equipId: String): Painter {
-    val imageUrl = "https://web.hycdn.cn/arknights/game/assets/uniequip/type/$equipId.png"
-    return rememberAsyncImagePainter(model = imageUrl)
+    return rememberAsyncImagePainter(model = LocalImageConfig.current.equip + equipId + ".png")
 }
 
 

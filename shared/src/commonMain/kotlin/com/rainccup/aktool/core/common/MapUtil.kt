@@ -4,16 +4,18 @@ import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.contentOrNull
 
-typealias NestingMap = Map<String, Map<String, Any?>>
-typealias ListMap = List<Map<String, Any?>>
+typealias NestingMap<T> = Map<String, Map<String, T>>
+typealias ListMap<T> = List<Map<String, T>>
 
-inline fun <reified T> Map<String, Any?>.getTyped(key: String): T? = this[key] as? T
+inline fun <reified T> Map<String, *>.getTyped(key: String): T? = this[key] as? T
 
-fun jsonToMap(element: JsonElement): Any = when (element) {
+fun jsonToMap(element: JsonElement): Any? = when (element) {
     is JsonObject -> element.mapValues { jsonToMap(it.value) }
     is JsonArray -> element.map { jsonToMap(it) }
     is JsonPrimitive -> when {
+        element.contentOrNull == null -> null
         element.isString -> element.content
         element.content.equals("true", ignoreCase = true) -> true
         element.content.equals("false", ignoreCase = true) -> false
@@ -24,7 +26,7 @@ fun jsonToMap(element: JsonElement): Any = when (element) {
     }
 }
 
-fun decodeToMap(text: String): Map<String, Any?> {
-    val element = JsonUtil.json.parseToJsonElement(text) as JsonObject
-    return element.mapValues { jsonToMap(it.value) }
+inline fun <reified T : Map<String, *>> decodeToMap(text: String): T {
+    val element = JsonUtil.json.parseToJsonElement(text)
+    return jsonToMap(element) as? T ?: error("Decode failed")
 }

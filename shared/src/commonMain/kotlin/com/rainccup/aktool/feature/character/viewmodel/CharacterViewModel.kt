@@ -7,13 +7,15 @@ import com.rainccup.aktool.core.common.replace
 import com.rainccup.aktool.core.domain.model.CharacterFilter
 import com.rainccup.aktool.core.domain.usecase.character.CharacterUseCase
 import com.rainccup.aktool.core.model.Character
+import com.rainccup.aktool.core.platform.ClipboardPort
 import com.rainccup.aktool.core.platform.Messenger
 import com.rainccup.aktool.resources.Res
+import com.rainccup.aktool.resources.char_id
+import com.rainccup.aktool.resources.copy_success
 import com.rainccup.aktool.resources.game_table_init_fail
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.getString
 import kotlin.time.Duration.Companion.milliseconds
@@ -21,30 +23,38 @@ import kotlin.time.Duration.Companion.milliseconds
 class CharacterViewModel(
     private val useCase: CharacterUseCase,
     private val messenger: Messenger,
+    private val clipboard: ClipboardPort,
 ) : ViewModel() {
     val characterData = mutableMapOf<String, Character>()
-    private val characterList = mutableStateListOf<Character>()
     private val charNameMap = mutableMapOf<String, String>()
 
-    private val _splash = MutableStateFlow(true)
-    val splash: StateFlow<Boolean> = _splash.asStateFlow()
+    /**
+     * 已排序的干员列表，直接交给 `LazyVerticalGrid`。
+     *
+     * 每次变更都经 [CharacterFilter] 排序（`byProfession` 内部 `sorted()`），所以这里无需再排。
+     * 原先页面调用的是 `charList()`，那个方法会在**组合期**对正在被网格遍历的列表排序——
+     * 既浪费又破坏"组合不产生副作用"的约定。
+     */
+    val characters: List<Character>
+        field = mutableStateListOf<Character>()
 
-    private val _isSelect = MutableStateFlow(false)
-    val isSelect: StateFlow<Boolean> = _isSelect.asStateFlow()
+    val splash: StateFlow<Boolean>
+        field = MutableStateFlow(true)
 
-    private val _profession = MutableStateFlow("ALL")
-    val profession: StateFlow<String> = _profession.asStateFlow()
+    val isSelect: StateFlow<Boolean>
+        field = MutableStateFlow(false)
 
-    private val _loadAnimate = MutableStateFlow(false)
-    val loadAnimate: StateFlow<Boolean> = _loadAnimate.asStateFlow()
+    val profession: StateFlow<String>
+        field = MutableStateFlow("ALL")
 
-    private val _gainChar = MutableStateFlow(false)
-    val gainChar: StateFlow<Boolean> = _gainChar.asStateFlow()
+    val loadAnimate: StateFlow<Boolean>
+        field = MutableStateFlow(false)
 
-    private val _isSearch = MutableStateFlow(false)
-    val isSearch: StateFlow<Boolean> = _isSearch.asStateFlow()
+    val gainChar: StateFlow<Boolean>
+        field = MutableStateFlow(false)
 
-    fun charList(): List<Character> = characterList.apply { sort() }
+    val isSearch: StateFlow<Boolean>
+        field = MutableStateFlow(false)
 
     fun initCharData() = viewModelScope.launch {
         if (!loadAnimate.value) {
@@ -52,14 +62,14 @@ class CharacterViewModel(
                 messenger.show(getString(Res.string.game_table_init_fail))
                 return@launch
             }
-            _loadAnimate.emit(true)
+            loadAnimate.emit(true)
             characterData.clear()
             runCatching {
                 val loaded = useCase.loadCharacters()
                 characterData.putAll(loaded.characters)
                 charNameMap.clear()
                 charNameMap.putAll(loaded.nameToId)
-                selectProfession(_profession.value)
+                selectProfession(profession.value)
                 delay(500.milliseconds)
             }.onFailure {
                 messenger.show(it.message ?: "error")
@@ -71,23 +81,23 @@ class CharacterViewModel(
     fun existChar(charId: String): Boolean = useCase.existChar(charId)
 
     fun selectProfession(profession: String) = viewModelScope.launch {
-        _profession.emit(profession)
-        characterList.clear()
-        characterList.addAll(CharacterFilter.byProfession(characterData.values, profession))
+        this@CharacterViewModel.profession.emit(profession)
+        characters.clear()
+        characters.addAll(CharacterFilter.byProfession(characterData.values, profession))
     }
 
     fun changeSelectState(state: Boolean) = viewModelScope.launch {
-        _isSelect.emit(state)
+        isSelect.emit(state)
     }
 
     fun updateCharData(char: Character) = viewModelScope.launch {
         characterData[char.instId.toString()] = char
-        selectProfession(_profession.value)
+        selectProfession(profession.value)
     }
 
     fun closeAnimate() = viewModelScope.launch {
-        _splash.emit(false)
-        _loadAnimate.emit(false)
+        splash.emit(false)
+        loadAnimate.emit(false)
     }
 
     /**
@@ -102,14 +112,24 @@ class CharacterViewModel(
     }
 
     fun changeGainCharState() = viewModelScope.launch {
-        _gainChar.emit(_gainChar.value.not())
+        gainChar.emit(gainChar.value.not())
     }
 
     fun getSearchedCharList(charName: String): List<String> =
         CharacterFilter.matches(charNameMap, charName)
 
+    fun copyCharId(charName: String) = viewModelScope.launch {
+        val charId = CharacterFilter.idOf(charNameMap, charName)
+        if (charId == CharacterFilter.NOT_FOUND) {
+            messenger.show(getString(Res.string.char_id))
+            return@launch
+        }
+        clipboard.setText(charId)
+        messenger.show(getString(Res.string.copy_success, charId))
+    }
+
     fun changeSearchState() = viewModelScope.launch {
-        _isSearch.emit(_isSearch.value.not())
+        isSearch.emit(isSearch.value.not())
     }
 
     fun getCharIdByCharName(charName: String): String =
@@ -117,7 +137,7 @@ class CharacterViewModel(
 
     fun searchChar(charName: String) {
         characterData.values.find { it.name == charName }?.let {
-            characterList.replace(it)
+            characters.replace(it)
         }
     }
 }

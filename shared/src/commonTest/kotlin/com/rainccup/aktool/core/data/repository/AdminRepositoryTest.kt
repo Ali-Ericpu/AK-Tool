@@ -6,7 +6,9 @@ import com.rainccup.aktool.core.network.NetworkConfig
 import com.rainccup.aktool.core.network.createHttpClient
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respond
+import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
+import io.ktor.http.headersOf
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -17,7 +19,13 @@ class AdminRepositoryTest {
         var seenUid = ""
         val engine = MockEngine { request ->
             seenUid = request.headers["uid"] ?: ""
-            respond("""{"msg":"ok","status":0,"type":"OK","data":null}""", HttpStatusCode.OK)
+            // ApiClient 用 Ktor 的 .body() 反序列化，依赖 ContentNegotiation，
+            // 因此桩响应必须声明 Content-Type（真实服务端会带）。
+            respond(
+                """{"msg":"ok","status":0,"type":"OK","data":null}""",
+                HttpStatusCode.OK,
+                headersOf(HttpHeaders.ContentType, "application/json"),
+            )
         }
         val net = NetworkConfig(baseUrl = "http://t")
         val api = ApiClient(net) { createHttpClient(net, engine) }

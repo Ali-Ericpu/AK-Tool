@@ -9,6 +9,7 @@ object JsonUtil {
         encodeDefaults = true
         explicitNulls = false
         prettyPrint = false
+
     }
 
     private val pretty: Json = Json {

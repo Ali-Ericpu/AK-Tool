@@ -16,12 +16,12 @@ import androidx.compose.ui.layout.ContentScale
 import coil3.compose.rememberAsyncImagePainter
 import com.rainccup.aktool.core.common.AppConfigContext
 import com.rainccup.aktool.core.common.LocalAppConfig
+import com.rainccup.aktool.core.common.LocalImageConfig
 import com.rainccup.aktool.core.data.datasource.ConfigRepository
-import com.rainccup.aktool.core.model.AppConfig
-import com.rainccup.aktool.core.network.HttpClientProvider
-import com.rainccup.aktool.app.AppNavHost
-import com.rainccup.aktool.feature.splash.ui.SplashPage
 import com.rainccup.aktool.core.designsystem.theme.AKToolTheme
+import com.rainccup.aktool.core.model.ImageConfig
+import com.rainccup.aktool.core.network.HttpClientProvider
+import com.rainccup.aktool.feature.splash.ui.SplashPage
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 import top.yukonga.miuix.kmp.basic.Surface
@@ -55,7 +55,8 @@ fun App() {
                             httpClientProvider.recreate(new.serverUri)
                         }
                     }
-                }
+                },
+                LocalImageConfig provides ImageConfig.default,
             ) {
                 Surface(modifier = Modifier.fillMaxSize()) {
                     if (config.customBg && config.bgPath.isNotEmpty()) {

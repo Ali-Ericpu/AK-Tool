@@ -19,33 +19,40 @@ class CharacterUseCase(
     /** 确保三张 excel 表已加载；缺表返回 false，由页面提示「数据缺失」。 */
     suspend fun init(): Boolean = gameTable.init()
 
-    /** 干员是否**尚未**拥有（true = 可补发），与页面表单的 error 语义一致。 */
+    /** 干员是否**存在**，与页面表单的 error 语义一致。 */
     fun existChar(charId: String): Boolean = gameTable.characterTable[charId] == null
 
-    /** 拉取并解析干员表。 */
     suspend fun loadCharacters(): LoadedCharacters {
-        val nameToId = mutableMapOf<String, String>()
-        gameTable.characterTable.forEach { (charId, charData) ->
+        val table = gameTable.characterTable
+        val nameToId = LinkedHashMap<String, String>(table.size)
+        table.forEach { (charId, charData) ->
             if (charId.startsWith("char_") && charData["displayNumber"] != null) {
                 nameToId[charData["name"] as String] = charId
             }
         }
+
         val result = admin.syncCharacter()
-        val payload = result.data ?: throw RuntimeException("数据异常")
-        val characters = mutableMapOf<String, Character>()
+        // data 为 null 即接口层失败
+        val payload = result.data ?: error("数据异常")
+
+        val characters = LinkedHashMap<String, Character>(payload.size)
         payload.forEach { (instId, char) ->
-            runCatching { gameTable.getCharacterData(char.charId) }.onSuccess {
-                characters[instId] = char.copy(
-                    name = it["name"] as String,
-                    profession = it["profession"] as String,
-                    rarity = (it["rarity"] as String).substringAfter("_").toInt(),
-                )
-            }.onFailure { Logger.d { "Character_Init_CharData ${it.message}" } }
+            val charData = table[char.charId]
+            // 表里没有该 charId：跳过
+            if (charData == null) {
+                Logger.d { "Character_Init_CharData ${char.charId} not in table" }
+                return@forEach
+            }
+            characters[instId] = char.copy(
+                name = charData["name"] as String,
+                profession = charData["profession"] as String,
+                rarity = (charData["rarity"] as String).substringAfter("_").toInt(),
+            )
         }
         return LoadedCharacters(characters, nameToId)
     }
 
-    /** 新增干员（原 CharacterViewModel.gainChar）。 */
+    /** 新增干员。 */
     suspend fun gainCharacter(charId: String) {
         val result = admin.gainItem(GainItemRequest(listOf(Item(charId, "CHAR", 1))))
         if (result.status != 0) throw RuntimeException(result.msg)

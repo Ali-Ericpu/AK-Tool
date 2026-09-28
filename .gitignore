@@ -22,4 +22,7 @@ androidApp/build/outputs/
 # Design/plan/report documents stay local and untracked
 /docs/
 
+# Redirected output of detached `gradlew :desktopApp:hotRun` sessions
+/hotrun*.log
+
 .worktrees/

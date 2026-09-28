@@ -17,7 +17,7 @@ fun main() {
         Window(
             onCloseRequest = ::exitApplication,
             title = "AK Tool",
-            state = rememberWindowState(width = 480.dp, height = 860.dp),
+            state = rememberWindowState(width = 550.dp, height = 1100.dp),
         ) {
             App()
         }

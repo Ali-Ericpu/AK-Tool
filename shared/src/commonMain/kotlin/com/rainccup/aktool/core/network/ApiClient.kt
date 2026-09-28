@@ -1,6 +1,5 @@
 package com.rainccup.aktool.core.network
 
-import com.rainccup.aktool.core.common.JsonUtil
 import com.rainccup.aktool.core.model.AddFlushMessageRequest
 import com.rainccup.aktool.core.model.ApiResult
 import com.rainccup.aktool.core.model.Character
@@ -30,8 +29,7 @@ class ApiClient(
                 header("uid", config.uid)
                 header("adminKey", config.adminKey)
             }
-            .bodyAsText()
-            .let { JsonUtil.decode(it) }
+            .body()
 
     suspend fun saveCharacter(body: SaveCharRequest): ApiResult<JsonElement?> =
         clientProvider()
@@ -40,8 +38,7 @@ class ApiClient(
                 header("adminKey", config.adminKey)
                 setBody(body)
             }
-            .bodyAsText()
-            .let { JsonUtil.decode(it) }
+            .body()
 
     suspend fun gainItem(body: GainItemRequest): ApiResult<JsonElement?> =
         clientProvider()
@@ -50,8 +47,7 @@ class ApiClient(
                 header("adminKey", config.adminKey)
                 setBody(body)
             }
-            .bodyAsText()
-            .let { JsonUtil.decode(it) }
+            .body()
 
     suspend fun syncStatus(): ApiResult<Status> =
         clientProvider()
@@ -59,8 +55,7 @@ class ApiClient(
                 header("uid", config.uid)
                 header("adminKey", config.adminKey)
             }
-            .bodyAsText()
-            .let { JsonUtil.decode(it) }
+            .body()
 
     suspend fun saveStatus(body: SaveStatusRequest): ApiResult<JsonElement?> =
         clientProvider()
@@ -69,8 +64,7 @@ class ApiClient(
                 header("adminKey", config.adminKey)
                 setBody(body)
             }
-            .bodyAsText()
-            .let { JsonUtil.decode(it) }
+            .body()
 
     suspend fun unlockAllChar(body: UnlockAllCharRequest): ApiResult<JsonElement?> =
         clientProvider()
@@ -79,8 +73,7 @@ class ApiClient(
                 header("adminKey", config.adminKey)
                 setBody(body)
             }
-            .bodyAsText()
-            .let { JsonUtil.decode(it) }
+            .body()
 
     suspend fun unlockAllStages(): ApiResult<JsonElement?> =
         clientProvider()
@@ -88,8 +81,7 @@ class ApiClient(
                 header("uid", config.uid)
                 header("adminKey", config.adminKey)
             }
-            .bodyAsText()
-            .let { JsonUtil.decode(it) }
+            .body()
 
     suspend fun unlockAllFlags(): ApiResult<JsonElement?> =
         clientProvider()
@@ -97,8 +89,7 @@ class ApiClient(
                 header("uid", config.uid)
                 header("adminKey", config.adminKey)
             }
-            .bodyAsText()
-            .let { JsonUtil.decode(it) }
+            .body()
 
     suspend fun addFlushMessage(body: AddFlushMessageRequest): ApiResult<JsonElement?> =
         clientProvider()
@@ -106,8 +97,7 @@ class ApiClient(
                 header("adminKey", config.adminKey)
                 setBody(body)
             }
-            .bodyAsText()
-            .let { JsonUtil.decode(it) }
+            .body()
 
     suspend fun resetActivity(body: ResetActivityRequest): ApiResult<JsonElement?> =
         clientProvider()
@@ -116,8 +106,7 @@ class ApiClient(
                 header("adminKey", config.adminKey)
                 setBody(body)
             }
-            .bodyAsText()
-            .let { JsonUtil.decode(it) }
+            .body()
 
     suspend fun registerAccount(body: RegisterAccountRequest): ApiResult<JsonElement?> =
         clientProvider()
@@ -125,16 +114,14 @@ class ApiClient(
                 header("adminKey", config.adminKey)
                 setBody(body)
             }
-            .bodyAsText()
-            .let { JsonUtil.decode(it) }
+            .body()
 
     suspend fun syncValidCode(): ApiResult<Map<String, String>> =
         clientProvider()
             .get("admin/syncValidCode") {
                 header("adminKey", config.adminKey)
             }
-            .bodyAsText()
-            .let { JsonUtil.decode(it) }
+            .body()
 
     suspend fun resetRlv2(): ApiResult<JsonElement?> =
         clientProvider()
@@ -142,8 +129,7 @@ class ApiClient(
                 header("uid", config.uid)
                 header("adminKey", config.adminKey)
             }
-            .bodyAsText()
-            .let { JsonUtil.decode(it) }
+            .body()
 
     suspend fun queryAccountByUID(): ApiResult<Map<String, String>> =
         clientProvider()

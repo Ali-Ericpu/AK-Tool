@@ -8,6 +8,9 @@ import com.rainccup.aktool.core.model.Character
  */
 object CharacterFilter {
 
+    /** 未匹配到干员时的返回值（保留原字面量，调用方据此判断）。 */
+    const val NOT_FOUND: String = "ERROR"
+
     fun byProfession(all: Collection<Character>, profession: String): List<Character> =
         if (profession == "ALL") all.sorted()
         else all.filter { it.profession == profession }.sorted()
@@ -23,6 +26,6 @@ object CharacterFilter {
         return found
     }
 
-    /** 干员名 → id；未找到返回 "ERROR"（与原实现一致）。 */
-    fun idOf(nameToId: Map<String, String>, name: String): String = nameToId[name] ?: "ERROR"
+    /** 干员名 → id；未找到返回 [NOT_FOUND]。 */
+    fun idOf(nameToId: Map<String, String>, name: String): String = nameToId[name] ?: NOT_FOUND
 }
