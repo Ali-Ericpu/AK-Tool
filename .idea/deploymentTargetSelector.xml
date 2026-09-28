@@ -2,8 +2,15 @@
 <project version="4">
   <component name="deploymentTargetSelector">
     <selectionStates>
-      <SelectionState runConfigName="composeApp">
+      <SelectionState runConfigName="androidApp">
         <option name="selectionMode" value="DROPDOWN" />
+        <DropdownSelection timestamp="2026-09-27T13:26:18.748317400Z">
+          <Target type="DEFAULT_BOOT">
+            <handle>
+              <DeviceId pluginId="Wireless" identifier="serviceName=adb-97ac0c22-Zcoqhe" />
+            </handle>
+          </Target>
+        </DropdownSelection>
         <DialogSelection />
       </SelectionState>
     </selectionStates>

@@ -19,6 +19,8 @@
     <string name="skill_level">SkillLevel</string>
     <string name="star_mark">Star Mark</string>
     <string name="update_excel">Update Resources</string>
+    <string name="update_success">Update Success</string>
+    <string name="update_fail">Update Failed</string>
     <string name="choose_bg">Choose Background</string>
     <string name="error_uri">Error URI</string>
     <string name="home">Home</string>

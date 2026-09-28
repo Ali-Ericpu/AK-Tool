@@ -19,6 +19,8 @@
     <string name="skill_level">技能等级</string>
     <string name="star_mark">特别关注</string>
     <string name="update_excel">更新资源</string>
+    <string name="update_success">更新成功</string>
+    <string name="update_fail">更新失败</string>
     <string name="choose_bg">选择背景文件</string>
     <string name="error_uri">链接配置错误</string>
     <string name="home">主页</string>

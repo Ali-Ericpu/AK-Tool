@@ -15,4 +15,8 @@ build/
 local.properties
 .kotlin/
 
+# Release build outputs (APK + mapping.txt are large and reproducible)
+androidApp/release/
+androidApp/build/outputs/
+
 .worktrees/

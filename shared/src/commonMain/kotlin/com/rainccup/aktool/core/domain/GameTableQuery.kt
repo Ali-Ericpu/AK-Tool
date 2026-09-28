@@ -7,7 +7,7 @@ import com.rainccup.aktool.core.data.datasource.GameTableRepository
  *
  * 页面只通过它读表，`feature` 因此不必依赖 `core.data`
  * （见 `ArchitectureRuleTest` 的目标依赖表：feature → domain 合法，feature → data 不合法）。
- * 写入/刷新资源仍走 `UpdateGameTableUseCase`。
+ * 写入/刷新资源仍走 `SettingUseCase`。
  */
 class GameTableQuery(private val repository: GameTableRepository) {
 

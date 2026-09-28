@@ -2,16 +2,7 @@ package com.rainccup.aktool.feature.extra.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.rainccup.aktool.core.domain.usecase.admin.AddFlushMessageUseCase
-import com.rainccup.aktool.core.domain.usecase.admin.GainItemUseCase
-import com.rainccup.aktool.core.domain.usecase.admin.QueryAccountByUidUseCase
-import com.rainccup.aktool.core.domain.usecase.admin.RegisterAccountUseCase
-import com.rainccup.aktool.core.domain.usecase.admin.ResetActivityUseCase
-import com.rainccup.aktool.core.domain.usecase.admin.ResetIntegratedStrategiesUseCase
-import com.rainccup.aktool.core.domain.usecase.admin.SyncValidCodeUseCase
-import com.rainccup.aktool.core.domain.usecase.admin.UnlockAllCharactersUseCase
-import com.rainccup.aktool.core.domain.usecase.admin.UnlockAllFlagsUseCase
-import com.rainccup.aktool.core.domain.usecase.admin.UnlockAllStagesUseCase
+import com.rainccup.aktool.core.domain.usecase.admin.ExtraUseCase
 import com.rainccup.aktool.core.model.AddFlushMessageRequest
 import com.rainccup.aktool.core.model.ApiResult
 import com.rainccup.aktool.core.model.Item
@@ -21,6 +12,7 @@ import com.rainccup.aktool.core.model.UnlockAllCharRequest
 import com.rainccup.aktool.core.platform.ClipboardPort
 import com.rainccup.aktool.core.platform.Messenger
 import com.rainccup.aktool.resources.Res
+import com.rainccup.aktool.resources.copy_success
 import com.rainccup.aktool.resources.game_table_init_fail
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -29,16 +21,7 @@ import kotlinx.serialization.json.JsonElement
 import org.jetbrains.compose.resources.getString
 
 class ExtraViewModel(
-    private val unlockAllCharactersUseCase: UnlockAllCharactersUseCase,
-    private val unlockAllStagesUseCase: UnlockAllStagesUseCase,
-    private val unlockAllFlagsUseCase: UnlockAllFlagsUseCase,
-    private val addFlushMessageUseCase: AddFlushMessageUseCase,
-    private val gainItemUseCase: GainItemUseCase,
-    private val resetActivityUseCase: ResetActivityUseCase,
-    private val registerAccountUseCase: RegisterAccountUseCase,
-    private val resetIntegratedStrategiesUseCase: ResetIntegratedStrategiesUseCase,
-    private val syncValidCodeUseCase: SyncValidCodeUseCase,
-    private val queryAccountByUidUseCase: QueryAccountByUidUseCase,
+    private val useCase: ExtraUseCase,
     private val messenger: Messenger,
     private val clipboard: ClipboardPort,
 ) : ViewModel() {
@@ -66,7 +49,7 @@ class ExtraViewModel(
     private var validateCode = mapOf<String, String>()
 
     fun changeUnlockCharState() = viewModelScope.launch {
-        if (showUnlockChar.value || unlockAllCharactersUseCase.init()) {
+        if (showUnlockChar.value || useCase.init()) {
             showUnlockChar.emit(!showUnlockChar.value)
         } else {
             messenger.show(getString(Res.string.game_table_init_fail))
@@ -108,41 +91,41 @@ class ExtraViewModel(
     }
 
     fun unlockAllChar(body: UnlockAllCharRequest) = viewModelScope.launch {
-        doRequest { unlockAllCharactersUseCase(body) }
+        doRequest { useCase.unlockAllCharacters(body) }
     }
 
     fun unlockAllStages() = viewModelScope.launch {
-        doRequest { unlockAllStagesUseCase() }
+        doRequest { useCase.unlockAllStages() }
     }
 
     fun unlockAllFlags() = viewModelScope.launch {
-        doRequest { unlockAllFlagsUseCase() }
+        doRequest { useCase.unlockAllFlags() }
     }
 
     fun addFlushMessage(body: AddFlushMessageRequest) = viewModelScope.launch {
-        doRequest { addFlushMessageUseCase(body) }
+        doRequest { useCase.addFlushMessage(body) }
     }
 
     fun gainItem(body: Item) = viewModelScope.launch {
-        doRequest { gainItemUseCase(body) }
+        doRequest { useCase.gainItem(body) }
     }
 
     fun resetActivity(body: ResetActivityRequest) = viewModelScope.launch {
-        doRequest { resetActivityUseCase(body) }
+        doRequest { useCase.resetActivity(body) }
     }
 
     fun registerAccount(body: RegisterAccountRequest) = viewModelScope.launch {
-        doRequest { registerAccountUseCase(body) }
+        doRequest { useCase.registerAccount(body) }
     }
 
     fun resetRlv2() = viewModelScope.launch {
-        doRequest { resetIntegratedStrategiesUseCase() }
+        doRequest { useCase.resetIntegratedStrategies() }
     }
 
     fun syncValidCode() = viewModelScope.launch {
         isConnecting.emit(true)
         runCatching {
-            validateCode = syncValidCodeUseCase()
+            validateCode = useCase.syncValidCode()
         }.onFailure {
             messenger.show(it.message ?: "error")
         }
@@ -153,9 +136,9 @@ class ExtraViewModel(
 
     fun queryAccountByUID() = viewModelScope.launch {
         runCatching {
-            val account = queryAccountByUidUseCase()
+            val account = useCase.queryAccount()
             clipboard.setText(account)
-            messenger.show("复制成功 : $account")
+            messenger.show(getString(Res.string.copy_success, account))
         }.onFailure {
             messenger.show(it.message ?: "error")
         }

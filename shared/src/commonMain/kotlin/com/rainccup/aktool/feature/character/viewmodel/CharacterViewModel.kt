@@ -5,8 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.rainccup.aktool.core.common.replace
 import com.rainccup.aktool.core.domain.model.CharacterFilter
-import com.rainccup.aktool.core.domain.usecase.character.GainCharacterUseCase
-import com.rainccup.aktool.core.domain.usecase.character.LoadCharactersUseCase
+import com.rainccup.aktool.core.domain.usecase.character.CharacterUseCase
 import com.rainccup.aktool.core.model.Character
 import com.rainccup.aktool.core.platform.Messenger
 import com.rainccup.aktool.resources.Res
@@ -20,8 +19,7 @@ import org.jetbrains.compose.resources.getString
 import kotlin.time.Duration.Companion.milliseconds
 
 class CharacterViewModel(
-    private val loadCharacters: LoadCharactersUseCase,
-    private val gainCharacter: GainCharacterUseCase,
+    private val useCase: CharacterUseCase,
     private val messenger: Messenger,
 ) : ViewModel() {
     val characterData = mutableMapOf<String, Character>()
@@ -50,14 +48,14 @@ class CharacterViewModel(
 
     fun initCharData() = viewModelScope.launch {
         if (!loadAnimate.value) {
-            if (!loadCharacters.init()) {
+            if (!useCase.init()) {
                 messenger.show(getString(Res.string.game_table_init_fail))
                 return@launch
             }
             _loadAnimate.emit(true)
             characterData.clear()
             runCatching {
-                val loaded = loadCharacters()
+                val loaded = useCase.loadCharacters()
                 characterData.putAll(loaded.characters)
                 charNameMap.clear()
                 charNameMap.putAll(loaded.nameToId)
@@ -70,7 +68,7 @@ class CharacterViewModel(
         }
     }
 
-    fun existChar(charId: String): Boolean = loadCharacters.existChar(charId)
+    fun existChar(charId: String): Boolean = useCase.existChar(charId)
 
     fun selectProfession(profession: String) = viewModelScope.launch {
         _profession.emit(profession)
@@ -93,7 +91,7 @@ class CharacterViewModel(
     }
 
     fun gainChar(charId: String) = viewModelScope.launch {
-        gainCharacter(charId)
+        useCase.gainCharacter(charId)
     }
 
     fun changeGainCharState() = viewModelScope.launch {

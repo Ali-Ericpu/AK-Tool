@@ -2,8 +2,7 @@ package com.rainccup.aktool.feature.home.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.rainccup.aktool.core.domain.usecase.status.GetStatusUseCase
-import com.rainccup.aktool.core.domain.usecase.status.SaveStatusUseCase
+import com.rainccup.aktool.core.domain.usecase.status.HomeUseCase
 import com.rainccup.aktool.core.model.SaveStatusRequest
 import com.rainccup.aktool.core.model.Status
 import com.rainccup.aktool.core.platform.Messenger
@@ -13,8 +12,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 class HomeViewModel(
-    private val getStatus: GetStatusUseCase,
-    private val saveStatus: SaveStatusUseCase,
+    private val useCase: HomeUseCase,
     private val messenger: Messenger,
 ) : ViewModel() {
     private val _isRefreshing = MutableStateFlow(false)
@@ -29,7 +27,7 @@ class HomeViewModel(
     fun refresh() = viewModelScope.launch {
         _isRefreshing.emit(true)
         try {
-            val result = getStatus()
+            val result = useCase.loadStatus()
             val data = result.data ?: error(result.msg)
             _status.emit(data)
             _isSplash.emit(false)
@@ -41,7 +39,7 @@ class HomeViewModel(
 
     fun updateStatus(request: SaveStatusRequest) = viewModelScope.launch {
         try {
-            val result = saveStatus(request)
+            val result = useCase.saveStatus(request)
             if (result.status != 0) error(result.msg)
             messenger.showSuccess()
         } catch (e: Exception) {
