@@ -428,7 +428,7 @@ private fun RegisterAccountDialog(
 ) {
     var account by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
-    val error = account.toULongOrNull() == null || account.length > 11 || password.isEmpty()
+    val error = account.isBlank() || account.length > 15 || password.isBlank()
     BasicDialog(
         show = show,
         title = stringResource(Res.string.register_acc),

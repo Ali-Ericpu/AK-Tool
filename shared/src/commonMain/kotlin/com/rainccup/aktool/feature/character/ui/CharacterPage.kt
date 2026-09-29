@@ -76,6 +76,7 @@ import com.rainccup.aktool.core.designsystem.icon
 import com.rainccup.aktool.core.domain.GameTableQuery
 import com.rainccup.aktool.core.model.Character
 import com.rainccup.aktool.core.model.Profession
+import com.rainccup.aktool.core.navigation.characterCardSharedElement
 import com.rainccup.aktool.core.platform.platformUiScale
 import com.rainccup.aktool.core.platform.urlEncode
 import com.rainccup.aktool.feature.character.viewmodel.CharacterViewModel
@@ -152,7 +153,10 @@ fun CharacterPage(
                     modifier = Modifier.fillMaxSize()
                 ) {
                     items(charList, key = { it.instId }) { char ->
-                        CharacterCard(char = char) {
+                        CharacterCard(
+                            modifier = Modifier.characterCardSharedElement(char.instId),
+                            char = char,
+                        ) {
                             onOpenDetail(char)
                         }
                     }

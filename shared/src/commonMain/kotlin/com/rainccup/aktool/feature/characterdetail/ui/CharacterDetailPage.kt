@@ -43,6 +43,7 @@ import androidx.constraintlayout.compose.ConstraintLayout
 import com.rainccup.aktool.core.designsystem.component.IntRangeSlider
 import com.rainccup.aktool.core.domain.GameTableQuery
 import com.rainccup.aktool.core.model.Character
+import com.rainccup.aktool.core.navigation.characterCardSharedElement
 import com.rainccup.aktool.core.platform.platformUiScale
 import com.rainccup.aktool.feature.character.ui.CharacterCard
 import com.rainccup.aktool.feature.character.ui.equipPainter
@@ -97,7 +98,10 @@ fun CharacterDetailPage(
                 )
             ) {
                 Row(modifier = Modifier.padding(start = 4.dp).fillMaxWidth()) {
-                    CharacterCard(char = char)
+                    CharacterCard(
+                        modifier = Modifier.characterCardSharedElement(char.instId),
+                        char = char,
+                    )
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.SpaceBetween,

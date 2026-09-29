@@ -2,6 +2,7 @@ package com.rainccup.aktool.app
 
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.ContentTransform
+import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
@@ -18,6 +19,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -33,6 +35,7 @@ import androidx.navigation3.ui.NavDisplay
 import androidx.savedstate.serialization.SavedStateConfiguration
 import com.rainccup.aktool.core.message.MessageBus
 import com.rainccup.aktool.core.navigation.AppRoute
+import com.rainccup.aktool.core.navigation.LocalSharedTransitionScope
 import com.rainccup.aktool.core.navigation.NavigationMotion
 import com.rainccup.aktool.core.navigation.SlideDirection
 import com.rainccup.aktool.feature.character.ui.CharacterPage
@@ -291,51 +294,60 @@ fun AppNavHost() {
         // 下面三个 transitionSpec 的接收者就变成 Scene<NavKey>，扩展函数全部失配。
         @Suppress("UNCHECKED_CAST")
         val routes = backStack as List<AppRoute>
-        NavDisplay(
-            backStack = routes,
-            onBack = { if (backStack.size > 1) backStack.removeLastOrNull() },
-            modifier = Modifier
-                .padding(paddingValues)
-                .padding(12.dp),
-            transitionSpec = navTransitionSpec,
-            popTransitionSpec = navPopTransitionSpec,
-            predictivePopTransitionSpec = navPredictivePopSpec,
-            entryDecorators = listOf(
-                rememberSaveableStateHolderNavEntryDecorator(),
-                rememberViewModelStoreNavEntryDecorator(),
-            ),
-            entryProvider = entryProvider {
-                entry<AppRoute.Home> {
-                    HomePage()
-                }
+        // 共享元素转场的作用域：干员卡要在列表页与详情页之间连续移动，必须由同一个
+        // SharedTransitionLayout 统一测量两个页面的坐标，并由它负责转场期间的 overlay 绘制
+        // （否则移动中的卡片会被页面的边界裁掉）。
+        SharedTransitionLayout {
+            val sharedTransitionScope = this
+            CompositionLocalProvider(LocalSharedTransitionScope provides sharedTransitionScope) {
+                NavDisplay(
+                    backStack = routes,
+                    onBack = { if (backStack.size > 1) backStack.removeLastOrNull() },
+                    sharedTransitionScope = sharedTransitionScope,
+                    modifier = Modifier
+                        .padding(paddingValues)
+                        .padding(12.dp),
+                    transitionSpec = navTransitionSpec,
+                    popTransitionSpec = navPopTransitionSpec,
+                    predictivePopTransitionSpec = navPredictivePopSpec,
+                    entryDecorators = listOf(
+                        rememberSaveableStateHolderNavEntryDecorator(),
+                        rememberViewModelStoreNavEntryDecorator(),
+                    ),
+                    entryProvider = entryProvider {
+                        entry<AppRoute.Home> {
+                            HomePage()
+                        }
 
-                entry<AppRoute.Character> {
-                    CharacterPage(it.char) { char ->
-                        backStack.add(AppRoute.CharacterDetail(char))
-                    }
-                }
-
-                entry<AppRoute.Extra> {
-                    ExtraPage()
-                }
-
-                entry<AppRoute.Setting> {
-                    SettingPage()
-                }
-
-                entry<AppRoute.CharacterDetail> {
-                    CharacterDetailPage(
-                        character = it.char,
-                        onSaved = { char ->
-                            backStack.removeLastOrNull()
-                            val last = backStack.lastOrNull()
-                            if (last is AppRoute.Character) {
-                                last.char = char
+                        entry<AppRoute.Character> {
+                            CharacterPage(it.char) { char ->
+                                backStack.add(AppRoute.CharacterDetail(char))
                             }
                         }
-                    )
-                }
-            },
-        )
+
+                        entry<AppRoute.Extra> {
+                            ExtraPage()
+                        }
+
+                        entry<AppRoute.Setting> {
+                            SettingPage()
+                        }
+
+                        entry<AppRoute.CharacterDetail> {
+                            CharacterDetailPage(
+                                character = it.char,
+                                onSaved = { char ->
+                                    backStack.removeLastOrNull()
+                                    val last = backStack.lastOrNull()
+                                    if (last is AppRoute.Character) {
+                                        last.char = char
+                                    }
+                                }
+                            )
+                        }
+                    },
+                )
+            }
+        }
     }
 }
