@@ -10,6 +10,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -105,201 +107,218 @@ fun HomePage() {
                 }
             }
         } else {
-            LazyColumn(modifier = Modifier.fillMaxSize()) {
-                item {
-                    LabelTextField(
-                        value = status.nickName,
-                        label = stringResource(Res.string.nick_name),
-                        error = { text ->
-                            text.toCharArray().sumOf { if (it.code > 255) 2L else 1L } > 16
-                        },
-                        onValueSave = {
-                            viewModel.updateStatus(SaveStatusRequest(nickName = it))
-                        },
-                    )
-                    Row {
+            Box {
+                LazyColumn(modifier = Modifier.fillMaxSize()) {
+                    item {
                         LabelTextField(
-                            value = status.level.toString(),
-                            label = stringResource(Res.string.level),
+                            value = status.nickName,
+                            label = stringResource(Res.string.nick_name),
+                            error = { text ->
+                                text.toCharArray().sumOf { if (it.code > 255) 2L else 1L } > 16
+                            },
+                            onValueSave = {
+                                viewModel.updateStatus(SaveStatusRequest(nickName = it))
+                            },
+                        )
+                        Row {
+                            LabelTextField(
+                                value = status.level.toString(),
+                                label = stringResource(Res.string.level),
+                                error = {
+                                    val int = it.toIntOrNull()
+                                    int == null || int !in 1..120
+                                },
+                                onValueSave = {
+                                    viewModel.updateStatus(SaveStatusRequest(level = it.toInt()))
+                                },
+                                modifier = Modifier.weight(1f)
+                            )
+                            LabelTextField(
+                                value = status.nickNumber,
+                                label = stringResource(Res.string.nick_num),
+                                error = { text ->
+                                    text.length != 4 || text.any { it.code !in 48..57 }
+                                },
+                                onValueSave = {
+                                    viewModel.updateStatus(SaveStatusRequest(nickNumber = it))
+                                },
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
+                        LabelTextField(
+                            value = status.androidDiamond.toString(),
+                            icon = { StatusImage(Res.drawable.status_diamond) },
+                            label = stringResource(Res.string.diamond),
+                            error = { it.checkIntRange() },
+                            onValueSave = {
+                                viewModel.updateStatus(
+                                    SaveStatusRequest(diamond = it.toInt())
+                                )
+                            },
+                        )
+                        LabelTextField(
+                            value = status.diamondShard.toString(),
+                            icon = { StatusImage(Res.drawable.status_diamond_shd) },
+                            label = stringResource(Res.string.diamond_shard),
+                            error = { it.checkIntRange() },
+                            onValueSave = {
+                                viewModel.updateStatus(
+                                    SaveStatusRequest(diamondShard = it.toInt())
+                                )
+                            },
+                        )
+                        LabelTextField(
+                            value = status.ap.toString(),
+                            icon = { StatusImage(Res.drawable.status_ap) },
+                            label = stringResource(Res.string.ap),
                             error = {
                                 val int = it.toIntOrNull()
-                                int == null || int !in 1..120
+                                int == null || int !in 0 until 10000
                             },
                             onValueSave = {
-                                viewModel.updateStatus(SaveStatusRequest(level = it.toInt()))
+                                viewModel.updateStatus(
+                                    SaveStatusRequest(ap = it.toInt())
+                                )
                             },
-                            modifier = Modifier.weight(1f)
                         )
                         LabelTextField(
-                            value = status.nickNumber,
-                            label = stringResource(Res.string.nick_num),
-                            error = { text ->
-                                text.length != 4 || text.any { it.code !in 48..57 }
-                            },
+                            value = status.gold.toString(),
+                            icon = { StatusImage(Res.drawable.status_gold) },
+                            label = stringResource(Res.string.gold),
+                            error = { it.checkIntRange() },
                             onValueSave = {
-                                viewModel.updateStatus(SaveStatusRequest(nickNumber = it))
+                                viewModel.updateStatus(
+                                    SaveStatusRequest(gold = it.toInt())
+                                )
                             },
-                            modifier = Modifier.weight(1f)
+                        )
+                        LabelTextField(
+                            value = status.hggShard.toString(),
+                            icon = { StatusImage(Res.drawable.status_hgg_shd) },
+                            label = stringResource(Res.string.hgg_shard),
+                            error = { it.checkIntRange() },
+                            onValueSave = {
+                                viewModel.updateStatus(
+                                    SaveStatusRequest(hggShard = it.toInt())
+                                )
+                            },
+                        )
+                        LabelTextField(
+                            value = status.lggShard.toString(),
+                            icon = { StatusImage(Res.drawable.status_lgg_shd) },
+                            label = stringResource(Res.string.lgg_shard),
+                            error = { it.checkIntRange() },
+                            onValueSave = {
+                                viewModel.updateStatus(
+                                    SaveStatusRequest(lggShard = it.toInt())
+                                )
+                            },
+                        )
+                        LabelTextField(
+                            value = status.gachaTicket.toString(),
+                            icon = { StatusImage(Res.drawable.status_tkt_gacha) },
+                            label = stringResource(Res.string.gacha_tkt),
+                            error = { it.checkIntRange() },
+                            onValueSave = {
+                                viewModel.updateStatus(
+                                    SaveStatusRequest(gachaTkt = it.toInt())
+                                )
+                            },
+                        )
+                        LabelTextField(
+                            value = status.tenGachaTicket.toString(),
+                            icon = { StatusImage(Res.drawable.status_tkt_gacha_10) },
+                            label = stringResource(Res.string.ten_gacha_tkt),
+                            error = { it.checkIntRange() },
+                            onValueSave = {
+                                viewModel.updateStatus(
+                                    SaveStatusRequest(tenGachaTkt = it.toInt())
+                                )
+                            },
+                        )
+                        LabelTextField(
+                            value = status.classicGachaTicket.toString(),
+                            icon = { StatusImage(Res.drawable.status_classic_gacha) },
+                            label = stringResource(Res.string.cls_gacha_tkt),
+                            error = { it.checkIntRange() },
+                            onValueSave = {
+                                viewModel.updateStatus(
+                                    SaveStatusRequest(classicGachaTkt = it.toInt())
+                                )
+                            },
+                        )
+                        LabelTextField(
+                            value = status.classicTenGachaTicket.toString(),
+                            icon = { StatusImage(Res.drawable.status_classic_gacha_10) },
+                            label = stringResource(Res.string.cls_ten_gacha_tkt),
+                            error = { it.checkIntRange() },
+                            onValueSave = {
+                                viewModel.updateStatus(
+                                    SaveStatusRequest(tenClassicGachaTkt = it.toInt())
+                                )
+                            },
+                        )
+                        LabelTextField(
+                            value = status.classicShard.toString(),
+                            icon = { StatusImage(Res.drawable.status_classic_normal_ticket) },
+                            label = stringResource(Res.string.cls_shard),
+                            error = { it.checkIntRange() },
+                            onValueSave = {
+                                viewModel.updateStatus(
+                                    SaveStatusRequest(classicShard = it.toInt())
+                                )
+                            },
+                        )
+                        LabelTextField(
+                            value = status.practiceTicket.toString(),
+                            icon = { StatusImage(Res.drawable.status_tkt_try) },
+                            label = stringResource(Res.string.try_tkt),
+                            error = { it.checkIntRange() },
+                            onValueSave = {
+                                viewModel.updateStatus(
+                                    SaveStatusRequest(tryTkt = it.toInt())
+                                )
+                            },
+                        )
+                        LabelTextField(
+                            value = status.recruitLicense.toString(),
+                            icon = { StatusImage(Res.drawable.status_tkt_recruit) },
+                            label = stringResource(Res.string.rec_tkt),
+                            error = { it.checkIntRange() },
+                            onValueSave = {
+                                viewModel.updateStatus(
+                                    SaveStatusRequest(recTkt = it.toInt())
+                                )
+                            },
+                        )
+                        LabelTextField(
+                            value = status.instantFinishTicket.toString(),
+                            icon = { StatusImage(Res.drawable.status_tkt_inst_fin) },
+                            label = stringResource(Res.string.fni_tkt),
+                            error = { it.checkIntRange() },
+                            onValueSave = {
+                                viewModel.updateStatus(
+                                    SaveStatusRequest(fniTkt = it.toInt())
+                                )
+                            },
                         )
                     }
-                    LabelTextField(
-                        value = status.androidDiamond.toString(),
-                        icon = { StatusImage(Res.drawable.status_diamond) },
-                        label = stringResource(Res.string.diamond),
-                        error = { it.checkIntRange() },
-                        onValueSave = {
-                            viewModel.updateStatus(
-                                SaveStatusRequest(diamond = it.toInt())
-                            )
-                        },
-                    )
-                    LabelTextField(
-                        value = status.diamondShard.toString(),
-                        icon = { StatusImage(Res.drawable.status_diamond_shd) },
-                        label = stringResource(Res.string.diamond_shard),
-                        error = { it.checkIntRange() },
-                        onValueSave = {
-                            viewModel.updateStatus(
-                                SaveStatusRequest(diamondShard = it.toInt())
-                            )
-                        },
-                    )
-                    LabelTextField(
-                        value = status.ap.toString(),
-                        icon = { StatusImage(Res.drawable.status_ap) },
-                        label = stringResource(Res.string.ap),
-                        error = {
-                            val int = it.toIntOrNull()
-                            int == null || int !in 0 until 10000
-                        },
-                        onValueSave = {
-                            viewModel.updateStatus(
-                                SaveStatusRequest(ap = it.toInt())
-                            )
-                        },
-                    )
-                    LabelTextField(
-                        value = status.gold.toString(),
-                        icon = { StatusImage(Res.drawable.status_gold) },
-                        label = stringResource(Res.string.gold),
-                        error = { it.checkIntRange() },
-                        onValueSave = {
-                            viewModel.updateStatus(
-                                SaveStatusRequest(gold = it.toInt())
-                            )
-                        },
-                    )
-                    LabelTextField(
-                        value = status.hggShard.toString(),
-                        icon = { StatusImage(Res.drawable.status_hgg_shd) },
-                        label = stringResource(Res.string.hgg_shard),
-                        error = { it.checkIntRange() },
-                        onValueSave = {
-                            viewModel.updateStatus(
-                                SaveStatusRequest(hggShard = it.toInt())
-                            )
-                        },
-                    )
-                    LabelTextField(
-                        value = status.lggShard.toString(),
-                        icon = { StatusImage(Res.drawable.status_lgg_shd) },
-                        label = stringResource(Res.string.lgg_shard),
-                        error = { it.checkIntRange() },
-                        onValueSave = {
-                            viewModel.updateStatus(
-                                SaveStatusRequest(lggShard = it.toInt())
-                            )
-                        },
-                    )
-                    LabelTextField(
-                        value = status.gachaTicket.toString(),
-                        icon = { StatusImage(Res.drawable.status_tkt_gacha) },
-                        label = stringResource(Res.string.gacha_tkt),
-                        error = { it.checkIntRange() },
-                        onValueSave = {
-                            viewModel.updateStatus(
-                                SaveStatusRequest(gachaTkt = it.toInt())
-                            )
-                        },
-                    )
-                    LabelTextField(
-                        value = status.tenGachaTicket.toString(),
-                        icon = { StatusImage(Res.drawable.status_tkt_gacha_10) },
-                        label = stringResource(Res.string.ten_gacha_tkt),
-                        error = { it.checkIntRange() },
-                        onValueSave = {
-                            viewModel.updateStatus(
-                                SaveStatusRequest(tenGachaTkt = it.toInt())
-                            )
-                        },
-                    )
-                    LabelTextField(
-                        value = status.classicGachaTicket.toString(),
-                        icon = { StatusImage(Res.drawable.status_classic_gacha) },
-                        label = stringResource(Res.string.cls_gacha_tkt),
-                        error = { it.checkIntRange() },
-                        onValueSave = {
-                            viewModel.updateStatus(
-                                SaveStatusRequest(classicGachaTkt = it.toInt())
-                            )
-                        },
-                    )
-                    LabelTextField(
-                        value = status.classicTenGachaTicket.toString(),
-                        icon = { StatusImage(Res.drawable.status_classic_gacha_10) },
-                        label = stringResource(Res.string.cls_ten_gacha_tkt),
-                        error = { it.checkIntRange() },
-                        onValueSave = {
-                            viewModel.updateStatus(
-                                SaveStatusRequest(tenClassicGachaTkt = it.toInt())
-                            )
-                        },
-                    )
-                    LabelTextField(
-                        value = status.classicShard.toString(),
-                        icon = { StatusImage(Res.drawable.status_classic_normal_ticket) },
-                        label = stringResource(Res.string.cls_shard),
-                        error = { it.checkIntRange() },
-                        onValueSave = {
-                            viewModel.updateStatus(
-                                SaveStatusRequest(classicShard = it.toInt())
-                            )
-                        },
-                    )
-                    LabelTextField(
-                        value = status.practiceTicket.toString(),
-                        icon = { StatusImage(Res.drawable.status_tkt_try) },
-                        label = stringResource(Res.string.try_tkt),
-                        error = { it.checkIntRange() },
-                        onValueSave = {
-                            viewModel.updateStatus(
-                                SaveStatusRequest(tryTkt = it.toInt())
-                            )
-                        },
-                    )
-                    LabelTextField(
-                        value = status.recruitLicense.toString(),
-                        icon = { StatusImage(Res.drawable.status_tkt_recruit) },
-                        label = stringResource(Res.string.rec_tkt),
-                        error = { it.checkIntRange() },
-                        onValueSave = {
-                            viewModel.updateStatus(
-                                SaveStatusRequest(recTkt = it.toInt())
-                            )
-                        },
-                    )
-                    LabelTextField(
-                        value = status.instantFinishTicket.toString(),
-                        icon = { StatusImage(Res.drawable.status_tkt_inst_fin) },
-                        label = stringResource(Res.string.fni_tkt),
-                        error = { it.checkIntRange() },
-                        onValueSave = {
-                            viewModel.updateStatus(
-                                SaveStatusRequest(fniTkt = it.toInt())
-                            )
-                        },
-                    )
                 }
+            }
+            IconButton(
+                onClick = viewModel::refresh,
+                backgroundColor = MiuixTheme.colorScheme.primary,
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(32.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Refresh,
+                    contentDescription = null,
+                    modifier = Modifier
+                        .padding(16.dp)
+                        .size(40.dp)
+                )
             }
         }
 

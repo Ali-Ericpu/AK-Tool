@@ -43,7 +43,7 @@ private fun rememberAdaptiveWindowState(): WindowState {
     return rememberWindowState(
         width = workArea?.let { contentWidth.coerceAtMost(it.width) } ?: contentWidth,
         height = workArea?.let { contentHeight.coerceAtMost(it.height) } ?: contentHeight,
-    ).apply { println(size) }
+    )
 }
 
 /**

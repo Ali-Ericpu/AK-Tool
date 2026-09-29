@@ -6,10 +6,12 @@ import com.rainccup.aktool.core.domain.usecase.status.HomeUseCase
 import com.rainccup.aktool.core.model.SaveStatusRequest
 import com.rainccup.aktool.core.model.Status
 import com.rainccup.aktool.core.platform.Messenger
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlin.time.Duration.Companion.milliseconds
 
 class HomeViewModel(
     private val useCase: HomeUseCase,
@@ -34,6 +36,7 @@ class HomeViewModel(
         } catch (e: Exception) {
             messenger.show(e.message ?: "error")
         }
+        delay(500.milliseconds)
         _isRefreshing.emit(false)
     }
 
