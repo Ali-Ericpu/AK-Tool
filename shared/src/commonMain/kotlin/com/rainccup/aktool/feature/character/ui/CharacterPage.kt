@@ -146,7 +146,7 @@ fun CharacterPage(
         ) {
             if (!showLoadAnimate && !splash) {
                 LazyVerticalGrid(
-                    GridCells.FixedSize(108.dp),
+                    GridCells.FixedSize(CharacterGridMetrics.CardWidth),
                     verticalArrangement = Arrangement.Top,
                     horizontalArrangement = Arrangement.SpaceAround,
                     state = lazyGridState,
@@ -314,8 +314,8 @@ fun CharacterCard(
     val charPainter = CharPainter.form(rarity ?: 1)
     Box(
         modifier = modifier
-            .height(228.dp)
-            .width(108.dp)
+            .height(CharacterGridMetrics.CardHeight)
+            .width(CharacterGridMetrics.CardWidth)
             .clipToBounds()
             .clickable { (onCharSelect(char.instId)) }
     ) {

@@ -262,16 +262,6 @@ fun AppNavHost() {
     Scaffold(
         snackbarHost = { SnackbarHost(state = snackbarHostState) },
         contentWindowInsets = WindowInsets(),
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = "AK TOOL",
-                        modifier = Modifier.padding(12.dp)
-                    )
-                },
-            )
-        },
         bottomBar = {
             NavigationBar {
                 tabs.forEach { tab ->
