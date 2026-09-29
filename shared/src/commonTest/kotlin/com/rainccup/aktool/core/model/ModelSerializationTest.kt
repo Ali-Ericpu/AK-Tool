@@ -36,6 +36,16 @@ class ModelSerializationTest {
     }
 
     @Test
+    fun appConfig_primaryColorSurvivesTheConfigFileRoundTrip() {
+        // 主题色存的是 Color.value（打包后的原始 ULong，超出 Long 范围），
+        // 必须确认经过 ConfigRepository 的 pretty JSON 往返后依然无损
+        val picked = AppConfig(primaryColor = 0xFF1E88E500000000UL)
+        assertEquals(picked, JsonUtil.decode<AppConfig>(JsonUtil.encodePretty(picked)))
+        // 未设置时的哨兵值同样要能原样读回
+        assertEquals(AppConfig(), JsonUtil.decode<AppConfig>(JsonUtil.encodePretty(AppConfig())))
+    }
+
+    @Test
     fun character_minimumFields() {
         val raw = """
             {"instId":1,"charId":"char_002_amiya","favorPoint":0,"potentialRank":0,

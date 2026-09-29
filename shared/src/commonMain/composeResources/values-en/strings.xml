@@ -7,6 +7,11 @@
     <string name="cancel">Cancel</string>
     <string name="dark_mode">Dark Mode</string>
     <string name="dynamic_color">Dynamic Color</string>
+    <string name="dynamic_color_summary">Build a full palette from the picked color; off uses it as-is</string>
+    <string name="primary_color">Theme Color</string>
+    <string name="primary_color_follow_system">Follow System</string>
+    <string name="primary_color_direct">Used as-is</string>
+    <string name="reset_to_default">Reset to Default</string>
     <string name="uid">UID</string>
     <string name="admin_key">Admin Key</string>
     <string name="server_uri">Server URI</string>

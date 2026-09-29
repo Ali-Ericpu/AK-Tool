@@ -35,6 +35,8 @@ fun BasicDialog(
     summary: String? = null,
     summaryColor: Color = DialogDefaults.summaryColor(),
     error: Boolean = false,
+    neutralText: String? = null,
+    onNeutral: () -> Unit = { },
     onCancel: () -> Unit = { },
     onConfirm: () -> Unit = { },
     content: @Composable (ColumnScope.() -> Unit) = {}
@@ -53,6 +55,8 @@ fun BasicDialog(
             content()
             ConfirmButtonRow(
                 error = error,
+                neutralText = neutralText,
+                onNeutral = onNeutral,
                 onCancel = onCancel,
                 onConfirm = onConfirm,
             )
@@ -100,6 +104,8 @@ fun EditTextDialog(
 @Composable
 fun ConfirmButtonRow(
     error: Boolean = false,
+    neutralText: String? = null,
+    onNeutral: () -> Unit = { },
     onCancel: () -> Unit = { },
     onConfirm: () -> Unit = { }
 ) {
@@ -110,6 +116,16 @@ fun ConfirmButtonRow(
             .fillMaxWidth()
             .padding(top = 16.dp)
     ) {
+        if (neutralText != null) {
+            TextButton(
+                text = neutralText,
+                onClick = onNeutral,
+                colors = ButtonDefaults.textButtonColors(
+                    color = Color.Transparent,
+                    textColor = MiuixTheme.colorScheme.onBackground,
+                ),
+            )
+        }
         TextButton(
             text = stringResource(Res.string.cancel),
             onClick = onCancel,

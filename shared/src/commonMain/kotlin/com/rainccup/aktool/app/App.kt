@@ -19,15 +19,19 @@ import com.rainccup.aktool.core.common.LocalAppConfig
 import com.rainccup.aktool.core.common.LocalImageConfig
 import com.rainccup.aktool.core.data.datasource.ConfigRepository
 import com.rainccup.aktool.core.designsystem.theme.AKToolTheme
+import com.rainccup.aktool.core.designsystem.theme.directPrimaryColors
+import com.rainccup.aktool.core.designsystem.theme.resolveColorSchemeMode
+import com.rainccup.aktool.core.designsystem.theme.seedColorOrNull
 import com.rainccup.aktool.core.model.ImageConfig
 import com.rainccup.aktool.core.network.HttpClientProvider
 import com.rainccup.aktool.feature.splash.ui.SplashPage
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 import top.yukonga.miuix.kmp.basic.Surface
-import top.yukonga.miuix.kmp.theme.ColorSchemeMode
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.theme.ThemeController
+import top.yukonga.miuix.kmp.theme.darkColorScheme
+import top.yukonga.miuix.kmp.theme.lightColorScheme
 
 @Composable
 fun App() {
@@ -37,13 +41,22 @@ fun App() {
     val coroutineScope = rememberCoroutineScope()
 
     val darkMode = config.darkMode || isSystemInDarkTheme()
-    // spec S2 模式优先级：darkMode > dynamicColor > System
-    val colorMode = when {
-        config.darkMode -> ColorSchemeMode.Dark
-        config.dynamicColor -> ColorSchemeMode.MonetSystem
-        else -> ColorSchemeMode.System
+    // 自选主题色优先：开启动态色彩时作为 Monet 种子色，关闭时直出到固定色板的 primary 家族
+    val seedColor = seedColorOrNull(config.primaryColor)
+    val colorMode = resolveColorSchemeMode(
+        darkMode = config.darkMode,
+        dynamicColor = config.dynamicColor,
+        hasCustomColor = seedColor != null,
+    )
+    val miuixController = remember(colorMode, seedColor, config.dynamicColor) {
+        val directColor = seedColor?.takeIf { !config.dynamicColor }
+        ThemeController(
+            colorSchemeMode = colorMode,
+            lightColors = directColor?.let { directPrimaryColors(lightColorScheme(), it) } ?: lightColorScheme(),
+            darkColors = directColor?.let { directPrimaryColors(darkColorScheme(), it) } ?: darkColorScheme(),
+            keyColor = seedColor.takeIf { config.dynamicColor },
+        )
     }
-    val miuixController = remember(colorMode) { ThemeController(colorMode) }
     MiuixTheme(controller = miuixController) {
         AKToolTheme(darkTheme = darkMode) {
             CompositionLocalProvider(

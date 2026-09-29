@@ -1,20 +1,33 @@
 package com.rainccup.aktool.feature.setting.ui
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.autofill.ContentType
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalAutofillManager
 import androidx.compose.ui.semantics.contentType
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.dp
 import com.rainccup.aktool.core.common.LocalAppConfig
+import com.rainccup.aktool.core.common.OnConfigChange
 import com.rainccup.aktool.core.designsystem.component.ActionButton
+import com.rainccup.aktool.core.designsystem.component.BasicDialog
 import com.rainccup.aktool.core.designsystem.component.EditText
 import com.rainccup.aktool.core.designsystem.component.ProgressActionButton
+import com.rainccup.aktool.core.designsystem.theme.UNSET_PRIMARY_COLOR
+import com.rainccup.aktool.core.model.AppConfig
 import com.rainccup.aktool.core.platform.FilePicker
 import com.rainccup.aktool.feature.setting.viewmodel.SettingViewModel
 import com.rainccup.aktool.resources.Res
@@ -22,6 +35,12 @@ import com.rainccup.aktool.resources.admin_key
 import com.rainccup.aktool.resources.choose_bg
 import com.rainccup.aktool.resources.custom_bg
 import com.rainccup.aktool.resources.dark_mode
+import com.rainccup.aktool.resources.dynamic_color
+import com.rainccup.aktool.resources.dynamic_color_summary
+import com.rainccup.aktool.resources.primary_color
+import com.rainccup.aktool.resources.primary_color_direct
+import com.rainccup.aktool.resources.primary_color_follow_system
+import com.rainccup.aktool.resources.reset_to_default
 import com.rainccup.aktool.resources.server_uri
 import com.rainccup.aktool.resources.uid
 import com.rainccup.aktool.resources.update_excel
@@ -29,7 +48,10 @@ import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
+import top.yukonga.miuix.kmp.basic.ColorPicker
+import top.yukonga.miuix.kmp.preference.ArrowPreference
 import top.yukonga.miuix.kmp.preference.SwitchPreference
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 @Composable
 fun SettingPage() {
@@ -86,6 +108,7 @@ fun SettingPage() {
                 checked = config.customBg,
                 onCheckedChange = { onConfigChange(config.copy(customBg = it)) }
             )
+            ChooseColorDialog(config, onConfigChange)
             ActionButton(label = stringResource(Res.string.choose_bg)) {
                 filePicker.pickImage { path -> path?.let { onConfigChange(config.copy(bgPath = it)) } }
             }
@@ -97,5 +120,60 @@ fun SettingPage() {
                 }
             )
         }
+    }
+}
+
+@Composable
+private fun ChooseColorDialog(config: AppConfig, onConfigChange: OnConfigChange) {
+    var show by remember { mutableStateOf(false) }
+    var color by remember(config) { mutableStateOf(config.primaryColor) }
+    var dynamicColor by remember(config) { mutableStateOf(config.dynamicColor) }
+    ArrowPreference(
+        title = stringResource(Res.string.primary_color),
+        summary = when {
+            config.primaryColor == UNSET_PRIMARY_COLOR -> stringResource(Res.string.primary_color_follow_system)
+            !config.dynamicColor -> stringResource(Res.string.primary_color_direct)
+            else -> null
+        },
+        onClick = {  show = true },
+        endActions = {
+            Spacer(
+                modifier = Modifier
+                    .background(color = MiuixTheme.colorScheme.primary, shape = CircleShape)
+                    .size(28.dp)
+            )
+        }
+    )
+    BasicDialog(
+        title = stringResource(Res.string.primary_color),
+        show = show,
+        neutralText = stringResource(Res.string.reset_to_default),
+        // 「恢复默认」只清掉主题色
+        onNeutral = {
+            show = false
+            onConfigChange(config.copy(primaryColor = UNSET_PRIMARY_COLOR))
+        },
+        // 取消只丢弃草稿，色块与开关读的都是 config，因此自动回到已保存的状态
+        onCancel = { show = false },
+        onConfirm = {
+            show = false
+            onConfigChange(
+                config.copy(
+                    primaryColor = color,
+                    dynamicColor = dynamicColor,
+                )
+            )
+        }
+    ) {
+        SwitchPreference(
+            title = stringResource(Res.string.dynamic_color),
+            summary = stringResource(Res.string.dynamic_color_summary),
+            checked = dynamicColor,
+            onCheckedChange = { dynamicColor = it }
+        )
+        ColorPicker(
+            color = Color(color),
+            onColorChanged = { color = it.value }
+        )
     }
 }

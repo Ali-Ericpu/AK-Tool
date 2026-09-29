@@ -11,4 +11,5 @@ data class AppConfig(
     val uid: String = "",
     val adminKey: String = "",
     val bgPath: String = "",
+    val primaryColor: ULong = 0x0UL,
 )

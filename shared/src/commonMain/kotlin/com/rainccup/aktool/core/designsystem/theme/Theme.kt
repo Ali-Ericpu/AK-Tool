@@ -6,6 +6,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.compositeOver
+import androidx.compose.ui.graphics.luminance
+import top.yukonga.miuix.kmp.theme.ColorSchemeMode
 import top.yukonga.miuix.kmp.theme.Colors
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
@@ -109,13 +113,83 @@ fun bridgeToMaterial3(colors: Colors, dark: Boolean): ColorScheme {
     }
 }
 
+/**
+ * AppConfig.primaryColor 的「未设置」哨兵值：0 表示用户没有自选主题色，
+ * 此时配色模式回退到 darkMode / dynamicColor 的既有优先级。
+ *
+ * 注意它并不是 Compose 的 [Color.Unspecified]（后者的原始值是 0x10UL），
+ * 而是一个全透明黑；若直接拿去当种子会生成一整套灰黑色板，所以必须在这里拦掉。
+ */
+const val UNSET_PRIMARY_COLOR: ULong = 0x0UL
+
+/**
+ * 把持久化的 [Color.value] 还原成 [Color]；未设置时返回 null，
+ * 让 Miuix 在 Monet 模式下回退到平台动态取色（Android 12+ 的壁纸取色）。
+ */
+fun seedColorOrNull(primaryColor: ULong): Color? =
+    if (primaryColor == UNSET_PRIMARY_COLOR) null else Color(primaryColor)
+
+/**
+ * 解析 Miuix 配色模式。
+ *
+ * [dynamicColor] 是总开关：关闭时完全不进 Monet，只用固定色板（自选色由
+ * [directPrimaryColors] 直出到 primary 家族）。开启时没有自选色就沿用 spec S2 的
+ * darkMode > dynamicColor > System；一旦自选了主题色就进入 Monet，否则 keyColor 无处生效。
+ */
+fun resolveColorSchemeMode(
+    darkMode: Boolean,
+    dynamicColor: Boolean,
+    hasCustomColor: Boolean,
+): ColorSchemeMode = when {
+    !dynamicColor -> if (darkMode) ColorSchemeMode.Dark else ColorSchemeMode.System
+    hasCustomColor -> if (darkMode) ColorSchemeMode.MonetDark else ColorSchemeMode.MonetSystem
+    darkMode -> ColorSchemeMode.Dark
+    else -> ColorSchemeMode.MonetSystem
+}
+
+/**
+ * 「直出」色板：不走 Monet 映射时，在固定色板上把自选色原样盖到 primary 家族。
+ *
+ * primary/primaryVariant/primaryContainer 都刻意等于所选颜色本身（不生成色调板），
+ * 只有两类槽位无法直出、必须算：[contrastingOn] 保证压在 primary 上的文字可读，
+ * disabled 系列与 sliderBackground 则沿用 Miuix 自己 `MonetMapping` 的做法——把带透明度的颜色压到 surface 上。
+ */
+fun directPrimaryColors(base: Colors, primary: Color): Colors {
+    // Miuix 对 disabledPrimary / disabledPrimaryButton / disabledPrimarySlider 用的是同一个压平结果
+    val disabledPrimary = primary.copy(alpha = 0.38f).compositeOver(base.surface)
+    val onPrimary = contrastingOn(primary)
+    return base.copy(
+        primary = primary,
+        onPrimary = onPrimary,
+        primaryVariant = primary,
+        onPrimaryVariant = onPrimary,
+        primaryContainer = primary,
+        onPrimaryContainer = onPrimary,
+        disabledPrimary = disabledPrimary,
+        disabledOnPrimary = onPrimary.copy(alpha = 0.38f).compositeOver(disabledPrimary),
+        disabledPrimaryButton = disabledPrimary,
+        disabledOnPrimaryButton = onPrimary.copy(alpha = 0.6f).compositeOver(disabledPrimary),
+        disabledPrimarySlider = disabledPrimary,
+        sliderBackground = primary.copy(alpha = 0.2f).compositeOver(base.surface),
+        sliderKeyPoint = primary,
+        onBackgroundVariant = primary,
+    )
+}
+
+/** 在黑白之间挑与 [background] 对比度更高的那个，用于压在它上面的 on* 文字色。 */
+fun contrastingOn(background: Color): Color {
+    val luminance = background.luminance()
+    val againstBlack = (luminance + 0.05f) / 0.05f
+    val againstWhite = 1.05f / (luminance + 0.05f)
+    return if (againstBlack >= againstWhite) Color.Black else Color.White
+}
+
 @Composable
 fun AKToolTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    dynamicColor: Boolean = false,
     content: @Composable () -> Unit,
 ) {
-    // Miuix 负责配色模式；这里只把当前 Miuix 色板桥接给 Material3
+    // Miuix 负责配色模式（Monet 动态取色或直出的固定色板）；这里只把当前 Miuix 色板桥接给 Material3
     MaterialTheme(
         colorScheme = bridgeToMaterial3(MiuixTheme.colorScheme, darkTheme),
         typography = Typography,

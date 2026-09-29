@@ -6,7 +6,12 @@
     <string name="save_failed">保存失败</string>
     <string name="cancel">取消</string>
     <string name="dark_mode">暗黑模式</string>
-    <string name="dynamic_color">动态取色</string>
+    <string name="dynamic_color">动态色彩</string>
+    <string name="dynamic_color_summary">由所选颜色生成整套色调板；关闭则直出该颜色</string>
+    <string name="primary_color">主题色</string>
+    <string name="primary_color_follow_system">跟随系统</string>
+    <string name="primary_color_direct">不做色调映射</string>
+    <string name="reset_to_default">恢复默认</string>
     <string name="uid">UID</string>
     <string name="admin_key">Admin Key</string>
     <string name="server_uri">服务器链接</string>
