@@ -15,9 +15,6 @@ import androidx.compose.material.icons.filled.AccountBox
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -235,7 +232,6 @@ private val navPredictivePopSpec:
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AppNavHost() {
     val backStack = rememberNavBackStack(navConfig, AppRoute.Home)
