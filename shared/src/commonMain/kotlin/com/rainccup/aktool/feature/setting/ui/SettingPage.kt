@@ -1,31 +1,38 @@
 package com.rainccup.aktool.feature.setting.ui
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.TextAutoSize
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.autofill.ContentType
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalAutofillManager
 import androidx.compose.ui.semantics.contentType
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.rainccup.aktool.core.common.LocalAppConfig
 import com.rainccup.aktool.core.common.OnConfigChange
-import com.rainccup.aktool.core.designsystem.component.ActionButton
 import com.rainccup.aktool.core.designsystem.component.BasicDialog
 import com.rainccup.aktool.core.designsystem.component.EditText
-import com.rainccup.aktool.core.designsystem.component.ProgressActionButton
 import com.rainccup.aktool.core.designsystem.theme.UNSET_PRIMARY_COLOR
 import com.rainccup.aktool.core.model.AppConfig
 import com.rainccup.aktool.core.platform.FilePicker
@@ -44,10 +51,10 @@ import com.rainccup.aktool.resources.reset_to_default
 import com.rainccup.aktool.resources.server_uri
 import com.rainccup.aktool.resources.uid
 import com.rainccup.aktool.resources.update_excel
-import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
+import top.yukonga.miuix.kmp.basic.CircularProgressIndicator
 import top.yukonga.miuix.kmp.basic.ColorPicker
 import top.yukonga.miuix.kmp.preference.ArrowPreference
 import top.yukonga.miuix.kmp.preference.SwitchPreference
@@ -58,67 +65,116 @@ fun SettingPage() {
     val config = LocalAppConfig.current.config
     val onConfigChange = LocalAppConfig.current.onConfigChange
     val viewModel: SettingViewModel = koinViewModel()
-    val isUpdateExcel by viewModel.isUpdateExcel.collectAsState()
-    val coroutineScope = rememberCoroutineScope()
+    val isUpdateExcel by viewModel.isUpdateExcel.collectAsStateWithLifecycle()
     val filePicker: FilePicker = koinInject()
     val autofillManager = LocalAutofillManager.current
-    LazyColumn {
-        item {
-            EditText(
-                value = config.serverUri,
-                label = stringResource(Res.string.server_uri),
-                hide = true,
-                singleLine = true,
-                autoSize = TextAutoSize.StepBased(),
-                onValueSave = {
-                    if (it.isNotBlank()) {
-                        onConfigChange(config.copy(serverUri = it))
-                    }
+    Column(
+        verticalArrangement = Arrangement.Top,
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier
+            .systemBarsPadding()
+    ) {
+        Text(
+            text = "AK TOOL",
+            fontSize = 42.sp,
+            autoSize = TextAutoSize.StepBased(maxFontSize = 30.sp),
+            modifier = Modifier
+                .statusBarsPadding()
+                .padding(vertical = 16.dp, horizontal = 12.dp)
+                .align(Alignment.Start)
+        )
+        LazyColumn(
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            item {
+                Column(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(MiuixTheme.colorScheme.background.copy(alpha = 0.8f))
+                ) {
+                    EditText(
+                        value = config.serverUri,
+                        label = stringResource(Res.string.server_uri),
+                        hide = true,
+                        singleLine = true,
+                        onValueSave = {
+                            if (it.isNotBlank()) {
+                                onConfigChange(config.copy(serverUri = it))
+                            }
+                        }
+                    )
+                    EditText(
+                        value = config.uid,
+                        label = stringResource(Res.string.uid),
+                        singleLine = true,
+                        onValueSave = { onConfigChange(config.copy(uid = it)) },
+                        modifier = Modifier.semantics {
+                            contentType = ContentType.Username + ContentType.NewUsername
+                        }
+                    )
+                    EditText(
+                        value = config.adminKey,
+                        label = stringResource(Res.string.admin_key),
+                        hide = true,
+                        singleLine = true,
+                        onValueSave = {
+                            autofillManager?.commit()
+                            onConfigChange(config.copy(adminKey = it))
+                        },
+                        modifier = Modifier.semantics {
+                            contentType = ContentType.Password + ContentType.NewPassword
+                        }
+                    )
+                    ArrowPreference(
+                        title = stringResource(Res.string.update_excel),
+                        onClick = { viewModel.updateExcel(config.serverUri) },
+                        enabled = !isUpdateExcel,
+                        endActions = {
+                            if (isUpdateExcel) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.padding(start = 8.dp),
+                                    size = 20.dp,
+                                )
+                            }
+                        }
+                    )
                 }
-            )
-            EditText(
-                value = config.uid,
-                label = stringResource(Res.string.uid),
-                singleLine = true,
-                onValueSave = { onConfigChange(config.copy(uid = it)) },
-                modifier = Modifier.semantics {
-                    contentType = ContentType.Username + ContentType.NewUsername
-                }
-            )
-            EditText(
-                value = config.adminKey,
-                label = stringResource(Res.string.admin_key),
-                hide = true,
-                singleLine = true,
-                onValueSave = {
-                    autofillManager?.commit()
-                    onConfigChange(config.copy(adminKey = it))
-                },
-                modifier = Modifier.semantics {
-                    contentType = ContentType.Password + ContentType.NewPassword
-                }
-            )
-            SwitchPreference(
-                title = stringResource(Res.string.dark_mode),
-                checked = config.darkMode,
-                onCheckedChange = { onConfigChange(config.copy(darkMode = it)) }
-            )
-            SwitchPreference(
-                title = stringResource(Res.string.custom_bg),
-                checked = config.customBg,
-                onCheckedChange = { onConfigChange(config.copy(customBg = it)) }
-            )
-            ChooseColorDialog(config, onConfigChange)
-            ActionButton(label = stringResource(Res.string.choose_bg)) {
-                filePicker.pickImage { path -> path?.let { onConfigChange(config.copy(bgPath = it)) } }
             }
-            ProgressActionButton(
-                label = stringResource(Res.string.update_excel),
-                isUpdate = isUpdateExcel,
-                onClick = {
-                    coroutineScope.launch { viewModel.updateExcel(config.serverUri) }
+            item {
+                Column(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(MiuixTheme.colorScheme.background.copy(alpha = 0.8f))
+                ) {
+                    SwitchPreference(
+                        title = stringResource(Res.string.dark_mode),
+                        checked = config.darkMode,
+                        onCheckedChange = { onConfigChange(config.copy(darkMode = it)) },
+                    )
+                    ChooseColorDialog(config, onConfigChange)
+                    SwitchPreference(
+                        title = stringResource(Res.string.custom_bg),
+                        checked = config.customBg,
+                        onCheckedChange = { onConfigChange(config.copy(customBg = it)) }
+                    )
+                    ArrowPreference(
+                        title = stringResource(Res.string.choose_bg),
+                        onClick = {
+                            filePicker.pickImage { path ->
+                                path?.let {
+                                    onConfigChange(
+                                        config.copy(
+                                            bgPath = it,
+                                            customBg = true
+                                        )
+                                    )
+                                }
+                            }
+                        }
+                    )
+
                 }
-            )
+            }
         }
     }
 }
@@ -135,7 +191,7 @@ private fun ChooseColorDialog(config: AppConfig, onConfigChange: OnConfigChange)
             !config.dynamicColor -> stringResource(Res.string.primary_color_direct)
             else -> null
         },
-        onClick = {  show = true },
+        onClick = { show = true },
         endActions = {
             Spacer(
                 modifier = Modifier

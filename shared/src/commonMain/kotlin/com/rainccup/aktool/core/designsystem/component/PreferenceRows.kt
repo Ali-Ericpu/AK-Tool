@@ -2,7 +2,6 @@ package com.rainccup.aktool.core.designsystem.component
 
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.Icon
@@ -26,7 +25,6 @@ fun EditText(
     label: String = "",
     hide: Boolean = false,
     singleLine: Boolean = false,
-    autoSize: TextAutoSize? = null,
     onValueSave: (String) -> Unit = { },
 ) {
     var dialogState by remember { mutableStateOf(false) }
@@ -36,7 +34,6 @@ fun EditText(
             Text(
                 text = if (hide) "*".repeat(value.length) else value,
                 maxLines = 1,
-                autoSize = autoSize
             )
         },
         onClick = { dialogState = true },
@@ -53,48 +50,4 @@ fun EditText(
         },
         modifier = modifier
     )
-}
-
-@Composable
-fun ActionButton(
-    label: String = "Test",
-    onClick: () -> Unit = { },
-) {
-    Button(
-        onClick = onClick,
-        modifier = Modifier
-            .padding(8.dp)
-            .fillMaxWidth(),
-    ) {
-        Text(text = label, style = MiuixTheme.textStyles.button)
-    }
-}
-
-@Composable
-fun ProgressActionButton(
-    label: String = "Test",
-    isUpdate: Boolean = true,
-    onClick: () -> Unit = { },
-) {
-    Button(
-        onClick = onClick,
-        enabled = !isUpdate,
-        modifier = Modifier
-            .padding(8.dp)
-            .fillMaxWidth(),
-    ) {
-        Text(text = label, style = MiuixTheme.textStyles.button)
-        if (isUpdate) {
-            CircularProgressIndicator(
-                modifier = Modifier.padding(start = 8.dp),
-                size = 20.dp,
-            )
-        } else {
-            Icon(
-                imageVector = Icons.Default.PlayArrow,
-                contentDescription = null,
-                modifier = Modifier.padding(start = 8.dp),
-            )
-        }
-    }
 }

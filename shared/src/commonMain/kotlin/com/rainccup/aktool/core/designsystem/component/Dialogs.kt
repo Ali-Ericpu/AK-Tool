@@ -75,7 +75,7 @@ fun EditTextDialog(
     onConfirm: (String?) -> Unit = { },
     onCancel: () -> Unit = { onConfirm(null) }
 ) {
-    var text by remember { mutableStateOf(value) }
+    var text by remember(show) { mutableStateOf(value) }
     val isError = error(text)
     BasicDialog(
         title = title,

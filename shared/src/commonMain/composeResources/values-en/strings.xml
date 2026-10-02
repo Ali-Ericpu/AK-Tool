@@ -6,7 +6,7 @@
     <string name="save_failed">Save Failed</string>
     <string name="cancel">Cancel</string>
     <string name="dark_mode">Dark Mode</string>
-    <string name="dynamic_color">Dynamic Color</string>
+    <string name="dynamic_color">Monet color</string>
     <string name="dynamic_color_summary">Build a full palette from the picked color; off uses it as-is</string>
     <string name="primary_color">Theme Color</string>
     <string name="primary_color_follow_system">Follow System</string>

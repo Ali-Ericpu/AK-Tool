@@ -20,6 +20,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
@@ -257,6 +258,7 @@ fun AppNavHost() {
 
     Scaffold(
         snackbarHost = { SnackbarHost(state = snackbarHostState) },
+        containerColor = Color.Transparent,
         contentWindowInsets = WindowInsets(),
         bottomBar = {
             NavigationBar {

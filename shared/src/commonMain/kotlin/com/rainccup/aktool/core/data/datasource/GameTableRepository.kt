@@ -24,8 +24,7 @@ class GameTableRepository(
     suspend fun init(): Boolean {
         if (characterTable.isNotEmpty() && favorTable.isNotEmpty()) return true
         val missing = jsonFiles.any { !fileExists("${paths.dataDir}/excel/$it") }
-        if (missing) return false
-        return withContext(Dispatchers.IO) {
+        return !missing && withContext(Dispatchers.IO) {
             characterTable = decodeToMap(readFileText("${paths.dataDir}/excel/${jsonFiles[0]}")!!)
             favorTable = decodeToMap(readFileText("${paths.dataDir}/excel/${jsonFiles[1]}")!!)
             uniequipTable = decodeToMap(readFileText("${paths.dataDir}/excel/${jsonFiles[2]}")!!)
@@ -33,12 +32,12 @@ class GameTableRepository(
         }
     }
 
-    suspend fun refresh(uri: String) {
+    suspend fun refresh(uri: String) = withContext(Dispatchers.IO) {
         jsonFiles.forEachIndexed { index, fileName ->
             val text = api.downloadText("${uri.trimEnd('/')}/assetbundle/excel/$fileName")
             writeFileText("${paths.dataDir}/excel/$fileName", text)
             when (index) {
-                0 -> characterTable =decodeToMap(text)
+                0 -> characterTable = decodeToMap(text)
                 1 -> favorTable = decodeToMap(text)
                 2 -> uniequipTable = decodeToMap(text)
             }
