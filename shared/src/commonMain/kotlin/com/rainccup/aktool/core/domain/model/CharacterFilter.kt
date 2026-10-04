@@ -1,6 +1,8 @@
 package com.rainccup.aktool.core.domain.model
 
 import com.rainccup.aktool.core.model.Character
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 /**
  * 角色列表的排序 / 职业筛选 / 名称匹配规则。
@@ -11,9 +13,11 @@ object CharacterFilter {
     /** 未匹配到干员时的返回值（保留原字面量，调用方据此判断）。 */
     const val NOT_FOUND: String = "ERROR"
 
-    fun byProfession(all: Collection<Character>, profession: String): List<Character> =
-        if (profession == "ALL") all.sorted()
-        else all.filter { it.profession == profession }.sorted()
+    suspend fun byProfession(all: Collection<Character>, profession: String): List<Character> =
+        withContext(Dispatchers.Default) {
+            if (profession == "ALL") all.sorted()
+            else all.filter { it.profession == profession }.sorted()
+        }
 
     /** 名称子串匹配，最多返回 10 个（与原实现一致）。 */
     fun matches(nameToId: Map<String, String>, query: String): List<String> {

@@ -109,6 +109,7 @@ import top.yukonga.miuix.kmp.basic.FloatingToolbar
 import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.basic.InputField
 import top.yukonga.miuix.kmp.basic.SearchBar
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 import kotlin.math.roundToInt
 
 @Composable
@@ -117,7 +118,6 @@ fun CharacterPage(
     onOpenDetail: (Character) -> Unit,
 ) {
     val viewModel: CharacterViewModel = koinViewModel()
-    val charList = viewModel.characters
     val splash by viewModel.splash.collectAsState()
     val showLoadAnimate by viewModel.loadAnimate.collectAsState()
     val showGainCharDialog by viewModel.gainChar.collectAsState()
@@ -144,7 +144,7 @@ fun CharacterPage(
         CompositionLocalProvider(
             LocalDensity provides Density(baseDensity.density * uiScale, baseDensity.fontScale)
         ) {
-            if (!showLoadAnimate && !splash) {
+            if (!splash) {
                 LazyVerticalGrid(
                     GridCells.FixedSize(CharacterGridMetrics.CardWidth),
                     verticalArrangement = Arrangement.Top,
@@ -152,7 +152,7 @@ fun CharacterPage(
                     state = lazyGridState,
                     modifier = Modifier.fillMaxSize()
                 ) {
-                    items(charList, key = { it.instId }) { char ->
+                    items(viewModel.characters, key = { it.instId }) { char ->
                         CharacterCard(
                             modifier = Modifier.characterCardSharedElement(char.instId),
                             char = char,
@@ -165,14 +165,14 @@ fun CharacterPage(
                     modifier = Modifier
                         .width(64.dp)
                         .wrapContentHeight()
-                        .align(Alignment.TopEnd)
-                        .padding(top = 80.dp)
+                        .align(Alignment.CenterEnd)
                 ) {
                     FloatingToolbar(
                         color = Color.Unspecified,
                         modifier = Modifier
                             .wrapContentHeight()
                             .offsetPercent(offsetPercentX = professionOffsetX)
+                            .clipToBounds()
                     ) {
                         LazyColumn(
                             verticalArrangement = Arrangement.Top,
@@ -185,8 +185,10 @@ fun CharacterPage(
                                         if (currentProfession == "ALL") {
                                             viewModel.changeSelectState(false)
                                         } else {
-                                            viewModel.selectProfession("ALL")
-                                            coroutineScope.launch { lazyGridState.scrollToItem(0) }
+                                            coroutineScope.launch {
+                                                viewModel.selectProfession("ALL")
+                                                lazyGridState.scrollToItem(0)
+                                            }
                                         }
                                     },
                                     modifier = Modifier
@@ -200,7 +202,7 @@ fun CharacterPage(
                                         text = if (currentProfession == "ALL") "BACK" else "ALL",
                                         textAlign = TextAlign.Center,
                                         maxLines = 1,
-                                        autoSize = TextAutoSize.StepBased(),
+                                        autoSize = TextAutoSize.StepBased(minFontSize = 8.sp),
                                         color = MaterialTheme.colorScheme.primary
                                     )
                                 }
@@ -218,8 +220,10 @@ fun CharacterPage(
                                             .alpha(0.8f)
                                             .height(42.dp)
                                             .clickable {
-                                                viewModel.selectProfession(it.name)
-                                                coroutineScope.launch { lazyGridState.scrollToItem(0) }
+                                                coroutineScope.launch {
+                                                    viewModel.selectProfession(it.name)
+                                                    lazyGridState.scrollToItem(0)
+                                                }
                                             }
                                     )
                                     if (currentProfession == it.name) {
@@ -264,7 +268,7 @@ fun CharacterPage(
             ) {
                 CircleIconButton(
                     icon = Icons.Default.NearMe,
-                    size = 72,
+                    size = 68,
                     onClick = viewModel::initCharData,
                     modifier = Modifier
                         .padding(4.dp)
@@ -285,12 +289,9 @@ fun CharacterPage(
     SearchCharDialog(
         show = showSearchDialog,
         onKeywordType = viewModel::getSearchedCharList,
-        onPickName = viewModel::searchChar,
+        onPickName = viewModel::pickName,
         onCopyCharId = viewModel::copyCharId,
-        onConfirmKeyword = { keyword ->
-            keyword?.let { viewModel.searchChar(it) }
-            viewModel.changeSearchState()
-        },
+        onConfirmKeyword = viewModel::searchChar,
         onCancel = viewModel::changeSearchState,
     )
 
@@ -563,7 +564,7 @@ fun SearchCharDialog(
                             .padding(4.dp)
                             .clip(RoundedCornerShape(12.dp))
                             .background(
-                                if (selected) MaterialTheme.colorScheme.primary
+                                if (selected) MiuixTheme.colorScheme.primary
                                 else Color.LightGray
                             )
                             .combinedClickable(

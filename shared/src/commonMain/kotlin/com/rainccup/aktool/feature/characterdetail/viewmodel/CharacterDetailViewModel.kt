@@ -44,6 +44,7 @@ class CharacterDetailViewModel(
     fun applySaveRules(char: Character): Character = useCase.applySaveRules(char)
 
     fun saveCharData(char: Character) = viewModelScope.launch {
+        accept(char)
         runCatching {
             val result = useCase.saveCharacter(char)
             if (result.status != 0) {

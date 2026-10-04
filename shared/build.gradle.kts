@@ -65,14 +65,14 @@ kotlin {
             implementation(libs.koin.test)
         }
         androidMain.dependencies {
-            implementation(libs.ktor.client.cio)
+            implementation(libs.ktor.client.okhttp)
         }
-        val desktopMain by getting {
+        val desktopMain = getByName("desktopMain") {
             dependencies {
                 implementation(libs.ktor.client.cio)
             }
         }
-        val desktopTest by getting {
+        val desktopTest = getByName("desktopTest") {
             dependencies {
                 implementation(libs.junit)
             }

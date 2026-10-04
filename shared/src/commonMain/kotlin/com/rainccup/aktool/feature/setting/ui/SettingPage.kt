@@ -6,8 +6,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -71,15 +69,12 @@ fun SettingPage() {
     Column(
         verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier
-            .systemBarsPadding()
     ) {
         Text(
             text = "AK TOOL",
             fontSize = 42.sp,
             autoSize = TextAutoSize.StepBased(maxFontSize = 30.sp),
             modifier = Modifier
-                .statusBarsPadding()
                 .padding(vertical = 16.dp, horizontal = 12.dp)
                 .align(Alignment.Start)
         )

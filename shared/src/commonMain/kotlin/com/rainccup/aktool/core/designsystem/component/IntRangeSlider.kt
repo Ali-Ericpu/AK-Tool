@@ -6,6 +6,7 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import top.yukonga.miuix.kmp.basic.SliderDefaults
 import top.yukonga.miuix.kmp.preference.SliderPreference
 import kotlin.math.max
 import kotlin.math.roundToInt
@@ -28,6 +29,7 @@ fun IntRangeSlider(
         valueRange = start.toFloat()..maxValue.toFloat(),
         steps = max(maxValue - start - 1, 0),
         onValueChangeFinished = { onValueChangeFinished(value.roundToInt()) },
+        hapticEffect = SliderDefaults.SliderHapticEffect.Step,
         modifier = modifier,
     )
 }

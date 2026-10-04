@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -41,6 +40,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import com.rainccup.aktool.core.designsystem.component.IntRangeSlider
+import com.rainccup.aktool.core.designsystem.component.PageActionRow
 import com.rainccup.aktool.core.domain.GameTableQuery
 import com.rainccup.aktool.core.model.Character
 import com.rainccup.aktool.core.navigation.characterCardSharedElement
@@ -50,7 +50,6 @@ import com.rainccup.aktool.feature.character.ui.equipPainter
 import com.rainccup.aktool.feature.character.ui.skillPainter
 import com.rainccup.aktool.feature.characterdetail.viewmodel.CharacterDetailViewModel
 import com.rainccup.aktool.resources.Res
-import com.rainccup.aktool.resources.cancel
 import com.rainccup.aktool.resources.character_locked_skill
 import com.rainccup.aktool.resources.character_skill_selected
 import com.rainccup.aktool.resources.character_special_skill_0
@@ -70,7 +69,6 @@ import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
-import top.yukonga.miuix.kmp.basic.Button
 import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.preference.SwitchPreference
 
@@ -86,173 +84,174 @@ fun CharacterDetailPage(
     val maxEvoPhase by vm.maxEvoPhase.collectAsState()
     val baseDensity = LocalDensity.current
     val uiScale = platformUiScale()
-    LazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
-    ) {
-        item {
-            CompositionLocalProvider(
-                LocalDensity provides Density(
-                    baseDensity.density * uiScale,
-                    baseDensity.fontScale
-                )
-            ) {
-                Row(modifier = Modifier.padding(start = 4.dp).fillMaxWidth()) {
-                    CharacterCard(
-                        modifier = Modifier.characterCardSharedElement(char.instId),
-                        char = char,
+    val saveChar: () -> Unit = {
+        val ruled = vm.applySaveRules(char)
+        vm.saveCharData(ruled)
+        onSaved(ruled)
+    }
+    Column {
+        LazyColumn(modifier = Modifier.weight(1f)) {
+            item {
+                CompositionLocalProvider(
+                    LocalDensity provides Density(
+                        baseDensity.density * uiScale,
+                        baseDensity.fontScale
                     )
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.SpaceBetween,
-                        modifier = Modifier.height(220.dp)
-                    ) {
-                        IntRangeSlider(
-                            value = char.potentialRank,
-                            start = 0,
-                            maxValue = 5,
-                            description = stringResource(Res.string.potential_rank),
-                            onValueChangeFinished = { vm.accept(char.copy(potentialRank = it)) },
-                            modifier = Modifier.weight(1f)
-                        )
-                        IntRangeSlider(
-                            value = char.favorPoint,
-                            start = 0,
-                            maxValue = 200,
-                            description = stringResource(Res.string.fav_pt),
-                            onValueChangeFinished = { vm.accept(char.copy(favorPoint = it)) },
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
-                }
-                Row(modifier = Modifier.fillMaxWidth()) {
-                    IntRangeSlider(
-                        value = char.evolvePhase,
-                        start = 0,
-                        maxValue = maxEvoPhase,
-                        description = stringResource(Res.string.evp_phase),
-                        onValueChangeFinished = { vm.changeEvoPhase(it) },
-                        modifier = Modifier.weight(1f)
-                    )
-                    IntRangeSlider(
-                        value = char.level,
-                        start = 1,
-                        maxValue = maxLevel,
-                        description = stringResource(Res.string.level),
-                        onValueChangeFinished = { vm.accept(char.copy(level = it)) },
-                        modifier = Modifier.weight(1f)
-                    )
-                }
-                if (char.skills.isNotEmpty()) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(4.dp)
-                            .clip(RoundedCornerShape(16.dp))
-                            .background(Color.LightGray)
-                    ) {
-                        IntRangeSlider(
-                            value = char.mainSkillLvl,
-                            start = 1,
-                            maxValue = maxSkillLevel,
-                            description = stringResource(Res.string.skill_level),
-                            onValueChangeFinished = { vm.accept(char.copy(mainSkillLvl = it)) },
-                        )
-                        LazyRow(
-                            horizontalArrangement = Arrangement.SpaceAround,
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(start = 4.dp, end = 4.dp, bottom = 4.dp)
-                                .height(80.dp)
-                        ) {
-                            itemsIndexed(char.skills) { index, skill ->
-                                SkillDetail(
-                                    skillId = skill.skillId,
-                                    unlock = skill.unlock == 1,
-                                    showSpecialLevel = char.evolvePhase >= 2 && char.mainSkillLvl >= 7,
-                                    specializeLevel = skill.specializeLevel,
-                                    select = index == char.defaultSkillIndex,
-                                    onSelectedChange = {
-                                        if (skill.unlock == 1) {
-                                            vm.accept(char.copy(defaultSkillIndex = index))
-                                        }
-                                    },
-                                    onSpecialLevelChange = { level ->
-                                        val copy = skill.copy(specializeLevel = level)
-                                        val skills = char.skills.toMutableList()
-                                        vm.accept(char.copy(skills = skills.also { it[index] = copy }))
-                                    }
-                                )
-                            }
-                        }
-                    }
-                }
-                if (char.equip.isNotEmpty()) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(4.dp)
-                            .clip(RoundedCornerShape(16.dp))
-                            .background(Color.LightGray)
-                    ) {
-                        Text(
-                            text = stringResource(Res.string.equip),
-                            fontSize = 20.sp,
-                            modifier = Modifier.padding(top = 8.dp, start = 16.dp, end = 16.dp)
-                        )
-                        LazyRow(
-                            horizontalArrangement = Arrangement.SpaceAround,
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(80.dp)
-                                .padding(4.dp)
-                        ) {
-                            items(char.equip.toList()) { (equipId, equipData) ->
-                                EquipDetail(
-                                    equipId = equipId,
-                                    level = equipData.level,
-                                    locked = equipData.locked,
-                                    isSelect = char.currentEquip == equipId,
-                                    onSelectedChange = {
-                                        if (char.evolvePhase >= 2) {
-                                            vm.accept(char.copy(currentEquip = equipId))
-                                        }
-                                    },
-                                    onLevelChange = { level ->
-                                        val copy = equipData.copy(level = level)
-                                        val map = char.equip.toMutableMap()
-                                        vm.accept(char.copy(equip = map.also { it[equipId] = copy }))
-                                    }
-                                )
-                            }
-                        }
-                    }
-                }
-                SwitchPreference(
-                    title = stringResource(Res.string.star_mark),
-                    checked = char.starMark == 1,
-                    onCheckedChange = { vm.accept(char.copy(starMark = if (it) 1 else 0)) },
-                )
-                Row(
-                    horizontalArrangement = Arrangement.SpaceAround,
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    Button(onClick = { onSaved(null) }) {
-                        Text(stringResource(Res.string.cancel))
+                    Row(modifier = Modifier.padding(start = 4.dp).fillMaxWidth()) {
+                        CharacterCard(
+                            modifier = Modifier.characterCardSharedElement(char.instId),
+                            char = char,
+                        )
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.SpaceBetween,
+                            modifier = Modifier.height(220.dp)
+                        ) {
+                            IntRangeSlider(
+                                value = char.potentialRank,
+                                start = 0,
+                                maxValue = 5,
+                                description = stringResource(Res.string.potential_rank),
+                                onValueChangeFinished = { vm.accept(char.copy(potentialRank = it)) },
+                                modifier = Modifier.weight(1f)
+                            )
+                            IntRangeSlider(
+                                value = char.favorPoint,
+                                start = 0,
+                                maxValue = 200,
+                                description = stringResource(Res.string.fav_pt),
+                                onValueChangeFinished = { vm.accept(char.copy(favorPoint = it)) },
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
                     }
-                    Button(onClick = {
-                        val ruled = vm.applySaveRules(char)
-                        vm.accept(ruled)
-                        vm.saveCharData(ruled)
-                        onSaved(ruled)
-                    }) {
-                        Text(stringResource(Res.string.save))
+                    Row(modifier = Modifier.fillMaxWidth()) {
+                        IntRangeSlider(
+                            value = char.evolvePhase,
+                            start = 0,
+                            maxValue = maxEvoPhase,
+                            description = stringResource(Res.string.evp_phase),
+                            onValueChangeFinished = { vm.changeEvoPhase(it) },
+                            modifier = Modifier.weight(1f)
+                        )
+                        IntRangeSlider(
+                            value = char.level,
+                            start = 1,
+                            maxValue = maxLevel,
+                            description = stringResource(Res.string.level),
+                            onValueChangeFinished = { vm.accept(char.copy(level = it)) },
+                            modifier = Modifier.weight(1f)
+                        )
                     }
+                    if (char.skills.isNotEmpty()) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(4.dp)
+                                .clip(RoundedCornerShape(16.dp))
+                                .background(Color.LightGray)
+                        ) {
+                            IntRangeSlider(
+                                value = char.mainSkillLvl,
+                                start = 1,
+                                maxValue = maxSkillLevel,
+                                description = stringResource(Res.string.skill_level),
+                                onValueChangeFinished = { vm.accept(char.copy(mainSkillLvl = it)) },
+                            )
+                            LazyRow(
+                                horizontalArrangement = Arrangement.SpaceAround,
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(start = 4.dp, end = 4.dp, bottom = 4.dp)
+                                    .height(80.dp)
+                            ) {
+                                itemsIndexed(char.skills) { index, skill ->
+                                    SkillDetail(
+                                        skillId = skill.skillId,
+                                        unlock = skill.unlock == 1,
+                                        showSpecialLevel = char.evolvePhase >= 2 && char.mainSkillLvl >= 7,
+                                        specializeLevel = skill.specializeLevel,
+                                        select = index == char.defaultSkillIndex,
+                                        onSelectedChange = {
+                                            if (skill.unlock == 1) {
+                                                vm.accept(char.copy(defaultSkillIndex = index))
+                                            }
+                                        },
+                                        onSpecialLevelChange = { level ->
+                                            val copy = skill.copy(specializeLevel = level)
+                                            val skills = char.skills.toMutableList()
+                                            vm.accept(char.copy(skills = skills.also {
+                                                it[index] = copy
+                                            }))
+                                        }
+                                    )
+                                }
+                            }
+                        }
+                    }
+                    if (char.equip.isNotEmpty()) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(4.dp)
+                                .clip(RoundedCornerShape(16.dp))
+                                .background(Color.LightGray)
+                        ) {
+                            Text(
+                                text = stringResource(Res.string.equip),
+                                fontSize = 20.sp,
+                                modifier = Modifier.padding(top = 8.dp, start = 16.dp, end = 16.dp)
+                            )
+                            LazyRow(
+                                horizontalArrangement = Arrangement.SpaceAround,
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(80.dp)
+                                    .padding(4.dp)
+                            ) {
+                                items(char.equip.toList()) { (equipId, equipData) ->
+                                    EquipDetail(
+                                        equipId = equipId,
+                                        level = equipData.level,
+                                        locked = equipData.locked,
+                                        isSelect = char.currentEquip == equipId,
+                                        onSelectedChange = {
+                                            if (char.evolvePhase >= 2) {
+                                                vm.accept(char.copy(currentEquip = equipId))
+                                            }
+                                        },
+                                        onLevelChange = { level ->
+                                            val copy = equipData.copy(level = level)
+                                            val map = char.equip.toMutableMap()
+                                            vm.accept(char.copy(equip = map.also {
+                                                it[equipId] = copy
+                                            }))
+                                        }
+                                    )
+                                }
+                            }
+                        }
+                    }
+                    SwitchPreference(
+                        title = stringResource(Res.string.star_mark),
+                        checked = char.starMark == 1,
+                        onCheckedChange = { vm.accept(char.copy(starMark = if (it) 1 else 0)) },
+                    )
                 }
             }
+        }
+        CompositionLocalProvider(
+            LocalDensity provides Density(baseDensity.density * uiScale, baseDensity.fontScale)
+        ) {
+            PageActionRow(
+                confirmText = stringResource(Res.string.save),
+                onConfirm = saveChar,
+                onCancel = { onSaved(null) },
+                modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
+            )
         }
     }
 }

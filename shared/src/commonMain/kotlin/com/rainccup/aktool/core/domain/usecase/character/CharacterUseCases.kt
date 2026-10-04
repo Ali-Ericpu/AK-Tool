@@ -6,6 +6,8 @@ import com.rainccup.aktool.core.data.repository.AdminRepository
 import com.rainccup.aktool.core.model.Character
 import com.rainccup.aktool.core.model.GainItemRequest
 import com.rainccup.aktool.core.model.Item
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 /**
  * 干员列表页（CharacterViewModel）的用例入口：读表、同步干员、补发干员。
@@ -22,7 +24,7 @@ class CharacterUseCase(
     /** 干员是否**存在**，与页面表单的 error 语义一致。 */
     fun existChar(charId: String): Boolean = gameTable.characterTable[charId] == null
 
-    suspend fun loadCharacters(): LoadedCharacters {
+    suspend fun loadCharacters(): LoadedCharacters = withContext(Dispatchers.IO) {
         val table = gameTable.characterTable
         val nameToId = LinkedHashMap<String, String>(table.size)
         table.forEach { (charId, charData) ->
@@ -49,7 +51,7 @@ class CharacterUseCase(
                 rarity = (charData["rarity"] as String).substringAfter("_").toInt(),
             )
         }
-        return LoadedCharacters(characters, nameToId)
+        LoadedCharacters(characters, nameToId)
     }
 
     /** 新增干员。 */
