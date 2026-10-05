@@ -20,6 +20,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -481,8 +482,10 @@ private fun ValidateCodeDialog(
     onExit: () -> Unit = { }
 ) {
     val clipboard = koinInject<ClipboardPort>()
-    if (show) {
-        onRefresh()
+    SideEffect(show) {
+        if (show) {
+            onRefresh()
+        }
     }
     OverlayDialog(
         show = show,
