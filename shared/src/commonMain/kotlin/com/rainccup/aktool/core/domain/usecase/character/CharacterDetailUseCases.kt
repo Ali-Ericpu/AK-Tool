@@ -103,7 +103,7 @@ class CharacterDetailUseCase(
         admin.saveCharacter(
             SaveCharRequest(
                 char.instId,
-                char.copy(favorPoint = gameTable.getFavPointPercent(char.favorPoint)),
+                char.copy(favorPoint = gameTable.getRealFavPoint(char.favorPoint)),
             ),
         )
 

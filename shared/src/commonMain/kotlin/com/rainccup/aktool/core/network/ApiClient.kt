@@ -110,9 +110,17 @@ class ApiClient(
 
     suspend fun registerAccount(body: RegisterAccountRequest): ApiResult<JsonElement?> =
         clientProvider()
-            .post("admin/registerAccount") {
+            .post("admin/account/register") {
                 header("adminKey", config.adminKey)
                 setBody(body)
+            }
+            .body()
+
+    suspend fun resetAccount(): ApiResult<JsonElement?> =
+        clientProvider()
+            .post("admin/account/reset") {
+                header("uid", config.uid)
+                header("adminKey", config.adminKey)
             }
             .body()
 

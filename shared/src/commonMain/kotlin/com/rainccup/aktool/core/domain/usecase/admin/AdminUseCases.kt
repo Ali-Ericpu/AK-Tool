@@ -44,6 +44,8 @@ class ExtraUseCase(
     suspend fun registerAccount(body: RegisterAccountRequest): ApiResult<JsonElement?> =
         admin.registerAccount(body)
 
+    suspend fun resetAccount(): ApiResult<JsonElement?> = admin.resetAccount()
+
     suspend fun resetIntegratedStrategies(): ApiResult<JsonElement?> = admin.resetRlv2()
 
     /** 验证码表；数据缺失时抛异常（与原实现一致）。 */

@@ -34,6 +34,7 @@ import androidx.compose.ui.unit.sp
 import com.rainccup.aktool.core.designsystem.component.BasicDialog
 import com.rainccup.aktool.core.designsystem.component.ConfirmButtonRow
 import com.rainccup.aktool.core.designsystem.component.IntRangeSlider
+import com.rainccup.aktool.core.designsystem.component.roundedBackground
 import com.rainccup.aktool.core.domain.model.UnlockAllCharRules
 import com.rainccup.aktool.core.model.AddFlushMessageRequest
 import com.rainccup.aktool.core.model.Item
@@ -67,6 +68,7 @@ import com.rainccup.aktool.resources.push_message
 import com.rainccup.aktool.resources.query_account
 import com.rainccup.aktool.resources.query_valid_code
 import com.rainccup.aktool.resources.register_acc
+import com.rainccup.aktool.resources.reset_account
 import com.rainccup.aktool.resources.reset_act
 import com.rainccup.aktool.resources.reset_rlv2
 import com.rainccup.aktool.resources.skill_level
@@ -99,51 +101,61 @@ fun ExtraPage() {
     Box(modifier = Modifier.fillMaxSize()) {
         LazyColumn(
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Top,
+            verticalArrangement = Arrangement.spacedBy(12.dp),
             modifier = Modifier.fillMaxSize()
         ) {
 
             item {
-                ArrowPreference(
-                    title = stringResource(Res.string.register_acc),
-                    onClick = viewModel::changeAccountState
-                )
-                ArrowPreference(
-                    title = stringResource(Res.string.unlock_all_char),
-                    onClick =viewModel::changeUnlockCharState
-                )
-                ArrowPreference(
-                    title = stringResource(Res.string.unlock_all_stages),
-                    onClick = viewModel::unlockAllStages
-                )
-                ArrowPreference(
-                    title = stringResource(Res.string.unlock_all_flags),
-                    onClick = viewModel::unlockAllFlags
-                )
-                ArrowPreference(
-                    title = stringResource(Res.string.add_flush_message),
-                    onClick = viewModel::changeMessageState
-                )
-                ArrowPreference(
-                    title = stringResource(Res.string.gain_item),
-                    onClick = viewModel::changeItemState
-                )
-                ArrowPreference(
-                    title = stringResource(Res.string.reset_act),
-                    onClick = viewModel::changeActivityState
-                )
-                ArrowPreference(
-                    title = stringResource(Res.string.query_valid_code),
-                    onClick = viewModel::changeValidCodeState
-                )
-                ArrowPreference(
-                    title = stringResource(Res.string.reset_rlv2),
-                    onClick = viewModel::resetRlv2
-                )
-                ArrowPreference(
-                    title = stringResource(Res.string.query_account),
-                    onClick = viewModel::queryAccountByUID
-                )
+                Column(modifier = Modifier.roundedBackground()) {
+                    ArrowPreference(
+                        title = stringResource(Res.string.register_acc),
+                        onClick = viewModel::changeAccountState
+                    )
+                    ArrowPreference(
+                        title = stringResource(Res.string.query_account),
+                        onClick = viewModel::queryAccountByUID
+                    )
+                    ArrowPreference(
+                        title = stringResource(Res.string.reset_account),
+                        onClick = viewModel::resetAccount
+                    )
+                    ArrowPreference(
+                        title = stringResource(Res.string.add_flush_message),
+                        onClick = viewModel::changeMessageState
+                    )
+                    ArrowPreference(
+                        title = stringResource(Res.string.query_valid_code),
+                        onClick = viewModel::changeValidCodeState
+                    )
+                }
+            }
+            item {
+                Column(modifier = Modifier.roundedBackground()) {
+                    ArrowPreference(
+                        title = stringResource(Res.string.unlock_all_char),
+                        onClick = viewModel::changeUnlockCharState
+                    )
+                    ArrowPreference(
+                        title = stringResource(Res.string.unlock_all_stages),
+                        onClick = viewModel::unlockAllStages
+                    )
+                    ArrowPreference(
+                        title = stringResource(Res.string.unlock_all_flags),
+                        onClick = viewModel::unlockAllFlags
+                    )
+                    ArrowPreference(
+                        title = stringResource(Res.string.gain_item),
+                        onClick = viewModel::changeItemState
+                    )
+                    ArrowPreference(
+                        title = stringResource(Res.string.reset_act),
+                        onClick = viewModel::changeActivityState
+                    )
+                    ArrowPreference(
+                        title = stringResource(Res.string.reset_rlv2),
+                        onClick = viewModel::resetRlv2
+                    )
+                }
             }
         }
     }
@@ -199,7 +211,7 @@ private fun UnlockAllCharDialog(
                 IntRangeSlider(
                     value = evolvePhase,
                     maxValue = 2,
-                    description = stringResource(Res.string.evp_phase),
+                    title = stringResource(Res.string.evp_phase),
 //                    onValueChange = { evolvePhase = it },
                     onValueChangeFinished = {
                         val effects = UnlockAllCharRules.onEvolvePhaseChanged(
@@ -222,7 +234,7 @@ private fun UnlockAllCharDialog(
                     value = level,
                     maxValue = 90,
                     start = 1,
-                    description = stringResource(Res.string.level),
+                    title = stringResource(Res.string.level),
 //                    onValueChange = { level = it },
                     onValueChangeFinished = {
                         level = it
@@ -236,7 +248,7 @@ private fun UnlockAllCharDialog(
                     value = mainSkillLvl,
                     maxValue = 7,
                     start = 1,
-                    description = stringResource(Res.string.skill_level),
+                    title = stringResource(Res.string.skill_level),
                     onValueChangeFinished = {
                         mainSkillLvl = UnlockAllCharRules.clampSkillLevel(evolvePhase, it)
                     },
@@ -245,7 +257,7 @@ private fun UnlockAllCharDialog(
                 IntRangeSlider(
                     value = potentialRank,
                     maxValue = 5,
-                    description = stringResource(Res.string.potential_rank),
+                    title = stringResource(Res.string.potential_rank),
                     onValueChangeFinished = { potentialRank = it },
                     modifier = Modifier.weight(1f)
                 )
@@ -253,7 +265,7 @@ private fun UnlockAllCharDialog(
             IntRangeSlider(
                 value = specializeLevel,
                 maxValue = 3,
-                description = stringResource(Res.string.sp_skill_lv),
+                title = stringResource(Res.string.sp_skill_lv),
                 onValueChangeFinished = {
                     specializeLevel =
                         UnlockAllCharRules.normalizeSpecializeLevel(evolvePhase, mainSkillLvl, it)
@@ -262,14 +274,14 @@ private fun UnlockAllCharDialog(
             IntRangeSlider(
                 value = favorPoint,
                 maxValue = 200,
-                description = stringResource(Res.string.fav_pt),
+                title = stringResource(Res.string.fav_pt),
                 onValueChangeFinished = { favorPoint = it }
             )
             IntRangeSlider(
                 value = equipLevel,
                 maxValue = 3,
                 start = 1,
-                description = stringResource(Res.string.equip_lv),
+                title = stringResource(Res.string.equip_lv),
                 onValueChangeFinished = {
                     equipLevel = UnlockAllCharRules.normalizeEquipLevel(evolvePhase, it)
                 },
@@ -415,7 +427,7 @@ private fun GainItemDialog(
             value = count,
             start = 1,
             maxValue = 99,
-            description = stringResource(Res.string.count),
+            title = stringResource(Res.string.count),
             onValueChangeFinished = { count = it },
         )
     }

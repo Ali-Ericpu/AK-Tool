@@ -31,6 +31,7 @@ import com.rainccup.aktool.core.common.LocalAppConfig
 import com.rainccup.aktool.core.common.OnConfigChange
 import com.rainccup.aktool.core.designsystem.component.BasicDialog
 import com.rainccup.aktool.core.designsystem.component.EditText
+import com.rainccup.aktool.core.designsystem.component.roundedBackground
 import com.rainccup.aktool.core.designsystem.theme.UNSET_PRIMARY_COLOR
 import com.rainccup.aktool.core.model.AppConfig
 import com.rainccup.aktool.core.platform.FilePicker
@@ -82,11 +83,7 @@ fun SettingPage() {
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             item {
-                Column(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(16.dp))
-                        .background(MiuixTheme.colorScheme.background.copy(alpha = 0.8f))
-                ) {
+                Column(modifier = Modifier.roundedBackground()) {
                     EditText(
                         value = config.serverUri,
                         label = stringResource(Res.string.server_uri),
@@ -136,11 +133,9 @@ fun SettingPage() {
                 }
             }
             item {
-                Column(
-                    modifier = Modifier
+                Column(modifier = Modifier.roundedBackground()
                         .clip(RoundedCornerShape(16.dp))
-                        .background(MiuixTheme.colorScheme.background.copy(alpha = 0.8f))
-                ) {
+                        .background(MiuixTheme.colorScheme.background.copy(alpha = 0.95f))) {
                     SwitchPreference(
                         title = stringResource(Res.string.dark_mode),
                         checked = config.darkMode,

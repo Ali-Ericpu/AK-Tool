@@ -80,6 +80,11 @@ class AdminRepository(
         return api.registerAccount(body)
     }
 
+    suspend fun resetAccount(): ApiResult<JsonElement?> {
+        syncCredentials()
+        return api.resetAccount()
+    }
+
     suspend fun syncValidCode(): ApiResult<Map<String, String>> {
         syncCredentials()
         return api.syncValidCode()

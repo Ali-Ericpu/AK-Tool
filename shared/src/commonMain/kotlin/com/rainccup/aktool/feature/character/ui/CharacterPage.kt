@@ -56,7 +56,6 @@ import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -72,6 +71,7 @@ import com.rainccup.aktool.core.designsystem.component.BasicDialog
 import com.rainccup.aktool.core.designsystem.component.CharPainter
 import com.rainccup.aktool.core.designsystem.component.CircleIconButton
 import com.rainccup.aktool.core.designsystem.component.EditTextDialog
+import com.rainccup.aktool.core.designsystem.component.offsetPercent
 import com.rainccup.aktool.core.designsystem.icon
 import com.rainccup.aktool.core.domain.GameTableQuery
 import com.rainccup.aktool.core.model.Character
@@ -110,7 +110,6 @@ import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.basic.InputField
 import top.yukonga.miuix.kmp.basic.SearchBar
 import top.yukonga.miuix.kmp.theme.MiuixTheme
-import kotlin.math.roundToInt
 
 @Composable
 fun CharacterPage(
@@ -241,20 +240,36 @@ fun CharacterPage(
                     FloatingToolbar(
                         modifier = Modifier.offsetPercent(offsetPercentX = menuOffsetX)
                     ) {
-                        Column(modifier = Modifier) {
+                        Column {
                             IconButton(
                                 onClick = { viewModel.changeSelectState(true) }
                             ) {
-                                Icon(Icons.Default.Menu, contentDescription = null)
+                                Icon(
+                                    imageVector = Icons.Default.Menu,
+                                    contentDescription = null,
+                                    tint = MiuixTheme.colorScheme.onBackground
+                                )
                             }
                             IconButton(onClick = viewModel::changeGainCharState) {
-                                Icon(Icons.Default.Add, contentDescription = null)
+                                Icon(
+                                    imageVector = Icons.Default.Add,
+                                    contentDescription = null,
+                                    tint = MiuixTheme.colorScheme.onBackground
+                                )
                             }
                             IconButton(onClick = viewModel::changeSearchState) {
-                                Icon(Icons.Default.Search, contentDescription = null)
+                                Icon(
+                                    imageVector = Icons.Default.Search,
+                                    contentDescription = null,
+                                    tint = MiuixTheme.colorScheme.onBackground
+                                )
                             }
                             IconButton(onClick = viewModel::initCharData) {
-                                Icon(Icons.Default.Refresh, contentDescription = null)
+                                Icon(
+                                    imageVector = Icons.Default.Refresh,
+                                    contentDescription = null,
+                                    tint = MiuixTheme.colorScheme.onBackground
+                                )
                             }
                         }
                     }
@@ -279,7 +294,7 @@ fun CharacterPage(
     EditTextDialog(
         title = stringResource(Res.string.char_id),
         show = showGainCharDialog,
-        error = { !it.startsWith("char_") || viewModel.existChar(it) },
+        error = { !it.startsWith("char_") || !viewModel.existChar(it) },
         onConfirm = { charId ->
             // 校验失败时 EditTextDialog 不会回调 onConfirm，所以这里 charId 必然非空。
             charId?.let { viewModel.gainChar(it) }
@@ -550,7 +565,7 @@ fun SearchCharDialog(
             onExpandedChange = { },
         ) {
             FlowRow(
-                horizontalArrangement = Arrangement.SpaceAround,
+                horizontalArrangement = Arrangement.SpaceBetween,
                 verticalArrangement = Arrangement.Top,
                 modifier = Modifier
                     .fillMaxWidth()
@@ -585,15 +600,6 @@ fun SearchCharDialog(
     }
 }
 
-fun Modifier.offsetPercent(offsetPercentX: Float = 0f, offsetPercentY: Float = 0f): Modifier =
-    layout { measurable, constraints ->
-        val placeable = measurable.measure(constraints)
-        layout(placeable.width, placeable.height) {
-            val offsetX = (offsetPercentX * placeable.width).roundToInt()
-            val offsetY = (offsetPercentY * placeable.height).roundToInt()
-            placeable.place(offsetX, offsetY)
-        }
-    }
 
 @Composable
 fun portraitPainter(skinId: String): Painter {

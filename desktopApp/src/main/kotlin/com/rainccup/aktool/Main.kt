@@ -64,23 +64,15 @@ private fun rememberAdaptiveWindowState(): WindowState {
 }
 
 /**
- * 主屏可用区域（已排除任务栏），换算成 Compose 的 dp；取不到时返回 null。
- *
- * `maximumWindowBounds` 给的是屏幕像素，要按窗口缩放系数换算成 dp——
- * `defaultTransform.scaleX` 正是 Compose Desktop 用来做 dp→px 的那个系数。
- * 不除它的话，150% 缩放下算出来的可用区会偏大 1.5 倍，收敛就形同虚设。
+ * 主屏可用区域（已排除任务栏），单位就是 Compose 的 dp；取不到时返回 null。
  *
  * 只取主屏；多屏时窗口若被移到其它屏，这个上限只是近似值。
  */
 private fun desktopWorkArea(): DpSize? = runCatching {
-    val environment = GraphicsEnvironment.getLocalGraphicsEnvironment()
-    val scale = environment.defaultScreenDevice.defaultConfiguration.defaultTransform.scaleX
-    val bounds = environment.maximumWindowBounds
-    if (scale <= 0f || bounds.width <= 0 || bounds.height <= 0) {
+    val bounds = GraphicsEnvironment.getLocalGraphicsEnvironment().maximumWindowBounds
+    if (bounds.width <= 0 || bounds.height <= 0) {
         null
     } else {
-        val width = bounds.width / scale
-        val height = bounds.height / scale
-        DpSize(width.dp, height.dp)
+        DpSize((bounds.width * 0.8).dp, (bounds.height * 0.8).dp)
     }
 }.getOrNull()

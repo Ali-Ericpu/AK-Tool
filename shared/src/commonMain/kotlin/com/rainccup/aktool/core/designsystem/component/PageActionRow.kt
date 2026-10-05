@@ -90,6 +90,9 @@ private fun PrimaryActionButton(
         modifier = modifier,
         enabled = enabled,
     ) {
-        Text(text)
+        Text(
+            text = text,
+            color = MiuixTheme.colorScheme.primary
+        )
     }
 }

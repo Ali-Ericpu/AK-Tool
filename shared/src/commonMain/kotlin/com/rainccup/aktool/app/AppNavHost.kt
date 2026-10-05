@@ -35,6 +35,8 @@ import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.scene.Scene
 import androidx.navigation3.ui.NavDisplay
 import androidx.savedstate.serialization.SavedStateConfiguration
+import com.rainccup.aktool.core.designsystem.LargeScreenBreakpoint
+import com.rainccup.aktool.core.designsystem.LocalLargeScreen
 import com.rainccup.aktool.core.message.MessageBus
 import com.rainccup.aktool.core.navigation.AppRoute
 import com.rainccup.aktool.core.navigation.LocalSharedTransitionScope
@@ -62,12 +64,6 @@ import top.yukonga.miuix.kmp.basic.NavigationRailItem
 import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.SnackbarHost
 import top.yukonga.miuix.kmp.basic.SnackbarHostState
-
-/**
- * 大屏断点：宽度达到该值就改用左侧导航栏（桌面 / 平板），否则保持底部标签栏。
- * 600dp 是 Material 3 里 compact → medium 的分界。
- */
-private val NavigationRailBreakpoint = 600.dp
 
 private val navConfig = SavedStateConfiguration {
     serializersModule = SerializersModule {
@@ -311,7 +307,7 @@ fun AppNavHost() {
 
     // 大屏（桌面 / 平板横屏）改用左侧导航栏；窄屏仍保持底部标签栏，两种布局共用同一份 tabs 与选中逻辑。
     BoxWithConstraints {
-        val useNavigationRail = maxWidth >= NavigationRailBreakpoint
+        val useNavigationRail = maxWidth >= LargeScreenBreakpoint
         Scaffold(
             snackbarHost = { SnackbarHost(state = snackbarHostState) },
             containerColor = Color.Transparent,
@@ -337,7 +333,10 @@ fun AppNavHost() {
             val routes = backStack as List<AppRoute>
             Row(modifier = Modifier.fillMaxSize()) {
                 if (useNavigationRail) {
-                    NavigationRail {
+                    NavigationRail(
+                        color = Color.Transparent,
+                        showDivider = false,
+                    ) {
                         tabs.forEach { tab ->
                             NavigationRailItem(
                                 selected = currentTop == tab.route,
@@ -353,7 +352,11 @@ fun AppNavHost() {
                 // （否则移动中的卡片会被页面的边界裁掉）。
                 SharedTransitionLayout(modifier = Modifier.weight(1f)) {
                     val sharedTransitionScope = this
-                    CompositionLocalProvider(LocalSharedTransitionScope provides sharedTransitionScope) {
+                    // 大屏判定只在这里做一次：页面通过 LocalLargeScreen 读同一个结果来分栏。
+                    CompositionLocalProvider(
+                        LocalSharedTransitionScope provides sharedTransitionScope,
+                        LocalLargeScreen provides useNavigationRail,
+                    ) {
                         NavDisplay(
                             backStack = routes,
                             onBack = { if (backStack.size > 1) backStack.removeLastOrNull() },

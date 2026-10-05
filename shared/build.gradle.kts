@@ -36,7 +36,6 @@ kotlin {
             implementation(libs.compose.components.resources)
             implementation(libs.compose.ui.tooling.preview)
             implementation(libs.compose.material)
-            implementation(libs.constraintlayout.multiplatform)
             implementation(libs.miuix.ui)
             implementation(libs.miuix.preference)
 

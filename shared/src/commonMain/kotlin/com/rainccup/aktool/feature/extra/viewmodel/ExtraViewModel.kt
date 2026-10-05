@@ -118,6 +118,10 @@ class ExtraViewModel(
         doRequest { useCase.registerAccount(body) }
     }
 
+    fun resetAccount() = viewModelScope.launch {
+        doRequest { useCase.resetAccount() }
+    }
+
     fun resetRlv2() = viewModelScope.launch {
         doRequest { useCase.resetIntegratedStrategies() }
     }

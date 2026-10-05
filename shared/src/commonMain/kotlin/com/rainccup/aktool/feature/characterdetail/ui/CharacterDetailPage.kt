@@ -2,7 +2,6 @@ package com.rainccup.aktool.feature.characterdetail.ui
 
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -18,7 +17,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.Icon
@@ -30,7 +28,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
@@ -38,9 +35,9 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.constraintlayout.compose.ConstraintLayout
 import com.rainccup.aktool.core.designsystem.component.IntRangeSlider
 import com.rainccup.aktool.core.designsystem.component.PageActionRow
+import com.rainccup.aktool.core.designsystem.component.roundedBackground
 import com.rainccup.aktool.core.domain.GameTableQuery
 import com.rainccup.aktool.core.model.Character
 import com.rainccup.aktool.core.navigation.characterCardSharedElement
@@ -71,6 +68,7 @@ import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
 import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.preference.SwitchPreference
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 @Composable
 fun CharacterDetailPage(
@@ -112,7 +110,7 @@ fun CharacterDetailPage(
                                 value = char.potentialRank,
                                 start = 0,
                                 maxValue = 5,
-                                description = stringResource(Res.string.potential_rank),
+                                title = stringResource(Res.string.potential_rank),
                                 onValueChangeFinished = { vm.accept(char.copy(potentialRank = it)) },
                                 modifier = Modifier.weight(1f)
                             )
@@ -120,7 +118,7 @@ fun CharacterDetailPage(
                                 value = char.favorPoint,
                                 start = 0,
                                 maxValue = 200,
-                                description = stringResource(Res.string.fav_pt),
+                                title = stringResource(Res.string.fav_pt),
                                 onValueChangeFinished = { vm.accept(char.copy(favorPoint = it)) },
                                 modifier = Modifier.weight(1f)
                             )
@@ -131,7 +129,7 @@ fun CharacterDetailPage(
                             value = char.evolvePhase,
                             start = 0,
                             maxValue = maxEvoPhase,
-                            description = stringResource(Res.string.evp_phase),
+                            title = stringResource(Res.string.evp_phase),
                             onValueChangeFinished = { vm.changeEvoPhase(it) },
                             modifier = Modifier.weight(1f)
                         )
@@ -139,7 +137,7 @@ fun CharacterDetailPage(
                             value = char.level,
                             start = 1,
                             maxValue = maxLevel,
-                            description = stringResource(Res.string.level),
+                            title = stringResource(Res.string.level),
                             onValueChangeFinished = { vm.accept(char.copy(level = it)) },
                             modifier = Modifier.weight(1f)
                         )
@@ -149,22 +147,22 @@ fun CharacterDetailPage(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(4.dp)
-                                .clip(RoundedCornerShape(16.dp))
-                                .background(Color.LightGray)
+                                .roundedBackground()
                         ) {
                             IntRangeSlider(
                                 value = char.mainSkillLvl,
                                 start = 1,
                                 maxValue = maxSkillLevel,
-                                description = stringResource(Res.string.skill_level),
-                                onValueChangeFinished = { vm.accept(char.copy(mainSkillLvl = it)) },
+                                title = stringResource(Res.string.skill_level),
+                                background = Color.Transparent,
+                                onValueChangeFinished = { vm.accept(char.copy(mainSkillLvl = it)) }
                             )
                             LazyRow(
                                 horizontalArrangement = Arrangement.SpaceAround,
                                 verticalAlignment = Alignment.CenterVertically,
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(start = 4.dp, end = 4.dp, bottom = 4.dp)
+                                    .padding(4.dp)
                                     .height(80.dp)
                             ) {
                                 itemsIndexed(char.skills) { index, skill ->
@@ -196,12 +194,12 @@ fun CharacterDetailPage(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(4.dp)
-                                .clip(RoundedCornerShape(16.dp))
-                                .background(Color.LightGray)
+                                .roundedBackground()
                         ) {
                             Text(
                                 text = stringResource(Res.string.equip),
                                 fontSize = 20.sp,
+                                color = MiuixTheme.colorScheme.onBackground,
                                 modifier = Modifier.padding(top = 8.dp, start = 16.dp, end = 16.dp)
                             )
                             LazyRow(
@@ -239,6 +237,9 @@ fun CharacterDetailPage(
                         title = stringResource(Res.string.star_mark),
                         checked = char.starMark == 1,
                         onCheckedChange = { vm.accept(char.copy(starMark = if (it) 1 else 0)) },
+                        modifier = Modifier
+                            .padding(4.dp)
+                            .roundedBackground()
                     )
                 }
             }
@@ -325,14 +326,20 @@ fun SkillDetail(
                 enabled = showSpecialLevel && specializeLevel < 3,
                 modifier = Modifier.weight(1f)
             ) {
-                Text("+")
+                Text(
+                    text = "+",
+                    color = MiuixTheme.colorScheme.onBackground
+                )
             }
             IconButton(
                 onClick = { onSpecialLevelChange(specializeLevel - 1) },
                 enabled = showSpecialLevel && specializeLevel > 0,
                 modifier = Modifier.weight(1f)
             ) {
-                Text("-")
+                Text(
+                    text = "-",
+                    color = MiuixTheme.colorScheme.onBackground
+                )
             }
         }
     }
@@ -351,17 +358,17 @@ fun EquipDetail(
     val equipType = gameTable.getEquipType(equipId)
     val isOriginal = equipType == "original"
     Row(modifier = Modifier.padding(8.dp)) {
-        ConstraintLayout(
+        Box(
             modifier = Modifier
                 .clickable { onSelectedChange() }
-                .fillMaxHeight()
+                .fillMaxHeight(),
+            contentAlignment = Alignment.Center
         ) {
-            val (equipIconRef, levelRef, selectRef, lockedRef) = createRefs()
             Image(
                 painter = equipPainter(equipType),
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
-                colorFilter = if (isOriginal) ColorFilter.tint(Color.Black) else null,
+                colorFilter = if (isOriginal) ColorFilter.tint(MiuixTheme.colorScheme.onBackground) else null,
                 modifier = Modifier
                     .border(
                         width = 4.dp,
@@ -369,9 +376,6 @@ fun EquipDetail(
                             alpha = if (isSelect) 1f else 0f,
                         ),
                     )
-                    .constrainAs(equipIconRef) {
-                        centerTo(parent)
-                    }
                     .fillMaxHeight()
                     .width(60.dp)
                     .padding(start = 4.dp)
@@ -380,10 +384,7 @@ fun EquipDetail(
                 Icon(
                     imageVector = Icons.Default.Lock,
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.constrainAs(lockedRef) {
-                        centerTo(equipIconRef)
-                    }
+                    tint = MaterialTheme.colorScheme.primary
                 )
             } else if (isOriginal.not() && locked == 0) {
                 val specialLevelPainter = when (level) {
@@ -397,11 +398,8 @@ fun EquipDetail(
                     contentDescription = null,
                     contentScale = ContentScale.Crop,
                     modifier = Modifier
+                        .align(Alignment.TopStart)
                         .width(16.dp)
-                        .constrainAs(levelRef) {
-                            top.linkTo(equipIconRef.top)
-                            start.linkTo(equipIconRef.start)
-                        }
                 )
             }
             if (isSelect) {
@@ -410,11 +408,8 @@ fun EquipDetail(
                     contentDescription = null,
                     contentScale = ContentScale.Crop,
                     modifier = Modifier
+                        .align(Alignment.TopEnd)
                         .width(24.dp)
-                        .constrainAs(selectRef) {
-                            top.linkTo(equipIconRef.top)
-                            end.linkTo(equipIconRef.end)
-                        }
                 )
             }
         }
@@ -430,14 +425,20 @@ fun EquipDetail(
                 enabled = isOriginal.not() && locked == 0 && level < 3,
                 modifier = Modifier.weight(1f)
             ) {
-                Text("+")
+                Text(
+                    text = "+",
+                    color = MiuixTheme.colorScheme.onBackground
+                )
             }
             IconButton(
                 onClick = { onLevelChange(level - 1) },
                 enabled = isOriginal.not() && locked == 0 && level > 1,
                 modifier = Modifier.weight(1f)
             ) {
-                Text("-")
+                Text(
+                    text = "-",
+                    color = MiuixTheme.colorScheme.onBackground
+                )
             }
         }
     }
