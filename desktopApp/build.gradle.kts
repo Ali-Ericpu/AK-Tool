@@ -25,11 +25,15 @@ dependencies {
     implementation(libs.koin.core)
 }
 
+val desktopPackageVersion: String = (findProperty("aktool.versionName") as String?)
+    ?.takeIf { it.isNotBlank() }
+    ?: "2.0.0"
+
 compose.desktop {
     application {
         mainClass = "com.rainccup.aktool.MainKt"
         nativeDistributions {
-            packageVersion = "1.5.6"
+            packageVersion = desktopPackageVersion
             packageName = "AK Tool"
         }
     }

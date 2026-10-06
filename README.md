@@ -13,6 +13,7 @@ Android application that share one code base: UI, domain logic, networking and s
 - [Modules](#modules)
 - [Requirements](#requirements)
 - [Getting started](#getting-started)
+- [Releases and CI](#releases-and-ci)
 - [Configuration](#configuration)
 - [Downloaded data tables](#downloaded-data-tables)
 - [Architecture](#architecture)
@@ -125,6 +126,66 @@ so the Compose Gradle plugin's packaging tasks apply as well (for example
 Release builds of `:androidApp` enable `isMinifyEnabled` and `isShrinkResources`. No
 `signingConfigs` are declared in this repository, so a release APK/AAB needs signing details
 supplied by you.
+
+---
+
+## Releases and CI
+
+[`.github/workflows/build.yml`](.github/workflows/build.yml) packages the project:
+
+| Job | Runner | Output |
+|---|---|---|
+| `android` | `ubuntu-latest` | `AK-Tool-apk` — the release APK, plus ProGuard's `mapping.txt` |
+| `desktop` | `windows-latest` | `AK-Tool-windows` — the application image zipped (it contains the launcher `.exe`), and an `.msi`/`.exe` installer when jpackage can build one |
+| `release` | `ubuntu-latest` | on a `v*` tag, attaches those artifacts to a GitHub release |
+
+Run it from the **Actions** tab, or push a tag such as `v1.5.6` to also publish a release.
+
+The Android job runs in the **`release` environment**, so it waits for approval before it starts:
+create that environment under Settings → Environments and add required reviewers. The four secrets
+below can live in that environment or at repository level — either way the keystore is only
+unwrapped inside a reviewed run.
+
+The tag also drives the version: pushing `v1.5.7` builds an APK whose `versionName` is `1.5.7`
+(with the desktop package version set to `1.5.7` too), while `versionCode` comes from the workflow
+run number. Locally the same values can be passed on the command line:
+
+```bash
+./gradlew :androidApp:assembleRelease -Paktool.versionName=1.5.7 -Paktool.versionCode=42
+./gradlew :desktopApp:createDistributable -Paktool.versionName=1.5.7
+```
+
+**Signing.** The release APK is signed only when the keystore is supplied through repository
+secrets (Settings → Secrets and variables → Actions):
+
+| Secret | Value |
+|---|---|
+| `KEYSTORE_BASE64` | base64 of the release keystore, without line breaks |
+| `KEYSTORE_PASSWORD` | keystore password |
+| `KEY_ALIAS` | key alias |
+| `KEY_PASSWORD` | key password |
+
+```bash
+base64 -w0 release.jks > keystore.b64          # Linux / macOS
+```
+
+```powershell
+[Convert]::ToBase64String([IO.File]::ReadAllBytes("release.jks")) > keystore.b64   # Windows
+```
+
+The keystore is never committed — `*.jks` and `*.keystore` are git-ignored. Without those
+secrets the workflow still builds, but the APK stays **unsigned and cannot be installed**; the
+job prints a warning and skips signature verification.
+
+Locally, export the same variables to sign a release build by hand:
+
+```bash
+export AKTOOL_KEYSTORE_FILE=/path/to/release.jks
+export AKTOOL_KEYSTORE_PASSWORD=your-keystore-password
+export AKTOOL_KEY_ALIAS=your-key-alias
+export AKTOOL_KEY_PASSWORD=your-key-password
+./gradlew :androidApp:assembleRelease
+```
 
 ---
 

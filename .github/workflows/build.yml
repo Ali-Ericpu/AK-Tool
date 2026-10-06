@@ -1,0 +1,157 @@
+name: Package
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: package-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  GRADLE_OPTS: "-Dorg.gradle.jvmargs=-Xmx3g"
+
+jobs:
+  android:
+    name: Android release APK
+    runs-on: ubuntu-latest
+    environment: release
+    env:
+      AKTOOL_KEYSTORE_FILE: ${{ runner.temp }}/release.keystore
+      AKTOOL_KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+      AKTOOL_KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+      AKTOOL_KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: gradle
+
+      # compileSdk 37 is newer than the platform shipped in the runner image, so AGP downloads
+      # it on demand — which requires the SDK licence to be accepted first.
+      - name: Accept Android SDK licences
+        run: |
+          SDKMGR="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+          [ -x "$SDKMGR" ] || SDKMGR="$ANDROID_HOME/tools/bin/sdkmanager"
+          yes | "$SDKMGR" --licenses > /dev/null 2>&1 || true
+
+      - name: Decode release keystore
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+        run: |
+          if [ -n "$KEYSTORE_BASE64" ]; then
+            echo "$KEYSTORE_BASE64" | base64 -d > "$AKTOOL_KEYSTORE_FILE"
+            echo "Keystore written to $AKTOOL_KEYSTORE_FILE"
+          else
+            echo "::warning::KEYSTORE_BASE64 is not set - the release APK will be UNSIGNED and cannot be installed."
+          fi
+
+      - name: Resolve version from the tag
+        shell: bash
+        run: |
+          if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
+            echo "AKTOOL_VERSION_NAME=${GITHUB_REF_NAME#v}" >> "$GITHUB_ENV"
+          else
+            echo "AKTOOL_VERSION_NAME=" >> "$GITHUB_ENV"
+          fi
+
+      - name: Build release APK
+        run: ./gradlew :androidApp:assembleRelease -Paktool.versionName="$AKTOOL_VERSION_NAME" -Paktool.versionCode="${{ github.run_number }}" --no-daemon --stacktrace
+
+      - name: Verify APK signature
+        run: |
+          if [ ! -f "$AKTOOL_KEYSTORE_FILE" ]; then
+            echo "No keystore was provided; skipping signature verification."
+            exit 0
+          fi
+          APKSIGNER=$(ls "$ANDROID_HOME"/build-tools/*/apksigner 2>/dev/null | tail -1)
+          "$APKSIGNER" verify --print-certs androidApp/build/outputs/apk/release/*.apk
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: AK-Tool-apk
+          if-no-files-found: error
+          path: |
+            androidApp/build/outputs/apk/release/*.apk
+            androidApp/build/outputs/mapping/release/mapping.txt
+
+  desktop:
+    name: Windows desktop build
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: gradle
+
+      - name: Resolve version from the tag
+        shell: bash
+        run: |
+          if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
+            echo "AKTOOL_VERSION_NAME=${GITHUB_REF_NAME#v}" >> "$GITHUB_ENV"
+          else
+            echo "AKTOOL_VERSION_NAME=" >> "$GITHUB_ENV"
+          fi
+
+      - name: Build application image
+        shell: bash
+        run: ./gradlew :desktopApp:createDistributable -Paktool.versionName="$AKTOOL_VERSION_NAME" --no-daemon --stacktrace
+
+      # Produces an .msi / .exe installer. jpackage needs the WiX toolset for that, which the
+      # runner image may not provide, so a failure here does not fail the job: the zipped
+      # application image below already contains the launcher executable.
+      - name: Build installer (best effort)
+        continue-on-error: true
+        shell: bash
+        run: ./gradlew :desktopApp:packageDistributionForCurrentOS -Paktool.versionName="$AKTOOL_VERSION_NAME" --no-daemon --stacktrace
+
+      - name: Zip application image
+        shell: pwsh
+        run: |
+          $app = Get-ChildItem "desktopApp/build/compose/binaries/main/app" -Directory | Select-Object -First 1
+          if (-not $app) { throw "application image not found under desktopApp/build/compose/binaries/main/app" }
+          Compress-Archive -Path (Join-Path $app.FullName '*') -DestinationPath "AK-Tool-windows.zip"
+          Get-Item "AK-Tool-windows.zip" | Select-Object Name, Length
+
+      - name: Upload desktop build
+        uses: actions/upload-artifact@v7
+        with:
+          name: AK-Tool-windows
+          if-no-files-found: warn
+          path: |
+            AK-Tool-windows.zip
+            desktopApp/build/compose/binaries/main/msi/*.msi
+            desktopApp/build/compose/binaries/main/exe/*.exe
+
+  release:
+    name: Attach artifacts to release
+    needs: [ android, desktop ]
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          path: artifacts
+
+      - name: Upload to the GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view "$GITHUB_REF_NAME" > /dev/null 2>&1 \
+            || gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" --generate-notes
+          find artifacts -type f \( -name '*.apk' -o -name '*.zip' -o -name '*.msi' -o -name '*.exe' \) -print0 \
+            | xargs -0 gh release upload "$GITHUB_REF_NAME" --clobber

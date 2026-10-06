@@ -25,3 +25,8 @@ androidApp/build/outputs/
 /hotrun*.log
 
 .worktrees/
+
+# Signing material must never be committed (CI reads it from repository secrets)
+*.jks
+*.keystore
+*.p12
