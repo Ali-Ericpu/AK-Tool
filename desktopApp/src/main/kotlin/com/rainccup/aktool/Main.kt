@@ -3,6 +3,8 @@ package com.rainccup.aktool
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.graphics.painter.BitmapPainter
+import androidx.compose.ui.graphics.toComposeImageBitmap
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
@@ -17,6 +19,7 @@ import com.rainccup.aktool.feature.character.ui.CharacterGridMetrics
 import org.koin.core.context.GlobalContext
 import org.koin.core.context.startKoin
 import java.awt.GraphicsEnvironment
+import javax.imageio.ImageIO
 
 fun main() {
     if (GlobalContext.getOrNull() == null) {
@@ -26,12 +29,22 @@ fun main() {
         Window(
             onCloseRequest = ::exitApplication,
             title = "AK Tool",
+            icon = remember { loadWindowIcon() },
             state = rememberAdaptiveWindowState(),
         ) {
             App()
         }
     }
 }
+
+/**
+ * 窗口图标：读取 desktopApp 资源里的 icon.png（由 assets/app-icon/generate_icon.py 生成）。
+ * 读不到时返回 null，窗口用系统默认图标，不影响启动。
+ */
+private fun loadWindowIcon(): BitmapPainter? =
+    object {}.javaClass.getResourceAsStream("/icon.png")
+        ?.use { ImageIO.read(it) }
+        ?.let { BitmapPainter(it.toComposeImageBitmap()) }
 
 /** 默认窗口占屏幕可用宽度的比例。 */
 private const val WindowWidthRatio = 0.9f

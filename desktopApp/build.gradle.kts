@@ -35,6 +35,9 @@ compose.desktop {
         nativeDistributions {
             packageVersion = desktopPackageVersion
             packageName = "AK Tool"
+            windows {
+                iconFile.set(rootProject.file("assets/app-icon/icon.ico"))
+            }
         }
     }
 }
