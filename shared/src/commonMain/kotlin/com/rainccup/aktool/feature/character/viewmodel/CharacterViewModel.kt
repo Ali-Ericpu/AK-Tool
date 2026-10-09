@@ -46,12 +46,6 @@ class CharacterViewModel(
     val loadAnimate: StateFlow<Boolean>
         field = MutableStateFlow(false)
 
-    val gainChar: StateFlow<Boolean>
-        field = MutableStateFlow(false)
-
-    val isSearch: StateFlow<Boolean>
-        field = MutableStateFlow(false)
-
     fun initCharData() = viewModelScope.launch {
         if (!loadAnimate.value) {
             if (!useCase.init()) {
@@ -59,10 +53,10 @@ class CharacterViewModel(
                 return@launch
             }
             loadAnimate.emit(true)
-            characterData.clear()
             runCatching {
                 val loaded = useCase.loadCharacters()
                 withContext(Dispatchers.Default) {
+                    characterData.clear()
                     characterData.putAll(loaded.characters)
                     charNameMap.clear()
                     charNameMap.putAll(loaded.nameToId)
@@ -76,14 +70,13 @@ class CharacterViewModel(
         }
     }
 
-    fun existChar(charId: String): Boolean = useCase.existChar(charId)
+    fun existChar(charId: String): Boolean =
+        useCase.existChar(charId) || charNameMap[charId] != null
 
-    suspend fun selectProfession(select: String) {
-        withContext(Dispatchers.Default) {
-            profession.emit(select)
-            val sorted = CharacterFilter.byProfession(characterData.values, select)
-            characters.replace(sorted)
-        }
+    fun selectProfession(select: String) = viewModelScope.launch(Dispatchers.Default) {
+        profession.emit(select)
+        val sorted = CharacterFilter.byProfession(characterData.values, select)
+        characters.replace(sorted)
     }
 
     fun changeSelectState(state: Boolean) = viewModelScope.launch {
@@ -106,30 +99,23 @@ class CharacterViewModel(
      * 成功后刷新列表。
      */
     fun gainChar(charId: String) = viewModelScope.launch {
-        runCatching { useCase.gainCharacter(charId) }
+        val realCharId = if (useCase.existChar(charId)) charId else getCharIdByCharName(charId)
+        runCatching { useCase.gainCharacter(realCharId) }
             .onSuccess { initCharData() }
             .onFailure { messenger.show(it.message ?: "error") }
-    }
-
-    fun changeGainCharState() = viewModelScope.launch {
-        gainChar.emit(gainChar.value.not())
     }
 
     fun getSearchedCharList(charName: String): List<String> =
         CharacterFilter.matches(charNameMap, charName)
 
     fun copyCharId(charName: String) = viewModelScope.launch {
-        val charId = CharacterFilter.idOf(charNameMap, charName)
+        val charId = getCharIdByCharName(charName)
         if (charId == CharacterFilter.NOT_FOUND) {
             messenger.show(getString(Res.string.char_id))
             return@launch
         }
         clipboard.setText(charId)
         messenger.show(getString(Res.string.copy_success, charId))
-    }
-
-    fun changeSearchState() = viewModelScope.launch {
-        isSearch.emit(isSearch.value.not())
     }
 
     fun getCharIdByCharName(charName: String): String =
@@ -145,13 +131,10 @@ class CharacterViewModel(
 
 
     fun searchChar(charName: String?) {
-        viewModelScope.launch {
-            if (charName == null) {
-                selectProfession(profession.value)
-            } else {
-                characters.replace(characterData.values.filter { charName in it.name!! })
-            }
-            isSearch.emit(false)
+        if (charName == null) {
+            selectProfession(profession.value)
+        } else {
+            characters.replace(characterData.values.filter { charName in it.name!! }.sorted())
         }
     }
 

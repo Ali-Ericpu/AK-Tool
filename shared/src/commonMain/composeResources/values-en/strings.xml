@@ -80,6 +80,6 @@
     <string name="query_account">Query Account</string>
     <string name="reset_account">Reset Account</string>
     <string name="content_invalid">Content is invalid</string>
-    <string name="game_table_init_fail">"GameTable is missing. Please update the data and try again"</string>
-    <string name="character_not_exist">"The operator does not exist"</string>
+    <string name="game_table_init_fail">GameTable is missing. Please update the data and try again</string>
+    <string name="character_not_exist">The operator does not exist</string>
 </resources>

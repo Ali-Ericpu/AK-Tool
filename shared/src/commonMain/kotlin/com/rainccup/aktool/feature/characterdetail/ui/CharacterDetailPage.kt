@@ -34,12 +34,12 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.rainccup.aktool.core.designsystem.component.IntRangeSlider
 import com.rainccup.aktool.core.designsystem.component.PageActionRow
 import com.rainccup.aktool.core.designsystem.component.roundedBackground
 import com.rainccup.aktool.core.domain.GameTableQuery
 import com.rainccup.aktool.core.model.Character
+import com.rainccup.aktool.core.model.Equip
 import com.rainccup.aktool.core.navigation.characterCardSharedElement
 import com.rainccup.aktool.core.platform.platformUiScale
 import com.rainccup.aktool.feature.character.ui.CharacterCard
@@ -66,6 +66,7 @@ import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
+import top.yukonga.miuix.kmp.basic.BasicComponent
 import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.preference.SwitchPreference
 import top.yukonga.miuix.kmp.theme.MiuixTheme
@@ -190,48 +191,13 @@ fun CharacterDetailPage(
                         }
                     }
                     if (char.equip.isNotEmpty()) {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(4.dp)
-                                .roundedBackground()
-                        ) {
-                            Text(
-                                text = stringResource(Res.string.equip),
-                                fontSize = 20.sp,
-                                color = MiuixTheme.colorScheme.onBackground,
-                                modifier = Modifier.padding(top = 8.dp, start = 16.dp, end = 16.dp)
-                            )
-                            LazyRow(
-                                horizontalArrangement = Arrangement.SpaceAround,
-                                verticalAlignment = Alignment.CenterVertically,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(80.dp)
-                                    .padding(4.dp)
-                            ) {
-                                items(char.equip.toList()) { (equipId, equipData) ->
-                                    EquipDetail(
-                                        equipId = equipId,
-                                        level = equipData.level,
-                                        locked = equipData.locked,
-                                        isSelect = char.currentEquip == equipId,
-                                        onSelectedChange = {
-                                            if (char.evolvePhase >= 2) {
-                                                vm.accept(char.copy(currentEquip = equipId))
-                                            }
-                                        },
-                                        onLevelChange = { level ->
-                                            val copy = equipData.copy(level = level)
-                                            val map = char.equip.toMutableMap()
-                                            vm.accept(char.copy(equip = map.also {
-                                                it[equipId] = copy
-                                            }))
-                                        }
-                                    )
-                                }
-                            }
-                        }
+                        CharEquip(
+                            evolvePhase = char.evolvePhase,
+                            currentEquip = char.currentEquip,
+                            equips = char.equip,
+                            onEquipIdChange = { vm.accept(char.copy(currentEquip = it)) },
+                            onEquipChange = { vm.accept(char.copy(equip = it)) }
+                        )
                     }
                     SwitchPreference(
                         title = stringResource(Res.string.star_mark),
@@ -346,10 +312,55 @@ fun SkillDetail(
 }
 
 @Composable
+fun CharEquip(
+    evolvePhase: Int,
+    currentEquip: String?,
+    equips: Map<String, Equip>,
+    onEquipIdChange: (String) -> Unit,
+    onEquipChange: (Map<String, Equip>) -> Unit,
+) {
+    BasicComponent(
+        title = stringResource(Res.string.equip),
+        modifier = Modifier.padding(4.dp).roundedBackground(),
+        bottomAction = {
+            LazyRow(
+                horizontalArrangement = Arrangement.SpaceAround,
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(80.dp)
+                    .padding(4.dp)
+            ) {
+                items(equips.toList()) { (equipId, equip) ->
+                    EquipDetail(
+                        equipId = equipId,
+                        level = equip.level,
+                        locked = equip.locked,
+                        isSelect = currentEquip == equipId,
+                        onSelectedChange = {
+                            if (evolvePhase >= 2) {
+                                onEquipIdChange(equipId)
+                            }
+                        },
+                        onLevelChange = { level ->
+                            val copy = equip.copy(level = level)
+                            val map = equips.toMutableMap().also {
+                                it[equipId] = copy
+                            }
+                            onEquipChange(map)
+                        }
+                    )
+                }
+            }
+        }
+    )
+}
+
+@Composable
 fun EquipDetail(
-    equipId: String = "",
-    level: Int = 1,
-    locked: Int = 1,
+    equipId: String,
+    level: Int,
+    locked: Int,
     isSelect: Boolean = false,
     onSelectedChange: () -> Unit = { },
     onLevelChange: (Int) -> Unit = { }
@@ -413,32 +424,34 @@ fun EquipDetail(
                 )
             }
         }
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.SpaceAround,
-            modifier = Modifier
-                .fillMaxHeight()
-                .width(28.dp)
-        ) {
-            IconButton(
-                onClick = { onLevelChange(level + 1) },
-                enabled = isOriginal.not() && locked == 0 && level < 3,
-                modifier = Modifier.weight(1f)
+        if (!isOriginal) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.SpaceAround,
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .width(28.dp)
             ) {
-                Text(
-                    text = "+",
-                    color = MiuixTheme.colorScheme.onBackground
-                )
-            }
-            IconButton(
-                onClick = { onLevelChange(level - 1) },
-                enabled = isOriginal.not() && locked == 0 && level > 1,
-                modifier = Modifier.weight(1f)
-            ) {
-                Text(
-                    text = "-",
-                    color = MiuixTheme.colorScheme.onBackground
-                )
+                IconButton(
+                    onClick = { onLevelChange(level + 1) },
+                    enabled = locked == 0 && level < 3,
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text(
+                        text = "+",
+                        color = MiuixTheme.colorScheme.onBackground
+                    )
+                }
+                IconButton(
+                    onClick = { onLevelChange(level - 1) },
+                    enabled = locked == 0 && level > 1,
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text(
+                        text = "-",
+                        color = MiuixTheme.colorScheme.onBackground
+                    )
+                }
             }
         }
     }

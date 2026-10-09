@@ -30,6 +30,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.NearMe
 import androidx.compose.material.icons.filled.Refresh
@@ -64,13 +65,13 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.rememberAsyncImagePainter
 import com.rainccup.aktool.core.common.LocalImageConfig
 import com.rainccup.aktool.core.common.replace
 import com.rainccup.aktool.core.designsystem.component.BasicDialog
 import com.rainccup.aktool.core.designsystem.component.CharPainter
 import com.rainccup.aktool.core.designsystem.component.CircleIconButton
-import com.rainccup.aktool.core.designsystem.component.EditTextDialog
 import com.rainccup.aktool.core.designsystem.component.offsetPercent
 import com.rainccup.aktool.core.designsystem.icon
 import com.rainccup.aktool.core.domain.GameTableQuery
@@ -89,6 +90,7 @@ import com.rainccup.aktool.resources.character_elite_2
 import com.rainccup.aktool.resources.character_elite_bg
 import com.rainccup.aktool.resources.character_empty_skill
 import com.rainccup.aktool.resources.character_level_bg
+import com.rainccup.aktool.resources.character_not_exist
 import com.rainccup.aktool.resources.character_potential_1
 import com.rainccup.aktool.resources.character_potential_2
 import com.rainccup.aktool.resources.character_potential_3
@@ -109,6 +111,7 @@ import top.yukonga.miuix.kmp.basic.FloatingToolbar
 import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.basic.InputField
 import top.yukonga.miuix.kmp.basic.SearchBar
+import top.yukonga.miuix.kmp.basic.TextField
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 @Composable
@@ -118,12 +121,10 @@ fun CharacterPage(
 ) {
     val viewModel: CharacterViewModel = koinViewModel()
     val splash by viewModel.splash.collectAsState()
-    val showLoadAnimate by viewModel.loadAnimate.collectAsState()
-    val showGainCharDialog by viewModel.gainChar.collectAsState()
-    val currentProfession by viewModel.profession.collectAsState()
-    val selectProfession by viewModel.isSelect.collectAsState()
-    val showSearchDialog by viewModel.isSearch.collectAsState()
-    val professions = Profession.entries.toList()
+    val showLoadAnimate by viewModel.loadAnimate.collectAsStateWithLifecycle()
+    val currentProfession by viewModel.profession.collectAsStateWithLifecycle()
+    val selectProfession by viewModel.isSelect.collectAsStateWithLifecycle()
+    val professions by remember { mutableStateOf(Profession.entries.toList()) }
     val coroutineScope = rememberCoroutineScope()
     val professionOffsetX by animateFloatAsState(if (selectProfession) 0f else 1.2f, label = "")
     val menuOffsetX by animateFloatAsState(if (!selectProfession) 0f else 1.5f, label = "")
@@ -184,8 +185,8 @@ fun CharacterPage(
                                         if (currentProfession == "ALL") {
                                             viewModel.changeSelectState(false)
                                         } else {
+                                            viewModel.selectProfession("ALL")
                                             coroutineScope.launch {
-                                                viewModel.selectProfession("ALL")
                                                 lazyGridState.scrollToItem(0)
                                             }
                                         }
@@ -219,8 +220,8 @@ fun CharacterPage(
                                             .alpha(0.8f)
                                             .height(42.dp)
                                             .clickable {
+                                                viewModel.selectProfession(it.name)
                                                 coroutineScope.launch {
-                                                    viewModel.selectProfession(it.name)
                                                     lazyGridState.scrollToItem(0)
                                                 }
                                             }
@@ -250,23 +251,31 @@ fun CharacterPage(
                                     tint = MiuixTheme.colorScheme.onBackground
                                 )
                             }
-                            IconButton(onClick = viewModel::changeGainCharState) {
-                                Icon(
-                                    imageVector = Icons.Default.Add,
-                                    contentDescription = null,
-                                    tint = MiuixTheme.colorScheme.onBackground
-                                )
+                            GainCharDialog(onGainChar = viewModel::gainChar) { charId ->
+                                viewModel.existChar(charId)
                             }
-                            IconButton(onClick = viewModel::changeSearchState) {
-                                Icon(
-                                    imageVector = Icons.Default.Search,
-                                    contentDescription = null,
-                                    tint = MiuixTheme.colorScheme.onBackground
-                                )
-                            }
+                            SearchCharDialog(
+                                onKeywordType = viewModel::getSearchedCharList,
+                                onPickName = viewModel::pickName,
+                                onCopyCharId = viewModel::copyCharId,
+                                onConfirmKeyword = viewModel::searchChar,
+                            )
                             IconButton(onClick = viewModel::initCharData) {
                                 Icon(
                                     imageVector = Icons.Default.Refresh,
+                                    contentDescription = null,
+                                    tint = MiuixTheme.colorScheme.onBackground
+                                )
+                            }
+                            IconButton(
+                                onClick = {
+                                    coroutineScope.launch {
+                                        lazyGridState.animateScrollToItem(0)
+                                    }
+                                }
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.ArrowUpward,
                                     contentDescription = null,
                                     tint = MiuixTheme.colorScheme.onBackground
                                 )
@@ -291,24 +300,6 @@ fun CharacterPage(
             }
         }
     }
-    EditTextDialog(
-        title = stringResource(Res.string.char_id),
-        show = showGainCharDialog,
-        error = { !it.startsWith("char_") || !viewModel.existChar(it) },
-        onConfirm = { charId ->
-            // 校验失败时 EditTextDialog 不会回调 onConfirm，所以这里 charId 必然非空。
-            charId?.let { viewModel.gainChar(it) }
-            viewModel.changeGainCharState()
-        }
-    )
-    SearchCharDialog(
-        show = showSearchDialog,
-        onKeywordType = viewModel::getSearchedCharList,
-        onPickName = viewModel::pickName,
-        onCopyCharId = viewModel::copyCharId,
-        onConfirmKeyword = viewModel::searchChar,
-        onCancel = viewModel::changeSearchState,
-    )
 
 }
 
@@ -389,7 +380,7 @@ fun CharacterCard(
         // rarity stars
         Image(
             painterResource(charPainter.rarityPainter), null,
-            contentScale = ContentScale.Fit,
+            contentScale = ContentScale.Crop,
             modifier = Modifier
                 .align(Alignment.TopStart)
                 .offset(x = 28.dp, y = 8.dp)
@@ -528,13 +519,12 @@ fun CharacterCard(
 
 @Composable
 fun SearchCharDialog(
-    show: Boolean,
     onKeywordType: (String) -> List<String> = { emptyList() },
     onPickName: (String) -> Unit = { },
     onCopyCharId: (String) -> Unit = { },
-    onConfirmKeyword: (String?) -> Unit = { },
-    onCancel: () -> Unit = { onConfirmKeyword(null) },
+    onConfirmKeyword: (String?) -> Unit = { }
 ) {
+    var show by remember { mutableStateOf(false) }
     var keyword by remember(show) { mutableStateOf("") }
     var selectedKeyword by remember(show) { mutableStateOf("") }
     val charNameList = remember(show) { mutableStateListOf<String>() }
@@ -544,18 +534,36 @@ fun SearchCharDialog(
         charNameList.replace(onKeywordType(keyword))
     }
 
+    IconButton(onClick = { show = true }) {
+        Icon(
+            imageVector = Icons.Default.Search,
+            contentDescription = null,
+            tint = MiuixTheme.colorScheme.onBackground
+        )
+    }
+
     BasicDialog(
         show = show,
         title = stringResource(Res.string.search),
-        onCancel = onCancel,
-        onConfirm = { onConfirmKeyword(selectedKeyword.ifEmpty { null }) }
+        onCancel = { show = false },
+        onConfirm = {
+            if (keyword.isNotBlank()) {
+                onConfirmKeyword(keyword)
+            }
+            show = false
+        }
     ) {
         SearchBar(
             inputField = {
                 InputField(
                     query = keyword,
                     onQueryChange = { keyword = it },
-                    onSearch = { onConfirmKeyword(keyword.ifEmpty { null }) },
+                    onSearch = {
+                        if (keyword.isNotBlank()) {
+                            onConfirmKeyword(keyword)
+                        }
+                        show = false
+                    },
                     expanded = keyword.isNotEmpty(),
                     onExpandedChange = { },
                     label = stringResource(Res.string.search),
@@ -587,6 +595,7 @@ fun SearchCharDialog(
                                 onClick = {
                                     selectedKeyword = word
                                     onPickName(word)
+                                    show = false
                                 },
                                 onLongClick = { onCopyCharId(word) }
                             )
@@ -597,6 +606,33 @@ fun SearchCharDialog(
                 }
             }
         }
+    }
+}
+
+@Composable
+fun GainCharDialog(
+    onGainChar: (String) -> Unit,
+    checkExist: (String) -> Boolean,
+) {
+    var show by remember { mutableStateOf(false) }
+    var charId by remember(show) { mutableStateOf("") }
+    var error by remember(charId) { mutableStateOf(!checkExist(charId)) }
+    IconButton(onClick = { show = true }) {
+        Icon(
+            imageVector = Icons.Default.Add,
+            contentDescription = null,
+            tint = MiuixTheme.colorScheme.onBackground
+        )
+    }
+    BasicDialog(
+        title = stringResource(Res.string.char_id),
+        show = show,
+        error = error,
+        summary = if (error) stringResource(Res.string.character_not_exist) else "",
+        onConfirm = { onGainChar(charId) },
+        onCancel = { show = false }
+    ) {
+        TextField(value = charId, onValueChange = { charId = it })
     }
 }
 

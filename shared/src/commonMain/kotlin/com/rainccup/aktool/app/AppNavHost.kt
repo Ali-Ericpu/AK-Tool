@@ -1,6 +1,7 @@
 package com.rainccup.aktool.app
 
 import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ContentTransform
 import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.animation.fadeIn
@@ -22,6 +23,8 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -295,7 +298,11 @@ fun AppNavHost() {
     // 切 Tab：只在目标不是当前页时入栈
     val onTabSelect: (AppRoute) -> Unit = { route ->
         if (currentTop != route) {
-            backStack.add(route)
+            if (route is AppRoute.Character && currentTop is AppRoute.CharacterDetail) {
+                backStack.removeLastOrNull()
+            } else {
+                backStack.add(route)
+            }
         }
     }
 
@@ -307,12 +314,12 @@ fun AppNavHost() {
 
     // 大屏（桌面 / 平板横屏）改用左侧导航栏；窄屏仍保持底部标签栏，两种布局共用同一份 tabs 与选中逻辑。
     BoxWithConstraints {
-        val useNavigationRail = maxWidth >= LargeScreenBreakpoint
+        val useNavigationRail by remember { derivedStateOf { maxWidth >= LargeScreenBreakpoint } }
         Scaffold(
             snackbarHost = { SnackbarHost(state = snackbarHostState) },
             containerColor = Color.Transparent,
             bottomBar = {
-                if (!useNavigationRail) {
+                AnimatedVisibility(!useNavigationRail && tabs.any { currentTop == it.route }) {
                     NavigationBar {
                         tabs.forEach { tab ->
                             NavigationBarItem(

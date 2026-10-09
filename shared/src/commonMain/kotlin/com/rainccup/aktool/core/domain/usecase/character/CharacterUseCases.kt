@@ -22,7 +22,8 @@ class CharacterUseCase(
     suspend fun init(): Boolean = gameTable.init()
 
     /** 干员是否**存在**，与页面表单的 error 语义一致。 */
-    fun existChar(charId: String): Boolean = gameTable.characterTable[charId] != null
+    fun existChar(charId: String): Boolean =
+        charId.startsWith("char_") && gameTable.characterTable[charId] != null
 
     suspend fun loadCharacters(): LoadedCharacters = withContext(Dispatchers.IO) {
         val table = gameTable.characterTable
