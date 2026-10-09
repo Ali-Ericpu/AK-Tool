@@ -90,7 +90,7 @@ androidComponents {
         .format(DateTimeFormatter.ofPattern("yyyyMMdd-HHmm"))
     onVariants(selector().withBuildType("release")) { variant ->
         variant.outputs.forEach { output ->
-            output.outputFileName.set("${rootProject.name}_${variant.name}_v${version}_${format}_${gitHash}")
+            output.outputFileName.set("${rootProject.name}_${variant.name}_v${version}_${format}_${gitHash}.apk")
         }
     }
 }

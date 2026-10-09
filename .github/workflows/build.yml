@@ -89,6 +89,17 @@ jobs:
           java-version: '25'
           cache: gradle
 
+      # The ProGuard step derives its library jars from java.home/jmods, so it needs a JDK
+      # that ships jmods. Print the toolchain facts next to the build to keep that visible.
+      - name: Report the toolchain (diagnostic)
+        shell: pwsh
+        run: |
+          echo "JAVA_HOME=$env:JAVA_HOME"
+          java -version
+          $jmods = Join-Path $env:JAVA_HOME 'jmods'
+          echo "jmods directory present: $(Test-Path $jmods)"
+          if (Test-Path $jmods) { echo "jmod count: $((Get-ChildItem $jmods -File).Count)" }
+
       - name: Build release application image
         shell: bash
         run: ./gradlew :desktopApp:createReleaseDistributable --no-daemon --stacktrace
