@@ -1,4 +1,7 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import java.time.LocalDateTime
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 
 plugins {
     alias(libs.plugins.android.application)
@@ -26,25 +29,9 @@ val releaseKeystorePassword = System.getenv("AKTOOL_KEYSTORE_PASSWORD")
 val releaseKeyAlias = System.getenv("AKTOOL_KEY_ALIAS")
 val releaseKeyPassword = System.getenv("AKTOOL_KEY_PASSWORD")
 val hasReleaseSigning = releaseKeystore != null &&
-    !releaseKeystorePassword.isNullOrBlank() &&
-    !releaseKeyAlias.isNullOrBlank() &&
-    !releaseKeyPassword.isNullOrBlank()
-
-/*
- * Version is overridable from the command line so a release can be built straight from a tag
- * (see .github/workflows/build.yml):
- *
- *   ./gradlew :androidApp:assembleRelease -Paktool.versionName=x.x.x -Paktool.versionCode=xx
- *
- * Without those properties the values below are used. `versionCode` must keep increasing, or
- * Android refuses to install the new build over an older one.
- */
-val appVersionName: String = (findProperty("aktool.versionName") as String?)
-    ?.takeIf { it.isNotBlank() }
-    ?: "2.0.0"
-val appVersionCode: Int = (findProperty("aktool.versionCode") as String?)
-    ?.toIntOrNull()
-    ?: 100
+        !releaseKeystorePassword.isNullOrBlank() &&
+        !releaseKeyAlias.isNullOrBlank() &&
+        !releaseKeyPassword.isNullOrBlank()
 
 android {
     namespace = "com.rainccup.aktool"
@@ -54,8 +41,8 @@ android {
         applicationId = "com.rainccup.aktool"
         minSdk = 28
         targetSdk = 37
-        versionCode = appVersionCode
-        versionName = appVersionName
+        versionCode = 201
+        versionName = project.version.toString()
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
@@ -92,6 +79,19 @@ android {
 kotlin {
     compilerOptions {
         jvmTarget.set(JvmTarget.JVM_17)
+    }
+}
+
+androidComponents {
+    val gitHash = providers.exec {
+        commandLine("git", "rev-parse", "--short", "HEAD")
+    }.standardOutput.asText.getOrElse("nogit").trim()
+    val format = LocalDateTime.now(ZoneId.of("Asia/Shanghai"))
+        .format(DateTimeFormatter.ofPattern("yyyyMMdd-HHmm"))
+    onVariants(selector().withBuildType("release")) { variant ->
+        variant.outputs.forEach { output ->
+            output.outputFileName.set("${rootProject.name}_${variant.name}_v${version}_${format}_${gitHash}")
+        }
     }
 }
 

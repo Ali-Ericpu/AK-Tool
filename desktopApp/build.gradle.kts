@@ -1,3 +1,4 @@
+import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
@@ -25,16 +26,14 @@ dependencies {
     implementation(libs.koin.core)
 }
 
-val desktopPackageVersion: String = (findProperty("aktool.versionName") as String?)
-    ?.takeIf { it.isNotBlank() }
-    ?: "2.0.0"
-
 compose.desktop {
     application {
         mainClass = "com.rainccup.aktool.MainKt"
         nativeDistributions {
-            packageVersion = desktopPackageVersion
+            packageVersion = version.toString()
             packageName = "AK Tool"
+            targetFormats(TargetFormat.Msi, TargetFormat.Exe)
+            licenseFile.set(rootProject.file("LICENSE"))
             windows {
                 iconFile.set(rootProject.file("assets/app-icon/icon.ico"))
             }

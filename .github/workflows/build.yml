@@ -55,17 +55,8 @@ jobs:
             echo "::warning::KEYSTORE_BASE64 is not set - the release APK will be UNSIGNED and cannot be installed."
           fi
 
-      - name: Resolve version from the tag
-        shell: bash
-        run: |
-          if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
-            echo "AKTOOL_VERSION_NAME=${GITHUB_REF_NAME#v}" >> "$GITHUB_ENV"
-          else
-            echo "AKTOOL_VERSION_NAME=" >> "$GITHUB_ENV"
-          fi
-
       - name: Build release APK
-        run: ./gradlew :androidApp:assembleRelease -Paktool.versionName="$AKTOOL_VERSION_NAME" -Paktool.versionCode="${{ github.run_number }}" --no-daemon --stacktrace
+        run: ./gradlew :androidApp:assembleRelease --no-daemon --stacktrace
 
       - name: Verify APK signature
         run: |
@@ -98,32 +89,38 @@ jobs:
           java-version: '25'
           cache: gradle
 
-      - name: Resolve version from the tag
+      - name: Build release application image
         shell: bash
+        run: ./gradlew :desktopApp:createReleaseDistributable --no-daemon --stacktrace
+
+      # jpackage only looks for WiX on PATH, and the runner image may not ship it, so install it.
+      # This is best-effort too: the packaging step below stays non-fatal either way.
+      - name: Install WiX toolset (best effort)
+        continue-on-error: true
+        shell: pwsh
         run: |
-          if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
-            echo "AKTOOL_VERSION_NAME=${GITHUB_REF_NAME#v}" >> "$GITHUB_ENV"
-          else
-            echo "AKTOOL_VERSION_NAME=" >> "$GITHUB_ENV"
-          fi
+          choco install wixtoolset -y --no-progress
+          where.exe candle.exe
+          where.exe light.exe
 
-      - name: Build application image
-        shell: bash
-        run: ./gradlew :desktopApp:createDistributable -Paktool.versionName="$AKTOOL_VERSION_NAME" --no-daemon --stacktrace
-
-      # Produces an .msi / .exe installer. jpackage needs the WiX toolset for that, which the
-      # runner image may not provide, so a failure here does not fail the job: the zipped
-      # application image below already contains the launcher executable.
-      - name: Build installer (best effort)
+      # Two separate best-effort steps: packageReleaseDistributionForCurrentOS depends on both
+      # formats, so one failing format would otherwise abort the other one too. A failure here
+      # does not fail the job: the zipped application image below contains the launcher.
+      - name: Build MSI installer (best effort)
         continue-on-error: true
         shell: bash
-        run: ./gradlew :desktopApp:packageDistributionForCurrentOS -Paktool.versionName="$AKTOOL_VERSION_NAME" --no-daemon --stacktrace
+        run: ./gradlew :desktopApp:packageReleaseMsi --no-daemon --stacktrace
+
+      - name: Build EXE installer (best effort)
+        continue-on-error: true
+        shell: bash
+        run: ./gradlew :desktopApp:packageReleaseExe --no-daemon --stacktrace
 
       - name: Zip application image
         shell: pwsh
         run: |
-          $app = Get-ChildItem "desktopApp/build/compose/binaries/main/app" -Directory | Select-Object -First 1
-          if (-not $app) { throw "application image not found under desktopApp/build/compose/binaries/main/app" }
+          $app = Get-ChildItem "desktopApp/build/compose/binaries/main-release/app" -Directory | Select-Object -First 1
+          if (-not $app) { throw "application image not found under desktopApp/build/compose/binaries/main-release/app" }
           Compress-Archive -Path (Join-Path $app.FullName '*') -DestinationPath "AK-Tool-windows.zip"
           Get-Item "AK-Tool-windows.zip" | Select-Object Name, Length
 
@@ -140,8 +137,8 @@ jobs:
           name: AK-Tool-windows-installer
           if-no-files-found: ignore
           path: |
-            desktopApp/build/compose/binaries/main/msi/*.msi
-            desktopApp/build/compose/binaries/main/exe/*.exe
+            desktopApp/build/compose/binaries/main-release/msi/*.msi
+            desktopApp/build/compose/binaries/main-release/exe/*.exe
 
   release:
     name: Attach artifacts to release

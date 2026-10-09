@@ -7,3 +7,6 @@ plugins {
     alias(libs.plugins.kotlin.jvm) apply false
     alias(libs.plugins.android.multiplatform.library) apply false
 }
+allprojects {
+    version = "2.0.1"
+}
