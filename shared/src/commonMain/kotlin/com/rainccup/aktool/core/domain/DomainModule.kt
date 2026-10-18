@@ -22,4 +22,7 @@ val domainModule = module {
 
     // 只读表查询门面：
     single { GameTableQuery(get()) }
+
+    // 干员数据的唯一来源：列表页与详情页共享，详情页保存后就地更新。
+    single { CharacterStore() }
 }

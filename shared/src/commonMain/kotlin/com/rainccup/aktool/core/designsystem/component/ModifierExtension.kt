@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.layout.layout
@@ -25,4 +26,4 @@ fun Modifier.offsetPercent(offsetPercentX: Float = 0f, offsetPercentY: Float = 0
 fun Modifier.roundedBackground(
     color: Color = MiuixTheme.colorScheme.background.copy(alpha = 0.95f),
     shape: Shape = RoundedCornerShape(16.dp)
-) = background(color = color, shape = shape)
+) = clip(shape).background(color)

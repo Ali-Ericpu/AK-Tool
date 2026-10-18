@@ -26,7 +26,7 @@ fun createHttpClient(
         install(Logging) {
             logger = object : Logger {
                 override fun log(message: String) {
-                    co.touchlab.kermit.Logger.i { message }
+                    co.touchlab.kermit.Logger.i(tag = "KTOR") { message }
                 }
             }
             level = LogLevel.INFO

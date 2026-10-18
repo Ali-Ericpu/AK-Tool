@@ -48,6 +48,7 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -116,26 +117,28 @@ import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 @Composable
 fun CharacterPage(
-    updateChar: Character?,
     onOpenDetail: (Character) -> Unit,
 ) {
     val viewModel: CharacterViewModel = koinViewModel()
     val splash by viewModel.splash.collectAsState()
     val showLoadAnimate by viewModel.loadAnimate.collectAsStateWithLifecycle()
     val currentProfession by viewModel.profession.collectAsStateWithLifecycle()
+    val characters by viewModel.characters.collectAsStateWithLifecycle()
     val selectProfession by viewModel.isSelect.collectAsStateWithLifecycle()
     val professions by remember { mutableStateOf(Profession.entries.toList()) }
     val coroutineScope = rememberCoroutineScope()
     val professionOffsetX by animateFloatAsState(if (selectProfession) 0f else 1.2f, label = "")
     val menuOffsetX by animateFloatAsState(if (!selectProfession) 0f else 1.5f, label = "")
     val lazyGridState = rememberLazyGridState()
-    val baseDensity = LocalDensity.current
-    val uiScale = platformUiScale()
-    LaunchedEffect(updateChar) {
-        updateChar?.let { char ->
-            viewModel.updateCharData(char)
+    var lastProfession by rememberSaveable { mutableStateOf(currentProfession) }
+    LaunchedEffect(currentProfession) {
+        if (lastProfession != currentProfession) {
+            lastProfession = currentProfession
+            lazyGridState.animateScrollToItem(0)
         }
     }
+    val baseDensity = LocalDensity.current
+    val uiScale = platformUiScale()
     PullToRefreshBox(
         isRefreshing = showLoadAnimate,
         onRefresh = viewModel::initCharData,
@@ -152,7 +155,7 @@ fun CharacterPage(
                     state = lazyGridState,
                     modifier = Modifier.fillMaxSize()
                 ) {
-                    items(viewModel.characters, key = { it.instId }) { char ->
+                    items(characters, key = { it.instId }) { char ->
                         CharacterCard(
                             modifier = Modifier.characterCardSharedElement(char.instId),
                             char = char,
@@ -186,9 +189,6 @@ fun CharacterPage(
                                             viewModel.changeSelectState(false)
                                         } else {
                                             viewModel.selectProfession("ALL")
-                                            coroutineScope.launch {
-                                                lazyGridState.scrollToItem(0)
-                                            }
                                         }
                                     },
                                     modifier = Modifier
@@ -221,9 +221,6 @@ fun CharacterPage(
                                             .height(42.dp)
                                             .clickable {
                                                 viewModel.selectProfession(it.name)
-                                                coroutineScope.launch {
-                                                    lazyGridState.scrollToItem(0)
-                                                }
                                             }
                                     )
                                     if (currentProfession == it.name) {

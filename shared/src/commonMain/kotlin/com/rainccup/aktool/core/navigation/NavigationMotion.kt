@@ -30,30 +30,42 @@ object NavigationMotion {
     val fadeSpec = tween<Float>(durationMillis = DURATION_MS, easing = easing)
     val slideSpec = tween<IntOffset>(durationMillis = DURATION_MS, easing = easing)
 
+    /**
+     * 把"场景里表示目的地的那个值"还原成路由。
+     *
+     * `SinglePaneScene.key` 取的就是 `NavEntry.contentKey`（见 SinglePaneSceneStrategy 的字节码），
+     * 而默认值是 `defaultContentKey()` 拼出来的字符串，形如
+     * `Home:class com.rainccup.aktool.core.navigation.AppRoute$Home`；
+     * Android 上没有 kotlin-reflect，还会多出 `" (Kotlin reflection is not available)"` 后缀。
+     *
+     * 认法：取字符串**最后一个** `$` 段（嵌套类）或 `.` 段（顶层类）里的类名字符，与 tab 的类名精确比对。
+     * 这样详情页的 `…$CharacterDetail` 不会被误判成 `Character`；认不出就返回 null，
+     * 调用方退化成"非 tab"（下钻动画），绝不会把 tab 之间的方向全算成同一个。
+     */
+    fun routeOf(candidate: Any?): AppRoute? = when (candidate) {
+        is AppRoute -> candidate
+        is Pair<*, *> -> (candidate.first as? AppRoute)
+            ?: tabs.firstOrNull { it.toString() == candidate.first?.toString() }
+        is String -> {
+            val simpleName = candidate.substringAfterLast('$')
+                .substringAfterLast('.')
+                .trim()
+                .takeWhile { it.isLetterOrDigit() || it == '_' }
+            tabs.firstOrNull { it::class.simpleName == simpleName }
+        }
+        else -> null
+    }
+
     fun isTab(route: AppRoute?): Boolean = route in tabs
 
-    /** 路由的标签名，需与 `Scene.key` 里 `"${key::class}"` 的末段保持一致。 */
-    fun label(route: AppRoute): String = when (route) {
-        AppRoute.Home -> "Home"
-        AppRoute.Character -> "Character"
-        AppRoute.Extra -> "Extra"
-        AppRoute.Setting -> "Setting"
-        is AppRoute.CharacterDetail -> "CharacterDetail"
-    }
-
     /**
-     * 从 `Scene.key` 解析目的地在标签栏中的序号；非 tab（含详情页）返回 -1。
+     * 目的地在标签栏中的序号；非 tab（含详情页）返回 -1。
      *
-     * `SinglePaneSceneStrategy` 把 `entries.last().contentKey` 直接当作 `Scene.key`，
-     * 而 `contentKey` 是 `Pair("$key", "${key::class}")`——**不是** AppRoute 本身。
-     * 曾经在这里写成 `scene.key as? AppRoute`，结果恒为 null、方向判定永远是兜底值，
-     * 表现为"点任何 tab 都往同一个方向动"。所以只解析类名，不依赖类型转换。
+     * 调用方直接传目的地路由本身（来自 `Scene.entries`，类型就是 AppRoute）。
+     * 以前这里从 `Scene.key` 里解析 `Pair` 与类名，那是 Navigation3 的内部形状：
+     * 库一升级就全部解析失败、序号恒为 -1，表现是"点任何 tab 都往同一个方向动"。
      */
-    fun tabIndexOfSceneKey(key: Any?): Int {
-        val text = (key as? Pair<*, *>)?.first?.toString() ?: return -1
-        val simple = text.substringAfterLast('.').substringAfterLast('$')
-        return tabs.indexOfFirst { label(it) == simple }
-    }
+    fun tabIndexOf(route: AppRoute?): Int = tabs.indexOf(route)
 
     /**
      * 一次目的地变更该往哪边移动；方向只由标签栏序号决定。

@@ -14,20 +14,27 @@ class GameTableRepository(
     private val api: ApiClient,
 ) {
     private val jsonFiles =
-        listOf("character_table.json", "favor_table.json", "uniequip_table.json")
+        listOf("character_table.json", "favor_table.json", "uniequip_table.json", "skin_table.json")
 
     var characterTable: NestingMap<Any?> = emptyMap()
         private set
     private var favorTable: Map<String, Any?> = emptyMap()
     private var uniequipTable: Map<String, Any?> = emptyMap()
+    var skinTable: Map<String, Any?> = emptyMap()
+        private set
 
     suspend fun init(): Boolean {
-        if (characterTable.isNotEmpty() && favorTable.isNotEmpty()) return true
+        if (characterTable.isNotEmpty() && favorTable.isNotEmpty()
+            && uniequipTable.isNotEmpty() && skinTable.isNotEmpty()
+        ) {
+            return true
+        }
         val missing = jsonFiles.any { !fileExists("${paths.dataDir}/excel/$it") }
         return !missing && withContext(Dispatchers.IO) {
             characterTable = decodeToMap(readFileText("${paths.dataDir}/excel/${jsonFiles[0]}")!!)
             favorTable = decodeToMap(readFileText("${paths.dataDir}/excel/${jsonFiles[1]}")!!)
             uniequipTable = decodeToMap(readFileText("${paths.dataDir}/excel/${jsonFiles[2]}")!!)
+            skinTable = decodeToMap(readFileText("${paths.dataDir}/excel/${jsonFiles[3]}")!!)
             true
         }
     }
@@ -40,6 +47,7 @@ class GameTableRepository(
                 0 -> characterTable = decodeToMap(text)
                 1 -> favorTable = decodeToMap(text)
                 2 -> uniequipTable = decodeToMap(text)
+                3 -> skinTable = decodeToMap(text)
             }
         }
     }

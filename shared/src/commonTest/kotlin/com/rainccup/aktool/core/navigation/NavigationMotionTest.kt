@@ -3,6 +3,7 @@ package com.rainccup.aktool.core.navigation
 import com.rainccup.aktool.core.model.Character
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 /**
@@ -131,36 +132,65 @@ class NavigationMotionTest {
     /**
      * 回归测试：方向判定曾经恒为兜底值。
      *
-     * `SinglePaneSceneStrategy` 把 `NavEntry.contentKey` 当作 `Scene.key`，而它是
-     * `Pair("$key", "${key::class}")`，**不是** AppRoute。原先写成 `scene.key as? AppRoute`
-     * 于是恒为 null、`direction` 恒返回兜底值 Right——表现是"点任何 tab 都朝同一个方向动"，
-     * 且不会有任何报错。
+     * 以前序号是从 `Scene.key` 的字符串 / Pair 形状里解析的（那是 Navigation3 的内部形状），
+     * 库一升级就全部解析失败、序号恒为 -1，于是所有 tab 切换都退化成同一个方向、
+     * 且不会有任何报错。现在直接按路由对象取序号。
      */
     @Test
-    fun sceneKeyResolvesToTabIndex() {
+    fun tabRouteResolvesToItsBarIndex() {
         NavigationMotion.tabs.forEachIndexed { index, route ->
-            val key = Pair("$route", "class com.rainccup.aktool.core.navigation.AppRoute\$${
-                NavigationMotion.label(route)
-            }")
             assertEquals(
                 index,
-                NavigationMotion.tabIndexOfSceneKey(key),
-                "key for $route must resolve to tab index $index",
+                NavigationMotion.tabIndexOf(route),
+                "route $route must resolve to tab index $index",
             )
         }
     }
 
     @Test
-    fun nonTabSceneKeyResolvesToMinusOne() {
+    fun nonTabDestinationResolvesToMinusOne() {
         // 详情页在标签栏里没有位置，必须回到兜底分支而不是被误判成某个 tab。
-        val detailKey = Pair(
-            "CharacterDetail(char=...)",
-            "class com.rainccup.aktool.core.navigation.AppRoute\$CharacterDetail",
-        )
-        assertEquals(-1, NavigationMotion.tabIndexOfSceneKey(detailKey))
-        assertEquals(-1, NavigationMotion.tabIndexOfSceneKey(null))
-        assertEquals(-1, NavigationMotion.tabIndexOfSceneKey("not-a-pair"))
-        assertEquals(-1, NavigationMotion.tabIndexOfSceneKey(Pair("nonsense", "x")))
+        assertEquals(-1, NavigationMotion.tabIndexOf(detail))
+        assertEquals(-1, NavigationMotion.tabIndexOf(null))
+    }
+
+    /**
+     * Android 上没有 kotlin-reflect，`KClass.toString()` 会带上
+     * `" (Kotlin reflection is not available)"` 后缀（桌面 JVM 上没有）。
+     *
+     * 这个差异曾经让序号恒为 -1：只在 Android 上退化成"所有 tab 同一方向"，
+     * 而桌面跑出来的测试全绿。两种形态都必须能解析。
+     */
+    @Test
+    fun androidStyleContentKeyWithReflectionNoticeResolves() {
+        val notice = " (Kotlin reflection is not available)"
+        NavigationMotion.tabs.forEach { route ->
+            val contentKey =
+                "$route:class com.rainccup.aktool.core.navigation.AppRoute\$${route::class.simpleName}$notice"
+            assertEquals(
+                route,
+                NavigationMotion.routeOf(contentKey),
+                "android contentKey for $route must resolve back to it",
+            )
+        }
+        val detailKey =
+            "CharacterDetail(char=…):class " +
+                "com.rainccup.aktool.core.navigation.AppRoute\$CharacterDetail$notice"
+        assertNull(NavigationMotion.routeOf(detailKey))
+    }
+
+    /**
+     * 路由对象本身，以及 (路由, 类名) 的旧式 Pair，都要能认。
+     *
+     * 真实的 contentKey 字符串（`Home:class …AppRoute$Home`）由 desktopTest 里的
+     * `ContentKeyResolutionTest` 用库自己的 `defaultContentKey` 验证，这里只覆盖对象形态。
+     */
+    @Test
+    fun routeObjectsAndLegacyPairShapesResolve() {
+        assertEquals(AppRoute.Home, NavigationMotion.routeOf(AppRoute.Home))
+        assertEquals(AppRoute.Extra, NavigationMotion.routeOf(Pair(AppRoute.Extra, "x")))
+        assertNull(NavigationMotion.routeOf("nonsense"))
+        assertNull(NavigationMotion.routeOf(null))
     }
 
     @Test

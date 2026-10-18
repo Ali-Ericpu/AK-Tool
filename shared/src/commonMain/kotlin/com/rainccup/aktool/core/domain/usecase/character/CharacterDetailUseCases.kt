@@ -1,11 +1,16 @@
 package com.rainccup.aktool.core.domain.usecase.character
 
+import com.rainccup.aktool.core.common.NestingMap
+import com.rainccup.aktool.core.common.getTyped
 import com.rainccup.aktool.core.data.datasource.GameTableRepository
 import com.rainccup.aktool.core.data.repository.AdminRepository
 import com.rainccup.aktool.core.model.ApiResult
 import com.rainccup.aktool.core.model.Character
 import com.rainccup.aktool.core.model.SaveCharRequest
+import com.rainccup.aktool.resources.Res
+import com.rainccup.aktool.resources.default_skin
 import kotlinx.serialization.json.JsonElement
+import org.jetbrains.compose.resources.getString
 import kotlin.math.min
 
 /**
@@ -68,7 +73,7 @@ class CharacterDetailUseCase(
 
     /** 精英满级：解锁全部模组、未选中模组时选第一个、皮肤 #1 且有 #2 时切换到 #2。 */
     fun applySaveRules(char: Character): Character {
-        var result = char
+        var result = char.copy(favorPoint = gameTable.getRealFavPoint(char.favorPoint))
         if (result.evolvePhase == 2) {
             if (result.equip.isNotEmpty()) {
                 val first = result.equip.keys.first()
@@ -98,14 +103,19 @@ class CharacterDetailUseCase(
         }
     }
 
-    /** 提交：好感度先换算成百分比点，再发请求。 */
     suspend fun saveCharacter(char: Character): ApiResult<JsonElement?> =
-        admin.saveCharacter(
-            SaveCharRequest(
-                char.instId,
-                char.copy(favorPoint = gameTable.getRealFavPoint(char.favorPoint)),
-            ),
-        )
+        admin.saveCharacter(SaveCharRequest(char.instId, char))
+
+    suspend fun getSkinList(charId: String): List<Pair<String, String>> {
+        return gameTable.skinTable.getTyped<NestingMap<Any>>("charSkins")!!
+            .filter { (skinId, data) ->
+                skinId.startsWith(charId) && data.getTyped<String>("charId") == charId
+            }.map { (skinId, data) ->
+                val skinName =
+                    data.getTyped<Map<String, Any>>("displaySkin")!!.getTyped<String>("skinName")
+                skinId to (skinName ?: getString(Res.string.default_skin))
+            }
+    }
 
     data class CharacterLimits(
         val maxEvoPhase: Int,

@@ -23,8 +23,6 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.derivedStateOf
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -40,6 +38,7 @@ import androidx.navigation3.ui.NavDisplay
 import androidx.savedstate.serialization.SavedStateConfiguration
 import com.rainccup.aktool.core.designsystem.LargeScreenBreakpoint
 import com.rainccup.aktool.core.designsystem.LocalLargeScreen
+import com.rainccup.aktool.core.domain.CharacterStore
 import com.rainccup.aktool.core.message.MessageBus
 import com.rainccup.aktool.core.navigation.AppRoute
 import com.rainccup.aktool.core.navigation.LocalSharedTransitionScope
@@ -205,15 +204,28 @@ private fun popTransform(direction: SlideDirection): ContentTransform =
  * 进入：tab 之间按标签栏顺序位移（底部标签栏横向 / 左侧导航栏竖向），
  * 下钻详情页按 tab 位置推入。
  *
- * 方向用**标签栏序号**判定（见 [NavigationMotion.tabIndexOfSceneKey]）。
+ * 方向用**标签栏序号**判定（见 [NavigationMotion.tabIndexOf]）。
  * 接收者显式写成 `AnimatedContentTransitionScope<Scene<AppRoute>>`：它同时把
  * NavDisplay 的 T 钉成 AppRoute，否则 T 会被推成 NavKey、接收者退化成 Scene<*>。
  */
+/**
+ * 目的地对应的标签栏序号；非 tab（详情页等）返回 -1。
+ *
+ * `NavEntry.key` 是 private，所以读公开的 `contentKey`；再退回 `Scene.key`。
+ * 两端都交给 [NavigationMotion.routeOf] 还原（它同时处理路由对象、旧式 Pair 与
+ * 形如 `Home:class …AppRoute$Home` 的字符串）。
+ */
+private fun Scene<AppRoute>.tabIndexOfDestination(): Int {
+    val destination = entries.lastOrNull()?.let { NavigationMotion.routeOf(it.contentKey) }
+        ?: NavigationMotion.routeOf(key)
+    return NavigationMotion.tabIndexOf(destination)
+}
+
 private fun AnimatedContentTransitionScope<Scene<AppRoute>>.navTransitionSpec(
     vertical: Boolean,
 ): ContentTransform {
-    val fromIndex = NavigationMotion.tabIndexOfSceneKey(initialState.key)
-    val toIndex = NavigationMotion.tabIndexOfSceneKey(targetState.key)
+    val fromIndex = initialState.tabIndexOfDestination()
+    val toIndex = targetState.tabIndexOfDestination()
     val direction = NavigationMotion.direction(fromIndex, toIndex)
     return if (NavigationMotion.sameLevel(fromIndex, toIndex)) {
         tabSwitchTransform(direction, vertical)
@@ -234,8 +246,8 @@ private fun AnimatedContentTransitionScope<Scene<AppRoute>>.navTransitionSpec(
 private fun AnimatedContentTransitionScope<Scene<AppRoute>>.navPopTransitionSpec(
     vertical: Boolean,
 ): ContentTransform {
-    val fromIndex = NavigationMotion.tabIndexOfSceneKey(initialState.key)
-    val toIndex = NavigationMotion.tabIndexOfSceneKey(targetState.key)
+    val fromIndex = initialState.tabIndexOfDestination()
+    val toIndex = targetState.tabIndexOfDestination()
     val entering = NavigationMotion.direction(fromIndex, toIndex)
     return if (NavigationMotion.sameLevel(fromIndex, toIndex)) {
         tabSwitchTransform(entering, vertical)
@@ -252,8 +264,8 @@ private fun AnimatedContentTransitionScope<Scene<AppRoute>>.navPopTransitionSpec
 private fun AnimatedContentTransitionScope<Scene<AppRoute>>.navPredictivePopSpec(
     vertical: Boolean,
 ): ContentTransform {
-    val fromIndex = NavigationMotion.tabIndexOfSceneKey(initialState.key)
-    val toIndex = NavigationMotion.tabIndexOfSceneKey(targetState.key)
+    val fromIndex = initialState.tabIndexOfDestination()
+    val toIndex = targetState.tabIndexOfDestination()
     return if (NavigationMotion.sameLevel(fromIndex, toIndex)) {
         tabSwitchTransform(NavigationMotion.direction(fromIndex, toIndex), vertical)
     } else {
@@ -282,6 +294,7 @@ private fun AnimatedContentTransitionScope<Scene<AppRoute>>.navPredictivePopSpec
 @Composable
 fun AppNavHost() {
     val backStack = rememberNavBackStack(navConfig, AppRoute.Home)
+    val characterStore: CharacterStore = koinInject()
     val homeLabel = stringResource(Res.string.home)
     val characterLabel = stringResource(Res.string.character)
     val extraLabel = stringResource(Res.string.extra)
@@ -314,7 +327,7 @@ fun AppNavHost() {
 
     // 大屏（桌面 / 平板横屏）改用左侧导航栏；窄屏仍保持底部标签栏，两种布局共用同一份 tabs 与选中逻辑。
     BoxWithConstraints {
-        val useNavigationRail by remember { derivedStateOf { maxWidth >= LargeScreenBreakpoint } }
+        val useNavigationRail = maxWidth >= LargeScreenBreakpoint
         Scaffold(
             snackbarHost = { SnackbarHost(state = snackbarHostState) },
             containerColor = Color.Transparent,
@@ -384,7 +397,7 @@ fun AppNavHost() {
                                 }
 
                                 entry<AppRoute.Character> {
-                                    CharacterPage(it.char) { char ->
+                                    CharacterPage { char ->
                                         backStack.add(AppRoute.CharacterDetail(char))
                                     }
                                 }
@@ -401,11 +414,9 @@ fun AppNavHost() {
                                     CharacterDetailPage(
                                         character = it.char,
                                         onSaved = { char ->
+                                            // 唯一数据源就地更新：列表页会据此自动重算可见列表。
+                                            char?.let(characterStore::upsert)
                                             backStack.removeLastOrNull()
-                                            val last = backStack.lastOrNull()
-                                            if (last is AppRoute.Character) {
-                                                last.char = char
-                                            }
                                         }
                                     )
                                 }
