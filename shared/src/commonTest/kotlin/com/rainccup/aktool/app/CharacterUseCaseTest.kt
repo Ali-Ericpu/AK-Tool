@@ -162,7 +162,9 @@ class CharacterUseCaseTest {
         )
         val useCase = CharacterUseCase(admin, gameTable)
         // 与 CharacterViewModel.initCharData 的执行顺序一致：先读表，再解析名册。
-        runBlocking { useCase.init() }
+        // 断言返回值：表不全时 init() 会静默返回 false，后面的解析就会得到空名册，
+        // 表现成"expected 2 but was 0"这种难查的失败。
+        assertTrue(runBlocking { useCase.init() }, "excel tables must load")
         return useCase
     }
 
@@ -175,11 +177,12 @@ class CharacterUseCaseTest {
         }
     }
 
-    /** 三张 excel 表就位，`GameTableRepository.init()` 才会返回 true。 */
+    /** 四张 excel 表就位，`GameTableRepository.init()` 才会返回 true（皮肤表是后加的）。 */
     private fun writeExcelTables(paths: AppPaths) {
         val dir = "${paths.dataDir}/excel"
         writeFileText("$dir/character_table.json", charTable)
         writeFileText("$dir/favor_table.json", """{"favorFrames":[{"level":0,"data":{"percent":0}}]}""")
         writeFileText("$dir/uniequip_table.json", """{"equipDict":{}}""")
+        writeFileText("$dir/skin_table.json", """{"charSkins":{}}""")
     }
 }

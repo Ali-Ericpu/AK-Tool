@@ -33,26 +33,26 @@ object NavigationMotion {
     /**
      * 把"场景里表示目的地的那个值"还原成路由。
      *
-     * `SinglePaneScene.key` 取的就是 `NavEntry.contentKey`（见 SinglePaneSceneStrategy 的字节码），
-     * 而默认值是 `defaultContentKey()` 拼出来的字符串，形如
-     * `Home:class com.rainccup.aktool.core.navigation.AppRoute$Home`；
-     * Android 上没有 kotlin-reflect，还会多出 `" (Kotlin reflection is not available)"` 后缀。
+     * `SinglePaneScene.key` 取的就是 `NavEntry.contentKey`（见 SinglePaneSceneStrategy 的字节码）。
+     * 它必须能塞进 Android 的 `Bundle`（`SaveableStateHolder` 拿它当状态键），所以只能保持
+     * Navigation3 默认的字符串形式，形如
+     * `Home:class com.rainccup.aktool.core.navigation.AppRoute$Home`。
      *
-     * 认法：取字符串**最后一个** `$` 段（嵌套类）或 `.` 段（顶层类）里的类名字符，与 tab 的类名精确比对。
-     * 这样详情页的 `…$CharacterDetail` 不会被误判成 `Character`；认不出就返回 null，
-     * 调用方退化成"非 tab"（下钻动画），绝不会把 tab 之间的方向全算成同一个。
+     * 解析只取 `":class "` **之前**那段，与路由自己的 `toString()` 比较：
+     * 两边走的是同一个 `toString()`，所以 R8 改写类名之后仍然相等；
+     * 类名部分（包括 Android 上 `" (Kotlin reflection is not available)"` 后缀）完全不参与判定。
+     * 详情页的 `toString()` 是 `CharacterDetail(char=…)`，不会与任何 tab 相等，因此被判成"非 tab"。
      */
     fun routeOf(candidate: Any?): AppRoute? = when (candidate) {
         is AppRoute -> candidate
         is Pair<*, *> -> (candidate.first as? AppRoute)
             ?: tabs.firstOrNull { it.toString() == candidate.first?.toString() }
+
         is String -> {
-            val simpleName = candidate.substringAfterLast('$')
-                .substringAfterLast('.')
-                .trim()
-                .takeWhile { it.isLetterOrDigit() || it == '_' }
-            tabs.firstOrNull { it::class.simpleName == simpleName }
+            val label = candidate.substringBefore(":class ")
+            tabs.firstOrNull { it.toString() == label }
         }
+
         else -> null
     }
 
