@@ -35,6 +35,7 @@ import com.rainccup.aktool.core.platform.FilePicker
 import com.rainccup.aktool.feature.setting.viewmodel.SettingViewModel
 import com.rainccup.aktool.resources.Res
 import com.rainccup.aktool.resources.admin_key
+import com.rainccup.aktool.resources.app_name_wordmark
 import com.rainccup.aktool.resources.choose_bg
 import com.rainccup.aktool.resources.custom_bg
 import com.rainccup.aktool.resources.dark_mode
@@ -70,7 +71,7 @@ fun SettingPage() {
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
-            text = "AK TOOL",
+            text = stringResource(Res.string.app_name_wordmark),
             fontSize = 42.sp,
             autoSize = TextAutoSize.StepBased(maxFontSize = 30.sp),
             modifier = Modifier

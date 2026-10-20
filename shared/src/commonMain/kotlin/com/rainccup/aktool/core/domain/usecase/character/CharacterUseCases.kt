@@ -6,8 +6,11 @@ import com.rainccup.aktool.core.data.repository.AdminRepository
 import com.rainccup.aktool.core.model.Character
 import com.rainccup.aktool.core.model.GainItemRequest
 import com.rainccup.aktool.core.model.Item
+import com.rainccup.aktool.resources.Res
+import com.rainccup.aktool.resources.error_data
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import org.jetbrains.compose.resources.getString
 
 /**
  * 干员列表页（CharacterViewModel）的用例入口：读表、同步干员、补发干员。
@@ -36,7 +39,7 @@ class CharacterUseCase(
 
         val result = admin.syncCharacter()
         // data 为 null 即接口层失败
-        val payload = result.data ?: error("数据异常")
+        val payload = result.data ?: error(getString(Res.string.error_data))
 
         val characters = LinkedHashMap<String, Character>(payload.size)
         payload.forEach { (instId, char) ->

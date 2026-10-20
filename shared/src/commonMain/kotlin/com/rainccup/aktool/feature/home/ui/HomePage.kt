@@ -32,13 +32,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import com.rainccup.aktool.core.common.validation.checkIntRange
+import com.rainccup.aktool.core.common.validation.coerceToValid
 import com.rainccup.aktool.core.designsystem.LocalLargeScreen
+import com.rainccup.aktool.core.designsystem.component.BirthdayPickerDialog
 import com.rainccup.aktool.core.designsystem.component.EditTextDialog
+import com.rainccup.aktool.core.model.Birthday
 import com.rainccup.aktool.core.model.SaveStatusRequest
 import com.rainccup.aktool.feature.home.viewmodel.HomeViewModel
 import com.rainccup.aktool.resources.Res
 import com.rainccup.aktool.resources.ap
 import com.rainccup.aktool.resources.baseline_home_start
+import com.rainccup.aktool.resources.birthday
+import com.rainccup.aktool.resources.birthday_format
 import com.rainccup.aktool.resources.cls_gacha_tkt
 import com.rainccup.aktool.resources.cls_shard
 import com.rainccup.aktool.resources.cls_ten_gacha_tkt
@@ -136,6 +141,13 @@ fun HomePage() {
                                 },
                                 onValueSave = {
                                     viewModel.updateStatus(SaveStatusRequest(nickName = it))
+                                },
+                            )
+                            BirthdayRow(
+                                value = status.birthday,
+                                label = stringResource(Res.string.birthday),
+                                onValueSave = {
+                                    viewModel.updateStatus(SaveStatusRequest(birthday = it))
                                 },
                             )
                             Row {
@@ -403,6 +415,44 @@ fun LabelTextField(
             it?.let { onValueSave(it) }
             showDialog = !showDialog
         }
+    )
+}
+
+/**
+ * 生日条目：与 [LabelTextField] 同款的 ArrowPreference 行，但点击后弹出的是日期选择器
+ * 而不是输入框。值为空（服务端未设置）时显示占位文案。
+ */
+@Composable
+fun BirthdayRow(
+    value: Birthday?,
+    label: String,
+    modifier: Modifier = Modifier,
+    onValueSave: (Birthday) -> Unit = {},
+) {
+    var showDialog by remember { mutableStateOf(false) }
+    ArrowPreference(
+        title = label,
+        endActions = {
+            Text(
+                text = value?.coerceToValid()
+                    ?.let { stringResource(Res.string.birthday_format, it.month, it.day) }
+                    ?: "-",
+                color = MiuixTheme.colorScheme.onBackground,
+            )
+        },
+        onClick = { showDialog = !showDialog },
+        holdDownState = showDialog,
+        modifier = modifier,
+    )
+    BirthdayPickerDialog(
+        show = showDialog,
+        birthday = value,
+        title = label,
+        onConfirm = {
+            onValueSave(it)
+            showDialog = !showDialog
+        },
+        onCancel = { showDialog = !showDialog },
     )
 }
 

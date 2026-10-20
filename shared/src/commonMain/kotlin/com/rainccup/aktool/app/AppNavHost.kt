@@ -36,6 +36,7 @@ import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.scene.Scene
 import androidx.navigation3.ui.NavDisplay
 import androidx.savedstate.serialization.SavedStateConfiguration
+import co.touchlab.kermit.Logger
 import com.rainccup.aktool.core.designsystem.LargeScreenBreakpoint
 import com.rainccup.aktool.core.designsystem.LocalLargeScreen
 import com.rainccup.aktool.core.domain.CharacterStore
@@ -322,7 +323,10 @@ fun AppNavHost() {
     val messageBus: MessageBus = koinInject()
     val snackbarHostState = remember { SnackbarHostState() }
     LaunchedEffect(messageBus) {
-        messageBus.messages.collectLatest { snackbarHostState.showSnackbar(it) }
+        messageBus.messages.collectLatest {
+            Logger.i(tag = "LOG_MESSAGE") { it }
+            snackbarHostState.showSnackbar(it)
+        }
     }
 
     // 大屏（桌面 / 平板横屏）改用左侧导航栏；窄屏仍保持底部标签栏，两种布局共用同一份 tabs 与选中逻辑。

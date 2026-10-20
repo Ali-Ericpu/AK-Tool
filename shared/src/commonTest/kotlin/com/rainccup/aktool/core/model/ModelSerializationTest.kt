@@ -46,6 +46,36 @@ class ModelSerializationTest {
     }
 
     @Test
+    fun saveStatusRequest_carriesBirthdayAndStillOmitsUnsetOnes() {
+        val withBirthday = JsonUtil.encode(SaveStatusRequest(birthday = Birthday(3, 21)))
+        assertTrue("\"birthday\":{\"month\":3,\"day\":21}" in withBirthday)
+        // 没设置生日时不应出现该字段：null 被 explicitNulls = false 省略
+        assertFalse("birthday" in JsonUtil.encode(SaveStatusRequest(level = 10)))
+    }
+
+    @Test
+    fun status_acceptsMissingBirthdayAndRoundTripsIt() {
+        val raw = """
+            {"nickName":"n","nickNumber":"1145","level":1,"exp":0,"socialPoint":0,
+             "gachaTicket":0,"tenGachaTicket":0,"instantFinishTicket":0,"hggShard":0,
+             "lggShard":0,"recruitLicense":0,"progress":0,"buyApRemainTimes":0,
+             "apLimitUpFlag":0,"uid":"1","ap":0,"maxAp":0,"androidDiamond":0,
+             "iosDiamond":0,"diamondShard":0,"gold":0,"practiceTicket":0,
+             "lastRefreshTs":0,"lastApAddTime":0,"registerTs":0,"lastOnlineTs":0,
+             "serverName":"TERRA","avatarId":"","resume":"","friendNumLimit":0,
+             "monthlySubscriptionStartTime":0,"monthlySubscriptionEndTime":0,
+             "secretary":"","secretarySkinId":"","tipMonthlyCardExpireTs":0,
+             "classicShard":0,"classicGachaTicket":0,"classicTenGachaTicket":0}
+        """.trimIndent()
+        // 旧服务器不带 birthday 字段也必须能解码
+        assertEquals(null, JsonUtil.decode<Status>(raw).birthday)
+        val withoutTail = raw.removeSuffix("}")
+        val withBirthday = JsonUtil.decode<Status>("$withoutTail,\"birthday\":{\"month\":3,\"day\":21}}")
+        assertEquals(Birthday(3, 21), withBirthday.birthday)
+        assertEquals(withBirthday, JsonUtil.decode<Status>(JsonUtil.encode(withBirthday)))
+    }
+
+    @Test
     fun character_minimumFields() {
         val raw = """
             {"instId":1,"charId":"char_002_amiya","favorPoint":0,"potentialRank":0,

@@ -448,6 +448,7 @@ data class Status(
     val classicShard: Int,
     val classicGachaTicket: Int,
     val classicTenGachaTicket: Int,
+    val birthday: Birthday? = null,
 )
 
 @Serializable
@@ -455,12 +456,21 @@ data class Avatar(
     val type: String? = null,
     val id: String? = null,
 )
+
+@Serializable
+data class Birthday(
+    val month: Int,
+    val day: Int,
+)
 ```
 
 Notes:
 
-- Only `flags`, `mainStageProgress`, `avatar` and `globalVoiceLan` are optional; **every other
-  property is required**, so a server response must include them.
+- Only `flags`, `mainStageProgress`, `avatar`, `globalVoiceLan` and `birthday` are optional;
+  **every other property is required**, so a server response must include them.
+- `birthday` carries a **month and day only — there is no year**, so the client cannot tell a
+  leap year from a common one and treats **February as having up to 29 days**. A server value
+  like `2/30` is clamped to `2/29` before it is shown or edited.
 - `flags` is a free-form string→int map; the client stores and echoes it without interpreting
   the keys.
 - Timestamps (`lastRefreshTs`, `lastApAddTime`, `registerTs`, `lastOnlineTs`,
@@ -589,6 +599,7 @@ data class SaveStatusRequest(
     val tryTkt: Int? = null,
     val recTkt: Int? = null,
     val fniTkt: Int? = null,
+    val birthday: Birthday? = null,
 )
 
 @Serializable
@@ -648,6 +659,7 @@ implementing against them:
 | Recruitment licence | `recruitLicense` | `recTkt` |
 | Instant-finish ticket | `instantFinishTicket` | `fniTkt` |
 | Nickname / number / level | `nickName`, `nickNumber`, `level` | same names |
+| Birthday | `birthday` (`Birthday`) | `birthday` (same shape; omitted when `null`) |
 
 The write model also has no counterpart for `exp`, `socialPoint`, `progress`,
 `buyApRemainTimes`, `apLimitUpFlag`, `maxAp` or the avatar/skin/timestamp fields — those are

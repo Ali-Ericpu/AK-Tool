@@ -46,6 +46,7 @@ data class Status(
     val classicShard: Int,
     val classicGachaTicket: Int,
     val classicTenGachaTicket: Int,
+    val birthday: Birthday? = null,
 ) {
     companion object {
         fun placeholder() = Status(
@@ -87,6 +88,7 @@ data class Status(
             classicShard = 0,
             classicGachaTicket = 0,
             classicTenGachaTicket = 0,
+            birthday = null
         )
     }
 }
@@ -95,4 +97,10 @@ data class Status(
 data class Avatar(
     val type: String? = null,
     val id: String? = null,
+)
+
+@Serializable
+data class Birthday(
+    val month: Int,
+    val day: Int
 )

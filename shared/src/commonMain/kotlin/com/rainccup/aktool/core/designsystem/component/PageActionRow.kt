@@ -8,13 +8,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.rainccup.aktool.resources.Res
 import com.rainccup.aktool.resources.cancel
 import org.jetbrains.compose.resources.stringResource
 import top.yukonga.miuix.kmp.basic.Button
-import top.yukonga.miuix.kmp.basic.ButtonDefaults
 import top.yukonga.miuix.kmp.basic.TextButton
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
@@ -71,10 +69,6 @@ private fun SecondaryActionButton(text: String, onClick: () -> Unit, modifier: M
         text = text,
         onClick = onClick,
         modifier = modifier,
-        colors = ButtonDefaults.textButtonColors(
-            color = Color.Transparent,
-            textColor = MiuixTheme.colorScheme.onBackground,
-        ),
     )
 }
 

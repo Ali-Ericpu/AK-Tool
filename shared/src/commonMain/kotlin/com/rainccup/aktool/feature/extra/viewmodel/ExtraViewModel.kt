@@ -14,6 +14,7 @@ import com.rainccup.aktool.core.platform.Messenger
 import com.rainccup.aktool.resources.Res
 import com.rainccup.aktool.resources.copy_success
 import com.rainccup.aktool.resources.game_table_init_fail
+import com.rainccup.aktool.resources.save_success
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -83,7 +84,7 @@ class ExtraViewModel(
             if (result.status != 0) {
                 throw RuntimeException(result.msg)
             }
-            messenger.showSuccess()
+            messenger.show(getString(Res.string.save_success))
         } catch (e: Exception) {
             messenger.show(e.message ?: "error")
         }

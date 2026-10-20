@@ -20,12 +20,13 @@ class MessageBusTest {
     }
 
     @Test
-    fun busMessenger_showSuccess_publishesCorrectText() = runTest {
+    fun busMessenger_publishesTheTextItWasGiven() = runTest {
         val bus = MessageBus()
         val messenger: Messenger = BusMessenger(bus)
         val pending = async { bus.messages.first() }
         yield()
-        messenger.showSuccess()
+        // 文案由调用方用 getString(Res.string.…) 解析；Messenger 只负责原样转发。
+        messenger.show("保存成功")
         assertEquals("保存成功", pending.await())
     }
 }

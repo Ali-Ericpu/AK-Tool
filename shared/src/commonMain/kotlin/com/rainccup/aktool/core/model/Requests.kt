@@ -30,6 +30,7 @@ data class SaveStatusRequest(
     val tryTkt: Int? = null,
     val recTkt: Int? = null,
     val fniTkt: Int? = null,
+    val birthday: Birthday? = null,
 )
 
 @Serializable

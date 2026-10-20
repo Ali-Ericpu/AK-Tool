@@ -36,8 +36,10 @@ import com.rainccup.aktool.core.designsystem.component.CircleIconButton
 import com.rainccup.aktool.feature.splash.viewmodel.SplashViewModel
 import com.rainccup.aktool.resources.Res
 import com.rainccup.aktool.resources.launch_logo
+import com.rainccup.aktool.resources.splash_ad_placeholder
 import kotlinx.coroutines.delay
 import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
@@ -70,7 +72,7 @@ fun SplashPage(viewModel: SplashViewModel = koinViewModel()) {
                         .clip(RoundedCornerShape(8.dp)),
                 )
                 Text(
-                    text = "广告位招租",
+                    text = stringResource(Res.string.splash_ad_placeholder),
                     modifier = Modifier.padding(top = 40.dp),
                 )
             }

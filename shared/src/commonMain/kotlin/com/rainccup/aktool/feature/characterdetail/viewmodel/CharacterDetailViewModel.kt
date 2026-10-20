@@ -7,11 +7,14 @@ import com.rainccup.aktool.core.domain.usecase.character.CharacterDetailUseCase
 import com.rainccup.aktool.core.model.Character
 import com.rainccup.aktool.core.platform.AppScope
 import com.rainccup.aktool.core.platform.Messenger
+import com.rainccup.aktool.resources.Res
+import com.rainccup.aktool.resources.save_success
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.getString
 
 class CharacterDetailViewModel(
     private val useCase: CharacterDetailUseCase,
@@ -62,7 +65,7 @@ class CharacterDetailViewModel(
                 if (result.status != 0) {
                     throw RuntimeException(result.msg)
                 }
-                messenger.showSuccess()
+                messenger.show(getString(Res.string.save_success))
             } catch (e: CancellationException) {
                 // 取消不是业务错误：原样抛出让协程按取消语义结束，不要弹给用户。
                 throw e

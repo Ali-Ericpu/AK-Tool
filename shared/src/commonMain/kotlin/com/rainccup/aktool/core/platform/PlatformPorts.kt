@@ -8,7 +8,6 @@ interface AppPaths {
 
 interface Messenger {
     fun show(message: String)
-    fun showSuccess()
 }
 
 interface ClipboardPort {

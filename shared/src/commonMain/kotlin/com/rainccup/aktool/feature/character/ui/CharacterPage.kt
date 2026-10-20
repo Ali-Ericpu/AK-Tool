@@ -83,6 +83,7 @@ import com.rainccup.aktool.core.platform.platformUiScale
 import com.rainccup.aktool.core.platform.urlEncode
 import com.rainccup.aktool.feature.character.viewmodel.CharacterViewModel
 import com.rainccup.aktool.resources.Res
+import com.rainccup.aktool.resources.cd_select
 import com.rainccup.aktool.resources.char_id
 import com.rainccup.aktool.resources.character_default_skill_icon
 import com.rainccup.aktool.resources.character_elite_0
@@ -100,6 +101,7 @@ import com.rainccup.aktool.resources.character_potential_5
 import com.rainccup.aktool.resources.character_star_mark
 import com.rainccup.aktool.resources.character_star_mark_edit
 import com.rainccup.aktool.resources.equip_bg
+import com.rainccup.aktool.resources.longpress_to_copy
 import com.rainccup.aktool.resources.lv
 import com.rainccup.aktool.resources.profession_select
 import com.rainccup.aktool.resources.search
@@ -226,7 +228,7 @@ fun CharacterPage(
                                     if (currentProfession == it.name) {
                                         Image(
                                             painter = painterResource(Res.drawable.profession_select),
-                                            contentDescription = "select",
+                                            contentDescription = stringResource(Res.string.cd_select),
                                             alignment = Alignment.CenterEnd,
                                             modifier = Modifier.height(42.dp)
                                         )
@@ -236,6 +238,7 @@ fun CharacterPage(
                         }
                     }
                     FloatingToolbar(
+                        color = MiuixTheme.colorScheme.background.copy(alpha = 0.9f),
                         modifier = Modifier.offsetPercent(offsetPercentX = menuOffsetX)
                     ) {
                         Column {
@@ -538,10 +541,10 @@ fun SearchCharDialog(
             tint = MiuixTheme.colorScheme.onBackground
         )
     }
-
     BasicDialog(
         show = show,
         title = stringResource(Res.string.search),
+        summary = stringResource(Res.string.longpress_to_copy).takeIf { charNameList.isNotEmpty() },
         onCancel = { show = false },
         onConfirm = {
             if (keyword.isNotBlank()) {
