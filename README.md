@@ -6,8 +6,21 @@ Android application that share one code base: UI, domain logic, networking and s
 
 ---
 
+## Screenshots
+
+| Home | Character |
+|---|---|
+| ![Home screen](picture/Home.jpg) | ![Character roster](picture/Character.jpg) |
+
+| Extra | Settings |
+|---|---|
+| ![Extra actions](picture/Extra.jpg) | ![Settings](picture/Setting.jpg) |
+
+---
+
 ## Table of contents
 
+- [Screenshots](#screenshots)
 - [Features](#features)
 - [Tech stack](#tech-stack)
 - [Modules](#modules)
@@ -28,17 +41,18 @@ Android application that share one code base: UI, domain logic, networking and s
 ## Features
 
 **Account status (`Home`)**
-View and edit account-level values — nickname, level, and the various in-game counters —
-with pull-to-refresh against `admin/status/sync` / `admin/status/save`.
+View and edit account-level values — nickname, level, birthday (month and day, no year) and the
+various in-game counters — with pull-to-refresh against `admin/status/sync` /
+`admin/status/save`.
 
 **Character roster (`Character`)**
 A grid of the account's characters, with a profession filter and a name search. Cards show
 artwork, rarity, elite/level badges and skill/equipment state.
 
 **Character detail (`CharacterDetail`)**
-Per-character editing: level, potential, favour points, skills and equipment. Saving writes
-back through `admin/character/save`. The card animates from its grid cell into the detail
-screen using Compose shared-element transitions.
+Per-character editing: level, potential, favour points, skills and equipment, plus a skin picker
+that shows every skin as a thumbnail. Saving writes back through `admin/character/save`. The card
+animates from its grid cell into the detail screen using Compose shared-element transitions.
 
 **Bulk actions and account management (`Extra`)**
 Unlock-all helpers (characters / stages / flags), item grants, account registration and
@@ -54,6 +68,10 @@ window width the bottom tab bar becomes a left-hand navigation rail, and pages t
 the extra room lay their items out two per row. The large-screen decision is made once, in
 `AppNavHost`, and published to pages through `LocalLargeScreen`.
 
+**Localisation**
+UI text lives in `shared/src/commonMain/composeResources/values/` (English, the default and
+fallback) and `values-zh/` (Chinese).
+
 ---
 
 ## Tech stack
@@ -61,7 +79,7 @@ the extra room lay their items out two per row. The large-screen decision is mad
 | Area | Choice | Version |
 |---|---|---|
 | Language | Kotlin (Multiplatform) | 2.4.20 |
-| UI | Compose Multiplatform | 1.12.1 |
+| UI | Compose Multiplatform | 1.12.2 |
 | Design system | Miuix (KMP) | 0.9.4 |
 | Material 3 components | `org.jetbrains.compose.material3` | 1.9.0 |
 | Android Gradle Plugin | AGP | 9.4.1 |
@@ -70,13 +88,15 @@ the extra room lay their items out two per row. The large-screen decision is mad
 | JSON | kotlinx.serialization | 1.11.0 |
 | Coroutines | kotlinx.coroutines | 1.11.0 |
 | DI | Koin | 4.2.2 |
-| Navigation | Navigation3 (back stack + scenes) | 1.2.0-beta01 |
+| Navigation | Navigation3 (back stack + scenes) | 1.2.0-rc01 |
 | Images | Coil 3 | 3.6.3 |
 | Logging | Kermit | 2.2.0 |
 | Testing | kotlin-test, JUnit 4 | 4.13.2 |
 
-Android targets `compileSdk`/`targetSdk` **37**, `minSdk` **28**, `versionCode` **18**,
-`versionName` **1.5.6**.
+Android targets `compileSdk`/`targetSdk` **37**, `minSdk` **28**, `versionCode` **203**,
+`versionName` **2.0.3**. The version itself lives in the root `build.gradle.kts`
+(`allprojects { version = "2.0.3" }`); `versionName` and the desktop `packageVersion` read it
+from there.
 
 ---
 
@@ -94,8 +114,10 @@ The Compose resource class for `:shared` is generated into `com.rainccup.aktool.
 
 ## Requirements
 
-- **JDK 21** for `:desktopApp` (`jvmToolchain(21)`). `:shared` and `:androidApp` compile with
-  `jvmTarget` 17; the Foojay toolchain resolver is enabled, so Gradle can provision the JDK.
+- **JDK 25** for `:desktopApp` (`jvmToolchain(25)`), and the same JDK is pinned for the Gradle
+  daemon in `gradle/gradle-daemon-jvm.properties`. `:shared`'s Android target and `:androidApp`
+  compile with `jvmTarget` 17; the Foojay toolchain resolver is enabled, so Gradle can provision
+  the JDK.
 - **Android SDK** with API 37 platform, referenced from `local.properties` (`sdk.dir=…`).
   `local.properties` is git-ignored and must be created locally.
 - Network access to your own server. The Android app permits cleartext HTTP
@@ -121,7 +143,7 @@ The Compose resource class for `:shared` is generated into `com.rainccup.aktool.
 On Windows use `gradlew.bat`. `:desktopApp` is a standard Compose Desktop application block,
 so the Compose Gradle plugin's packaging tasks apply as well (for example
 `packageDistributionForCurrentOS`); `nativeDistributions` is configured with
-`packageName = "AK Tool"` and `packageVersion = "1.5.6"`.
+`packageName = "AK Tool"` and `packageVersion = version` (= `2.0.3`).
 
 Release builds of `:androidApp` enable `isMinifyEnabled` and `isShrinkResources`. No
 `signingConfigs` are declared in this repository, so a release APK/AAB needs signing details
@@ -139,21 +161,16 @@ supplied by you.
 | `desktop` | `windows-latest` | `AK-Tool-windows` — the application image zipped (it contains the launcher `.exe`), and an `.msi`/`.exe` installer when jpackage can build one |
 | `release` | `ubuntu-latest` | on a `v*` tag, attaches those artifacts to a GitHub release |
 
-Run it from the **Actions** tab, or push a tag such as `v1.5.6` to also publish a release.
+Run it from the **Actions** tab, or push a tag such as `v2.0.3` to also publish a release.
 
 The Android job runs in the **`release` environment**, so it waits for approval before it starts:
 create that environment under Settings → Environments and add required reviewers. The four secrets
 below can live in that environment or at repository level — either way the keystore is only
 unwrapped inside a reviewed run.
 
-The tag also drives the version: pushing `v1.5.7` builds an APK whose `versionName` is `1.5.7`
-(with the desktop package version set to `1.5.7` too), while `versionCode` comes from the workflow
-run number. Locally the same values can be passed on the command line:
-
-```bash
-./gradlew :androidApp:assembleRelease -Paktool.versionName=1.5.7 -Paktool.versionCode=42
-./gradlew :desktopApp:createDistributable -Paktool.versionName=1.5.7
-```
+The tag **does not** drive the version: `version`, `versionCode` and `versionName` are set in
+the build files (`2.0.3` / `203`). Pushing `v2.0.3` only triggers the release job that attaches
+the artifacts; bump the version fields by hand when you cut a release.
 
 **Signing.** The release APK is signed only when the keystore is supplied through repository
 secrets (Settings → Secrets and variables → Actions):
@@ -227,20 +244,21 @@ HTTP client so the new base URL takes effect immediately.
 
 ## Downloaded data tables
 
-Static game data is not bundled. The app fetches three JSON files from your server and caches
+Static game data is not bundled. The app fetches four JSON files from your server and caches
 them on disk:
 
 ```
 <serverUri>/assetbundle/excel/character_table.json
 <serverUri>/assetbundle/excel/favor_table.json
 <serverUri>/assetbundle/excel/uniequip_table.json
+<serverUri>/assetbundle/excel/skin_table.json
 ```
 
 They are written to `<dataDir>/excel/` (`~/.aktool/data/excel/` on desktop,
 `<filesDir>/data/excel/` on Android) and refreshed from the Settings screen. The client reads
 only a few fields from each table (elite phases and their max level; favour frames and their
-percent values; equipment type icons) and treats everything else as opaque. Fetching is plain
-`GET` with no `uid`/`adminKey` headers — see [`API.md`](API.md).
+percent values; equipment type icons; skin ids and names) and treats everything else as opaque.
+Fetching is plain `GET` with no `uid`/`adminKey` headers — see [`API.md`](API.md).
 
 ---
 
@@ -271,7 +289,8 @@ Three deviations are **intentional and documented in the test itself**:
 1. `feature.* -> core.platform` — UI uses platform ports (`platformUiScale`, `urlEncode`,
    `Messenger`, `ClipboardPort`) which are `expect`/`actual` declarations.
 2. `feature.characterdetail -> feature.character` — the detail screen reuses the roster's card
-   and painters and holds `CharacterViewModel` to refresh the list after saving.
+   and painters. Saved characters no longer travel back through the back stack: they are written
+   into `CharacterStore` (`core.domain`), and the roster derives its visible list from it.
 3. `core.common <-> core.model` — `core.common` holds `LocalAppConfig`, which carries the
    `AppConfig` model; the reverse edge comes from tests only.
 
@@ -312,8 +331,8 @@ Platform source sets provide the `actual` implementations:
 
 | Source set | What it covers |
 |---|---|
-| `shared/src/commonTest` | Model serialization, use cases, repositories, navigation motion, message bus, DI resolution, API client against Ktor's `MockEngine`. |
-| `shared/src/desktopTest` | The package-dependency ratchet (`ArchitectureRuleTest`). |
+| `shared/src/commonTest` | Model serialization, use cases, repositories, navigation motion and direction math, birthday validation, message bus, DI resolution, API client against Ktor's `MockEngine`. |
+| `shared/src/desktopTest` | The package-dependency ratchet (`ArchitectureRuleTest`) and content-key resolution against Navigation3's own `defaultContentKey` (`ContentKeyResolutionTest`). |
 
 ```bash
 ./gradlew :shared:allTests
@@ -323,8 +342,9 @@ Platform source sets provide the `actual` implementations:
 
 ## Related documents
 
-- [`API.md`](API.md) — the HTTP interface: transport setup, authentication, the
-  response envelope, every endpoint, and the request/response models.
+- [`API.md`](API.md) — the HTTP interface: conventions, authentication, the response envelope,
+  per-endpoint and per-field validation rules, and the caveats worth knowing before you
+  implement a server against it.
 
 ---
 
