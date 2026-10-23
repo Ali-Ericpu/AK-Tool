@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!--
+        系统处于深色模式时应用必然也走深色（App.kt 里 darkMode = config.darkMode || isSystemInDarkTheme()），
+        首帧就该用白色状态栏图标；这里只覆写图标明暗，父主题仍沿用 values/themes.xml 的 Light 版本，
+        以免顺带改掉窗口背景色带来别的视觉差异。
+    -->
+    <style name="Theme.AKTool" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowLightStatusBar">false</item>
+    </style>
+</resources>

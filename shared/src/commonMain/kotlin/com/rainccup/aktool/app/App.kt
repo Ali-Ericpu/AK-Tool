@@ -23,6 +23,7 @@ import com.rainccup.aktool.core.designsystem.theme.resolveColorSchemeMode
 import com.rainccup.aktool.core.designsystem.theme.seedColorOrNull
 import com.rainccup.aktool.core.model.ImageConfig
 import com.rainccup.aktool.core.network.HttpClientProvider
+import com.rainccup.aktool.core.platform.SyncSystemBarAppearance
 import com.rainccup.aktool.feature.splash.ui.SplashPage
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
@@ -40,6 +41,8 @@ fun App() {
     val coroutineScope = rememberCoroutineScope()
 
     val darkMode = config.darkMode || isSystemInDarkTheme()
+    // 状态栏/导航栏图标跟随主题：Android 15 起强制 edge-to-edge，图标写死会在深色主题下看不见
+    SyncSystemBarAppearance(darkTheme = darkMode)
     // 自选主题色优先：开启动态色彩时作为 Monet 种子色，关闭时直出到固定色板的 primary 家族
     val seedColor = seedColorOrNull(config.primaryColor)
     val colorMode = resolveColorSchemeMode(
