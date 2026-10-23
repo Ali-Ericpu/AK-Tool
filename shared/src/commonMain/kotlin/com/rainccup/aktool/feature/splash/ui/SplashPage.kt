@@ -8,18 +8,11 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.layout.safeContentPadding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -28,8 +21,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import com.rainccup.aktool.core.designsystem.component.CircleIconButton
@@ -41,6 +32,7 @@ import kotlinx.coroutines.delay
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
+import kotlin.time.Duration.Companion.seconds
 
 @Composable
 fun SplashPage(viewModel: SplashViewModel = koinViewModel()) {
@@ -55,8 +47,7 @@ fun SplashPage(viewModel: SplashViewModel = koinViewModel()) {
                 .fillMaxSize()
                 .background(MaterialTheme.colorScheme.background)
                 .padding(16.dp)
-                .statusBarsPadding()
-                .navigationBarsPadding(),
+                .safeContentPadding(),
         ) {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -68,8 +59,6 @@ fun SplashPage(viewModel: SplashViewModel = koinViewModel()) {
                     contentScale = ContentScale.Crop,
                     modifier = Modifier
                         .height(250.dp)
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(8.dp)),
                 )
                 Text(
                     text = stringResource(Res.string.splash_ad_placeholder),
@@ -84,7 +73,7 @@ fun SplashPage(viewModel: SplashViewModel = koinViewModel()) {
         }
     }
     LaunchedEffect(Unit) {
-        delay(2000)
+        delay(2.seconds)
         viewModel.closeSplash()
     }
 }
