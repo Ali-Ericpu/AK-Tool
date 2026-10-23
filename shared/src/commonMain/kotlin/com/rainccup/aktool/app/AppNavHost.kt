@@ -11,14 +11,16 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccountBox
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -38,7 +40,9 @@ import androidx.navigation3.ui.NavDisplay
 import androidx.savedstate.serialization.SavedStateConfiguration
 import co.touchlab.kermit.Logger
 import com.rainccup.aktool.core.designsystem.LargeScreenBreakpoint
+import com.rainccup.aktool.core.designsystem.LocalFloatingBarInset
 import com.rainccup.aktool.core.designsystem.LocalLargeScreen
+import com.rainccup.aktool.core.designsystem.floatingBarMetrics
 import com.rainccup.aktool.core.domain.CharacterStore
 import com.rainccup.aktool.core.message.MessageBus
 import com.rainccup.aktool.core.navigation.AppRoute
@@ -60,13 +64,18 @@ import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
-import top.yukonga.miuix.kmp.basic.NavigationBar
-import top.yukonga.miuix.kmp.basic.NavigationBarItem
+import top.yukonga.miuix.kmp.basic.FloatingNavigationBar
+import top.yukonga.miuix.kmp.basic.FloatingNavigationBarItem
 import top.yukonga.miuix.kmp.basic.NavigationRail
 import top.yukonga.miuix.kmp.basic.NavigationRailItem
 import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.SnackbarHost
 import top.yukonga.miuix.kmp.basic.SnackbarHostState
+import top.yukonga.miuix.kmp.blur.highlight.Highlight
+import top.yukonga.miuix.kmp.blur.layerBackdrop
+import top.yukonga.miuix.kmp.blur.rememberLayerBackdrop
+import top.yukonga.miuix.kmp.blur.textureBlur
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 private val navConfig = SavedStateConfiguration {
     serializersModule = SerializersModule {
@@ -293,7 +302,7 @@ private fun AnimatedContentTransitionScope<Scene<AppRoute>>.navPredictivePopSpec
 }
 
 @Composable
-fun AppNavHost() {
+fun AppNavHost(background: @Composable () -> Unit = {}) {
     val backStack = rememberNavBackStack(navConfig, AppRoute.Home)
     val characterStore: CharacterStore = koinInject()
     val homeLabel = stringResource(Res.string.home)
@@ -303,7 +312,7 @@ fun AppNavHost() {
     val tabs = remember(homeLabel, characterLabel, extraLabel, settingLabel) {
         listOf(
             TabMeta(AppRoute.Home, homeLabel, Icons.Default.Home),
-            TabMeta(AppRoute.Character, characterLabel, Icons.Default.AccountBox),
+            TabMeta(AppRoute.Character, characterLabel, Icons.Default.People),
             TabMeta(AppRoute.Extra, extraLabel, Icons.Default.Build),
             TabMeta(AppRoute.Setting, settingLabel, Icons.Default.Settings),
         )
@@ -321,6 +330,15 @@ fun AppNavHost() {
     }
 
     val messageBus: MessageBus = koinInject()
+    // 玻璃底栏的背景来源：图层里同时装自定义背景与页面内容，
+    // 底栏再用 textureBlur 在同一形状里绘制模糊后的它。
+    val surface = MiuixTheme.colorScheme.surface
+    val backdrop = rememberLayerBackdrop {
+        drawRect(surface)
+        drawContent()
+    }
+    // 底栏是浮层：内容底部不留白，一路铺到它下面穿过去（玻璃要采样到滑过去的内容才有质感），
+    // 被它压住的那一段通过 LocalFloatingBarInset 交给各页面的滚动容器。
     val snackbarHostState = remember { SnackbarHostState() }
     LaunchedEffect(messageBus) {
         messageBus.messages.collectLatest {
@@ -332,14 +350,31 @@ fun AppNavHost() {
     // 大屏（桌面 / 平板横屏）改用左侧导航栏；窄屏仍保持底部标签栏，两种布局共用同一份 tabs 与选中逻辑。
     BoxWithConstraints {
         val useNavigationRail = maxWidth >= LargeScreenBreakpoint
+        val bottomBarVisible = !useNavigationRail && tabs.any { currentTop == it.route }
+        // 底栏放进 bottomBar 槽而不是外层的 Box：miuix 把弹窗画在 Scaffold 的 popup 层里（最后绘制），
+        // 底栏待在槽里就处在这层之下，弹窗仍然压得住底栏；挂到 Scaffold 外面反而会盖住弹窗。
+        // 顺带的好处：paddingValues.bottom 直接就是底栏的实测高度，不用再自己量 root 坐标。
         Scaffold(
             snackbarHost = { SnackbarHost(state = snackbarHostState) },
             containerColor = Color.Transparent,
             bottomBar = {
-                AnimatedVisibility(!useNavigationRail && tabs.any { currentTop == it.route }) {
-                    NavigationBar {
+                // 半透明 surface 让底下内容透出来，再用 textureBlur 采样 layerBackdrop 形成玻璃。
+                AnimatedVisibility(
+                    visible = bottomBarVisible,
+                    enter = slideInVertically { it } + fadeIn(),
+                    exit = slideOutVertically { it } + fadeOut(),
+                ) {
+                    FloatingNavigationBar(
+                        modifier = Modifier.textureBlur(
+                            backdrop = backdrop,
+                            shape = RoundedCornerShape(28.dp),
+                            // 玻璃边缘高光：沿形状内侧描一圈渐变亮边。
+                            highlight = Highlight(width = 1.dp, alpha = 0.55f),
+                        ),
+                        color = MiuixTheme.colorScheme.surface.copy(alpha = 0.55f),
+                    ) {
                         tabs.forEach { tab ->
-                            NavigationBarItem(
+                            FloatingNavigationBarItem(
                                 selected = currentTop == tab.route,
                                 onClick = { onTabSelect(tab.route) },
                                 icon = tab.icon,
@@ -355,77 +390,92 @@ fun AppNavHost() {
             // 下面三个 transitionSpec 的接收者就变成 Scene<NavKey>，扩展函数全部失配。
             @Suppress("UNCHECKED_CAST")
             val routes = backStack as List<AppRoute>
-            Row(modifier = Modifier.fillMaxSize()) {
-                if (useNavigationRail) {
-                    NavigationRail(
-                        color = Color.Transparent,
-                        showDivider = false,
-                    ) {
-                        tabs.forEach { tab ->
-                            NavigationRailItem(
-                                selected = currentTop == tab.route,
-                                onClick = { onTabSelect(tab.route) },
-                                icon = tab.icon,
-                                label = tab.label,
-                            )
+            // Scaffold 给的 paddingValues 拆成「内容内边距」与「底栏占位」，细节见 FloatingBar.kt。
+            val bar = floatingBarMetrics(paddingValues)
+            // 背景图必须落在 backdrop 层内，玻璃底栏才采样得到它；
+            // 底栏是该层的兄弟节点，若也包进去会把自己录成拖影。
+            Box(modifier = Modifier.fillMaxSize().layerBackdrop(backdrop)) {
+                background()
+                Row(modifier = Modifier.fillMaxSize()) {
+                    if (useNavigationRail) {
+                        NavigationRail(
+                            color = Color.Transparent,
+                            showDivider = false,
+                        ) {
+                            tabs.forEach { tab ->
+                                NavigationRailItem(
+                                    selected = currentTop == tab.route,
+                                    onClick = { onTabSelect(tab.route) },
+                                    icon = tab.icon,
+                                    label = tab.label,
+                                )
+                            }
                         }
                     }
-                }
-                // 共享元素转场的作用域：干员卡要在列表页与详情页之间连续移动，必须由同一个
-                // SharedTransitionLayout 统一测量两个页面的坐标，并由它负责转场期间的 overlay 绘制
-                // （否则移动中的卡片会被页面的边界裁掉）。
-                SharedTransitionLayout(modifier = Modifier.weight(1f)) {
-                    val sharedTransitionScope = this
-                    // 大屏判定只在这里做一次：页面通过 LocalLargeScreen 读同一个结果来分栏。
-                    CompositionLocalProvider(
-                        LocalSharedTransitionScope provides sharedTransitionScope,
-                        LocalLargeScreen provides useNavigationRail,
-                    ) {
-                        NavDisplay(
-                            backStack = routes,
-                            onBack = { if (backStack.size > 1) backStack.removeLastOrNull() },
-                            sharedTransitionScope = sharedTransitionScope,
-                            modifier = Modifier
-                                .padding(paddingValues)
-                                .padding(12.dp),
-                            transitionSpec = { navTransitionSpec(useNavigationRail) },
-                            popTransitionSpec = { navPopTransitionSpec(useNavigationRail) },
-                            predictivePopTransitionSpec = { navPredictivePopSpec(useNavigationRail) },
-                            entryDecorators = listOf(
-                                rememberSaveableStateHolderNavEntryDecorator(),
-                                rememberViewModelStoreNavEntryDecorator(),
-                            ),
-                            entryProvider = entryProvider {
-                                entry<AppRoute.Home> {
-                                    HomePage()
-                                }
-
-                                entry<AppRoute.Character> {
-                                    CharacterPage { char ->
-                                        backStack.add(AppRoute.CharacterDetail(char))
-                                    }
-                                }
-
-                                entry<AppRoute.Extra> {
-                                    ExtraPage()
-                                }
-
-                                entry<AppRoute.Setting> {
-                                    SettingPage()
-                                }
-
-                                entry<AppRoute.CharacterDetail> {
-                                    CharacterDetailPage(
-                                        character = it.char,
-                                        onSaved = { char ->
-                                            // 唯一数据源就地更新：列表页会据此自动重算可见列表。
-                                            char?.let(characterStore::upsert)
-                                            backStack.removeLastOrNull()
-                                        }
+                    // 共享元素转场的作用域：干员卡要在列表页与详情页之间连续移动，必须由同一个
+                    // SharedTransitionLayout 统一测量两个页面的坐标，并由它负责转场期间的 overlay 绘制
+                    // （否则移动中的卡片会被页面的边界裁掉）。
+                    SharedTransitionLayout(modifier = Modifier.weight(1f)) {
+                        val sharedTransitionScope = this
+                        // 大屏判定只在这里做一次：页面通过 LocalLargeScreen 读同一个结果来分栏。
+                        CompositionLocalProvider(
+                            LocalSharedTransitionScope provides sharedTransitionScope,
+                            LocalLargeScreen provides useNavigationRail,
+                            LocalFloatingBarInset provides bar.reserve,
+                        ) {
+                            NavDisplay(
+                                backStack = routes,
+                                onBack = { if (backStack.size > 1) backStack.removeLastOrNull() },
+                                sharedTransitionScope = sharedTransitionScope,
+                                modifier = Modifier
+                                    // 左右 / 顶部照常吃 Scaffold 的内边距，底部只吃系统栏：内容要一路铺到
+                                    // 底栏底下穿过去，模糊才有东西可采样；最后一项的留白交给各页面的
+                                    // 滚动容器（LocalFloatingBarInset）。
+                                    .padding(bar.contentPadding)
+                                    .padding(start = 12.dp, end = 12.dp, top = 12.dp),
+                                transitionSpec = { navTransitionSpec(useNavigationRail) },
+                                popTransitionSpec = { navPopTransitionSpec(useNavigationRail) },
+                                predictivePopTransitionSpec = {
+                                    navPredictivePopSpec(
+                                        useNavigationRail
                                     )
-                                }
-                            },
-                        )
+                                },
+                                entryDecorators = listOf(
+                                    rememberSaveableStateHolderNavEntryDecorator(),
+                                    rememberViewModelStoreNavEntryDecorator(),
+                                ),
+                                entryProvider = entryProvider {
+                                    entry<AppRoute.Home> {
+                                        HomePage()
+                                    }
+
+                                    entry<AppRoute.Character> {
+                                        CharacterPage { char ->
+                                            backStack.add(AppRoute.CharacterDetail(char))
+                                        }
+                                    }
+
+                                    entry<AppRoute.Extra> {
+                                        ExtraPage()
+                                    }
+
+                                    entry<AppRoute.Setting> {
+                                        SettingPage()
+                                    }
+
+                                    entry<AppRoute.CharacterDetail> {
+                                        CharacterDetailPage(
+                                            character = it.char,
+                                            onSaved = { char ->
+                                                // 唯一数据源就地更新：列表页会据此自动重算可见列表。
+                                                char?.let(characterStore::upsert)
+                                                backStack.removeLastOrNull()
+                                            }
+                                        )
+                                    }
+                                },
+                            )
+                        }
                     }
                 }
             }

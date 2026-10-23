@@ -3,6 +3,7 @@ package com.rainccup.aktool.feature.setting.ui
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -26,6 +27,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.rainccup.aktool.core.common.LocalAppConfig
 import com.rainccup.aktool.core.common.OnConfigChange
+import com.rainccup.aktool.core.designsystem.LocalFloatingBarInset
 import com.rainccup.aktool.core.designsystem.component.BasicDialog
 import com.rainccup.aktool.core.designsystem.component.EditText
 import com.rainccup.aktool.core.designsystem.component.roundedBackground
@@ -79,7 +81,9 @@ fun SettingPage() {
                 .align(Alignment.Start)
         )
         LazyColumn(
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+            // 内容直接在悬浮底栏底下滑过去，最后一项靠这段底部留白停在浮层之上。
+            contentPadding = PaddingValues(bottom = LocalFloatingBarInset.current)
         ) {
             item {
                 Column(modifier = Modifier.roundedBackground()) {

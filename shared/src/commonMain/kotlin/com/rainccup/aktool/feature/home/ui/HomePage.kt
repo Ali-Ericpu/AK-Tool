@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -33,6 +34,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import com.rainccup.aktool.core.common.validation.checkIntRange
 import com.rainccup.aktool.core.common.validation.coerceToValid
+import com.rainccup.aktool.core.designsystem.LocalFloatingBarInset
 import com.rainccup.aktool.core.designsystem.LocalLargeScreen
 import com.rainccup.aktool.core.designsystem.component.BirthdayPickerDialog
 import com.rainccup.aktool.core.designsystem.component.EditTextDialog
@@ -124,6 +126,8 @@ fun HomePage() {
                 LazyColumn(
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
+                    // 内容直接在悬浮底栏底下滑过去，最后一项靠这段底部留白停在浮层之上。
+                    contentPadding = PaddingValues(bottom = LocalFloatingBarInset.current),
                     modifier = Modifier.fillMaxSize()
                 ) {
                     item {
@@ -374,6 +378,8 @@ fun HomePage() {
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
                     .padding(32.dp)
+                    // 悬浮底栏是叠层，按钮得抬到它上方；大屏走左侧导航栏时留白为 0。
+                    .padding(bottom = LocalFloatingBarInset.current)
             ) {
                 Icon(
                     imageVector = Icons.Default.Refresh,

@@ -38,6 +38,7 @@ kotlin {
             implementation(libs.compose.material)
             implementation(libs.miuix.ui)
             implementation(libs.miuix.preference)
+            implementation(libs.miuix.blur)
 
             implementation(libs.kotlinx.coroutines.core)
             implementation(libs.kotlinx.serialization.json)

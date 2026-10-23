@@ -1,5 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+    <!-- miuix-blur 声明了 minSdk 33，但内部用 isRuntimeShaderSupported()（Build.VERSION.SDK_INT >= 33）
+         把整条渲染管线挡住了：低于 33 时模糊/高光静默降级，只剩半透明底色，不会崩。
+         所以这里放行它，保留 minSdk 28。 -->
+    <uses-sdk tools:overrideLibrary="top.yukonga.miuix.kmp.blur" />
     <uses-permission android:name="android.permission.INTERNET" />
     <application
         android:icon="@mipmap/ic_launcher"

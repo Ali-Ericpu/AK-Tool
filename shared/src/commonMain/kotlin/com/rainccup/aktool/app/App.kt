@@ -71,15 +71,20 @@ fun App() {
                 LocalImageConfig provides ImageConfig.default,
             ) {
                 Surface(modifier = Modifier.fillMaxSize()) {
-                    if (config.customBg && config.bgPath.isNotEmpty()) {
-                        Image(
-                            painter = rememberAsyncImagePainter(config.bgPath),
-                            contentDescription = null,
-                            contentScale = ContentScale.Crop,
-                            modifier = Modifier.fillMaxSize(),
-                        )
-                    }
-                    AppNavHost()
+                    // 自定义背景交给 AppNavHost 画进 backdrop 层内：
+                    // 直接画在这里的话它会落在内容层之外，玻璃底栏采样不到。
+                    AppNavHost(
+                        background = {
+                            if (config.customBg && config.bgPath.isNotEmpty()) {
+                                Image(
+                                    painter = rememberAsyncImagePainter(config.bgPath),
+                                    contentDescription = null,
+                                    contentScale = ContentScale.Crop,
+                                    modifier = Modifier.fillMaxSize(),
+                                )
+                            }
+                        },
+                    )
                     SplashPage()
                 }
             }
