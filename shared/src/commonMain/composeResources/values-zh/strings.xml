@@ -90,4 +90,9 @@
     <string name="splash_ad_placeholder">广告位招租</string>
     <string name="app_name_wordmark">AK TOOL</string>
     <string name="cd_select">选择</string>
+    <string name="character_profession_all">全部</string>
+    <string name="character_profession_back">收起</string>
+    <string name="cd_menu">菜单</string>
+    <string name="cd_refresh">刷新</string>
+    <string name="cd_back_to_top">回到顶部</string>
 </resources>

@@ -2,14 +2,17 @@ package com.rainccup.aktool.feature.character.ui
 
 
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -20,14 +23,14 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.TextAutoSize
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowUpward
@@ -56,6 +59,8 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.ColorMatrix
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
@@ -70,6 +75,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.rememberAsyncImagePainter
 import com.rainccup.aktool.core.common.LocalImageConfig
 import com.rainccup.aktool.core.common.replace
+import com.rainccup.aktool.core.designsystem.LocalFloatingBarInset
 import com.rainccup.aktool.core.designsystem.component.BasicDialog
 import com.rainccup.aktool.core.designsystem.component.CharPainter
 import com.rainccup.aktool.core.designsystem.component.CircleIconButton
@@ -83,7 +89,9 @@ import com.rainccup.aktool.core.platform.platformUiScale
 import com.rainccup.aktool.core.platform.urlEncode
 import com.rainccup.aktool.feature.character.viewmodel.CharacterViewModel
 import com.rainccup.aktool.resources.Res
-import com.rainccup.aktool.resources.cd_select
+import com.rainccup.aktool.resources.cd_back_to_top
+import com.rainccup.aktool.resources.cd_menu
+import com.rainccup.aktool.resources.cd_refresh
 import com.rainccup.aktool.resources.char_id
 import com.rainccup.aktool.resources.character_default_skill_icon
 import com.rainccup.aktool.resources.character_elite_0
@@ -98,12 +106,13 @@ import com.rainccup.aktool.resources.character_potential_2
 import com.rainccup.aktool.resources.character_potential_3
 import com.rainccup.aktool.resources.character_potential_4
 import com.rainccup.aktool.resources.character_potential_5
+import com.rainccup.aktool.resources.character_profession_all
+import com.rainccup.aktool.resources.character_profession_back
 import com.rainccup.aktool.resources.character_star_mark
 import com.rainccup.aktool.resources.character_star_mark_edit
 import com.rainccup.aktool.resources.equip_bg
 import com.rainccup.aktool.resources.longpress_to_copy
 import com.rainccup.aktool.resources.lv
-import com.rainccup.aktool.resources.profession_select
 import com.rainccup.aktool.resources.search
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
@@ -111,6 +120,7 @@ import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 import top.yukonga.miuix.kmp.basic.FloatingToolbar
+import top.yukonga.miuix.kmp.basic.FloatingToolbarDefaults
 import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.basic.InputField
 import top.yukonga.miuix.kmp.basic.SearchBar
@@ -127,10 +137,6 @@ fun CharacterPage(
     val currentProfession by viewModel.profession.collectAsStateWithLifecycle()
     val characters by viewModel.characters.collectAsStateWithLifecycle()
     val selectProfession by viewModel.isSelect.collectAsStateWithLifecycle()
-    val professions by remember { mutableStateOf(Profession.entries.toList()) }
-    val coroutineScope = rememberCoroutineScope()
-    val professionOffsetX by animateFloatAsState(if (selectProfession) 0f else 1.2f, label = "")
-    val menuOffsetX by animateFloatAsState(if (!selectProfession) 0f else 1.5f, label = "")
     val lazyGridState = rememberLazyGridState()
     var lastProfession by rememberSaveable { mutableStateOf(currentProfession) }
     LaunchedEffect(currentProfession) {
@@ -155,6 +161,8 @@ fun CharacterPage(
                     verticalArrangement = Arrangement.Top,
                     horizontalArrangement = Arrangement.SpaceAround,
                     state = lazyGridState,
+                    // 内容直接在悬浮底栏底下滑过去，最后一排靠这段底部留白停在浮层之上。
+                    contentPadding = PaddingValues(bottom = LocalFloatingBarInset.current),
                     modifier = Modifier.fillMaxSize()
                 ) {
                     items(characters, key = { it.instId }) { char ->
@@ -166,123 +174,12 @@ fun CharacterPage(
                         }
                     }
                 }
-                Box(
-                    modifier = Modifier
-                        .width(64.dp)
-                        .wrapContentHeight()
-                        .align(Alignment.CenterEnd)
-                ) {
-                    FloatingToolbar(
-                        color = Color.Unspecified,
-                        modifier = Modifier
-                            .wrapContentHeight()
-                            .offsetPercent(offsetPercentX = professionOffsetX)
-                            .clipToBounds()
-                    ) {
-                        LazyColumn(
-                            verticalArrangement = Arrangement.Top,
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            modifier = Modifier.clip(RoundedCornerShape(32.dp))
-                        ) {
-                            item {
-                                IconButton(
-                                    onClick = {
-                                        if (currentProfession == "ALL") {
-                                            viewModel.changeSelectState(false)
-                                        } else {
-                                            viewModel.selectProfession("ALL")
-                                        }
-                                    },
-                                    modifier = Modifier
-                                        .height(48.dp)
-                                        .width(48.dp)
-                                        .background(Color.Black.copy(alpha = 0.8f))
-                                        .align(alignment = Alignment.CenterEnd)
-                                        .padding(4.dp)
-                                ) {
-                                    Text(
-                                        text = if (currentProfession == "ALL") "BACK" else "ALL",
-                                        textAlign = TextAlign.Center,
-                                        maxLines = 1,
-                                        autoSize = TextAutoSize.StepBased(minFontSize = 8.sp),
-                                        color = MaterialTheme.colorScheme.primary
-                                    )
-                                }
-                            }
-                            items(professions) {
-                                Box(
-                                    contentAlignment = Alignment.CenterEnd,
-                                    modifier = Modifier.fillMaxSize()
-                                ) {
-                                    Image(
-                                        painter = painterResource(it.icon),
-                                        contentDescription = it.name,
-                                        contentScale = ContentScale.Crop,
-                                        modifier = Modifier
-                                            .alpha(0.8f)
-                                            .height(42.dp)
-                                            .clickable {
-                                                viewModel.selectProfession(it.name)
-                                            }
-                                    )
-                                    if (currentProfession == it.name) {
-                                        Image(
-                                            painter = painterResource(Res.drawable.profession_select),
-                                            contentDescription = stringResource(Res.string.cd_select),
-                                            alignment = Alignment.CenterEnd,
-                                            modifier = Modifier.height(42.dp)
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    FloatingToolbar(
-                        color = MiuixTheme.colorScheme.background.copy(alpha = 0.9f),
-                        modifier = Modifier.offsetPercent(offsetPercentX = menuOffsetX)
-                    ) {
-                        Column {
-                            IconButton(
-                                onClick = { viewModel.changeSelectState(true) }
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Menu,
-                                    contentDescription = null,
-                                    tint = MiuixTheme.colorScheme.onBackground
-                                )
-                            }
-                            GainCharDialog(onGainChar = viewModel::gainChar) { charId ->
-                                viewModel.existChar(charId)
-                            }
-                            SearchCharDialog(
-                                onKeywordType = viewModel::getSearchedCharList,
-                                onPickName = viewModel::pickName,
-                                onCopyCharId = viewModel::copyCharId,
-                                onConfirmKeyword = viewModel::searchChar,
-                            )
-                            IconButton(onClick = viewModel::initCharData) {
-                                Icon(
-                                    imageVector = Icons.Default.Refresh,
-                                    contentDescription = null,
-                                    tint = MiuixTheme.colorScheme.onBackground
-                                )
-                            }
-                            IconButton(
-                                onClick = {
-                                    coroutineScope.launch {
-                                        lazyGridState.animateScrollToItem(0)
-                                    }
-                                }
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.ArrowUpward,
-                                    contentDescription = null,
-                                    tint = MiuixTheme.colorScheme.onBackground
-                                )
-                            }
-                        }
-                    }
-                }
+                CharacterToolbars(
+                    viewModel = viewModel,
+                    lazyGridState = lazyGridState,
+                    currentProfession = currentProfession,
+                    professionOpen = selectProfession,
+                )
             }
         }
         if (splash && !showLoadAnimate) {
@@ -659,8 +556,222 @@ fun equipPainter(equipId: String): Painter {
 }
 
 
+/* ---------------- 右侧悬浮工具栏 ---------------- */
 
+private val ToolbarWidth = 64.dp
+private val ToolbarCornerRadius = 28.dp
+private val ToolbarOutsidePadding = PaddingValues(horizontal = 6.dp, vertical = 6.dp)
+private val ToolbarIconSize = 40.dp
 
+/** 两个面板滑出屏幕时相对自身宽度的位移比例，>1 保证完全移出可见区。 */
+private const val ToolbarSlide = 1.4f
+private const val ToolbarSwitchMillis = 280
 
+/**
+ * 右侧两个悬浮面板：职业筛选与页内菜单。
+ *
+ * 两者共用同一套外观（surfaceContainer 底 + 28dp 圆角 + 不要投影）和同一个动画进度 ——
+ * 只有一个 animateFloatAsState，滑出幅度、时长、方向因此完全对称；
+ */
+@Composable
+private fun BoxScope.CharacterToolbars(
+    viewModel: CharacterViewModel,
+    lazyGridState: LazyGridState,
+    currentProfession: String,
+    professionOpen: Boolean,
+) {
+    val progress by animateFloatAsState(
+        targetValue = if (professionOpen) 1f else 0f,
+        animationSpec = tween(ToolbarSwitchMillis),
+        label = "characterToolbars",
+    )
+    Box(
+        modifier = Modifier
+            .width(ToolbarWidth)
+            .wrapContentHeight()
+            .align(Alignment.CenterEnd),
+    ) {
+        ProfessionPanel(
+            currentProfession = currentProfession,
+            modifier = Modifier.offsetPercent(offsetPercentX = (1f - progress) * ToolbarSlide),
+            onSelectProfession = viewModel::selectProfession,
+            onCollapse = { viewModel.changeSelectState(false) },
+        )
+        CharacterMenuPanel(
+            viewModel = viewModel,
+            lazyGridState = lazyGridState,
+            modifier = Modifier.offsetPercent(offsetPercentX = progress * ToolbarSlide),
+        )
+    }
+}
 
+/** 职业筛选面板：顶部是「全部 / 收起」，下面是八个职业图标。 */
+@Composable
+private fun ProfessionPanel(
+    currentProfession: String,
+    onSelectProfession: (String) -> Unit,
+    onCollapse: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    FloatingToolbar(
+        color = Color.Transparent,
+        cornerRadius = ToolbarCornerRadius,
+        outSidePadding = ToolbarOutsidePadding,
+        shadowElevation = 0.dp,
+        modifier = modifier,
+    ) {
+        Column(
+            modifier = Modifier
+                .verticalScroll(rememberScrollState())
+                .background(Color.Black.copy(alpha = 0.8f), RoundedCornerShape(ToolbarCornerRadius))
+                .padding(bottom = 8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(ToolbarIconSize)
+                    .clickable {
+                        if (currentProfession == "ALL") onCollapse() else onSelectProfession("ALL")
+                    },
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    text = stringResource(
+                        if (currentProfession == "ALL") {
+                            Res.string.character_profession_back
+                        } else {
+                            Res.string.character_profession_all
+                        }
+                    ),
+                    color = if (currentProfession == "ALL") {
+                        MiuixTheme.colorScheme.primary
+                    } else {
+                        Color.White
+                    },
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Medium,
+                    textAlign = TextAlign.Center,
+                    maxLines = 1,
+                )
+            }
+            Profession.entries.forEach { profession ->
+                ProfessionIconButton(
+                    profession = profession,
+                    selected = currentProfession == profession.name,
+                    onClick = { onSelectProfession(profession.name) },
+                )
+            }
+        }
+    }
+}
 
+/** 单个职业图标：黑色底映射成透明，选中时再把剩下的白色染成主题主色。 */
+@Composable
+private fun ProfessionIconButton(
+    profession: Profession,
+    selected: Boolean,
+    onClick: () -> Unit,
+) {
+    val primary = MiuixTheme.colorScheme.primary
+    val selectedFilter = remember(primary) { professionIconFilter(primary) }
+    val plainFilter = remember { professionIconFilter(null) }
+    Box(
+        modifier = Modifier
+            .size(ToolbarIconSize)
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center,
+    ) {
+        Image(
+            painter = painterResource(profession.icon),
+            contentDescription = profession.name,
+            contentScale = ContentScale.Crop,
+            alpha = 0.8f,
+            colorFilter = if (selected) selectedFilter else plainFilter,
+            modifier = Modifier.padding(2.dp).fillMaxSize()
+        )
+    }
+}
+
+/**
+ * 职业图标的颜色矩阵。
+ *
+ * 1. 黑→透明：alpha 取原图灰度（`A' = R`）——黑底 alpha 归零、白图形 alpha 满值，
+ *    抗锯齿灰阶自动变成半透明过渡，既不留黑边也不会发硬。
+ * 2. 传入 [tint] 时再把剩下的白色按各通道缩放（`R' = tint.r · R` 等）染成该色。
+ */
+private fun professionIconFilter(tint: Color?): ColorFilter {
+    val values = if (tint == null) {
+        floatArrayOf(
+            1f, 0f, 0f, 0f, 0f,
+            0f, 1f, 0f, 0f, 0f,
+            0f, 0f, 1f, 0f, 0f,
+            1f, 0f, 0f, 0f, 0f,
+        )
+    } else {
+        floatArrayOf(
+            tint.red, 0f, 0f, 0f, 0f,
+            tint.green, 0f, 0f, 0f, 0f,
+            tint.blue, 0f, 0f, 0f, 0f,
+            1f, 0f, 0f, 0f, 0f,
+        )
+    }
+    return ColorFilter.colorMatrix(ColorMatrix(values))
+}
+
+/** 页内菜单面板：展开职业面板、新增 / 搜索角色、刷新、回到顶部。 */
+@Composable
+private fun CharacterMenuPanel(
+    viewModel: CharacterViewModel,
+    lazyGridState: LazyGridState,
+    modifier: Modifier = Modifier,
+) {
+    val coroutineScope = rememberCoroutineScope()
+    FloatingToolbar(
+        color = FloatingToolbarDefaults.defaultColor(),
+        cornerRadius = ToolbarCornerRadius,
+        outSidePadding = ToolbarOutsidePadding,
+        shadowElevation = 0.dp,
+        modifier = modifier,
+    ) {
+        Column(
+            modifier = Modifier.padding(vertical = 4.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
+            IconButton(onClick = { viewModel.changeSelectState(true) }) {
+                Icon(
+                    imageVector = Icons.Default.Menu,
+                    contentDescription = stringResource(Res.string.cd_menu),
+                    tint = MiuixTheme.colorScheme.onBackground,
+                )
+            }
+            GainCharDialog(onGainChar = viewModel::gainChar) { charId ->
+                viewModel.existChar(charId)
+            }
+            SearchCharDialog(
+                onKeywordType = viewModel::getSearchedCharList,
+                onPickName = viewModel::pickName,
+                onCopyCharId = viewModel::copyCharId,
+                onConfirmKeyword = viewModel::searchChar,
+            )
+            IconButton(onClick = viewModel::initCharData) {
+                Icon(
+                    imageVector = Icons.Default.Refresh,
+                    contentDescription = stringResource(Res.string.cd_refresh),
+                    tint = MiuixTheme.colorScheme.onBackground,
+                )
+            }
+            IconButton(
+                onClick = {
+                    coroutineScope.launch { lazyGridState.animateScrollToItem(0) }
+                }
+            ) {
+                Icon(
+                    imageVector = Icons.Default.ArrowUpward,
+                    contentDescription = stringResource(Res.string.cd_back_to_top),
+                    tint = MiuixTheme.colorScheme.onBackground,
+                )
+            }
+        }
+    }
+}

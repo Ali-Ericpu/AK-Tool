@@ -90,4 +90,9 @@
     <string name="splash_ad_placeholder">Your ad here</string>
     <string name="app_name_wordmark">AK TOOL</string>
     <string name="cd_select">Select</string>
+    <string name="character_profession_all">ALL</string>
+    <string name="character_profession_back">BACK</string>
+    <string name="cd_menu">Menu</string>
+    <string name="cd_refresh">Refresh</string>
+    <string name="cd_back_to_top">Back to top</string>
 </resources>
