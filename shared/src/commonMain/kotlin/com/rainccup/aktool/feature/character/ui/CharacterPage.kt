@@ -1,8 +1,11 @@
 package com.rainccup.aktool.feature.character.ui
 
 
-import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -21,7 +24,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyGridState
@@ -69,6 +71,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -79,7 +82,6 @@ import com.rainccup.aktool.core.designsystem.LocalFloatingBarInset
 import com.rainccup.aktool.core.designsystem.component.BasicDialog
 import com.rainccup.aktool.core.designsystem.component.CharPainter
 import com.rainccup.aktool.core.designsystem.component.CircleIconButton
-import com.rainccup.aktool.core.designsystem.component.offsetPercent
 import com.rainccup.aktool.core.designsystem.icon
 import com.rainccup.aktool.core.domain.GameTableQuery
 import com.rainccup.aktool.core.model.Character
@@ -557,21 +559,15 @@ fun equipPainter(equipId: String): Painter {
 
 
 /* ---------------- 右侧悬浮工具栏 ---------------- */
-
-private val ToolbarWidth = 64.dp
 private val ToolbarCornerRadius = 28.dp
 private val ToolbarOutsidePadding = PaddingValues(horizontal = 6.dp, vertical = 6.dp)
 private val ToolbarIconSize = 40.dp
 
-/** 两个面板滑出屏幕时相对自身宽度的位移比例，>1 保证完全移出可见区。 */
-private const val ToolbarSlide = 1.4f
-private const val ToolbarSwitchMillis = 280
-
 /**
  * 右侧两个悬浮面板：职业筛选与页内菜单。
  *
- * 两者共用同一套外观（surfaceContainer 底 + 28dp 圆角 + 不要投影）和同一个动画进度 ——
- * 只有一个 animateFloatAsState，滑出幅度、时长、方向因此完全对称；
+ * 两者共用同一套外观（surfaceContainer 底 + 28dp 圆角 + 不要投影），但同一时刻只组合一个：
+ * 收起的那一个不进 composition，就没有"已经滑出去却仍然露着一个角"的可能。
  */
 @Composable
 private fun BoxScope.CharacterToolbars(
@@ -580,28 +576,28 @@ private fun BoxScope.CharacterToolbars(
     currentProfession: String,
     professionOpen: Boolean,
 ) {
-    val progress by animateFloatAsState(
-        targetValue = if (professionOpen) 1f else 0f,
-        animationSpec = tween(ToolbarSwitchMillis),
+    AnimatedContent(
+        targetState = professionOpen,
+        transitionSpec = {
+            val spec = tween<IntOffset>(300)
+            slideInHorizontally(animationSpec = spec) { it } togetherWith
+                    slideOutHorizontally(animationSpec = spec) { it }
+        },
         label = "characterToolbars",
-    )
-    Box(
-        modifier = Modifier
-            .width(ToolbarWidth)
-            .wrapContentHeight()
-            .align(Alignment.CenterEnd),
-    ) {
-        ProfessionPanel(
-            currentProfession = currentProfession,
-            modifier = Modifier.offsetPercent(offsetPercentX = (1f - progress) * ToolbarSlide),
-            onSelectProfession = viewModel::selectProfession,
-            onCollapse = { viewModel.changeSelectState(false) },
-        )
-        CharacterMenuPanel(
-            viewModel = viewModel,
-            lazyGridState = lazyGridState,
-            modifier = Modifier.offsetPercent(offsetPercentX = progress * ToolbarSlide),
-        )
+        modifier = Modifier.align(Alignment.CenterEnd)
+    ) { open ->
+        if (open) {
+            ProfessionPanel(
+                currentProfession = currentProfession,
+                onSelectProfession = viewModel::selectProfession,
+                onCollapse = { viewModel.changeSelectState(false) },
+            )
+        } else {
+            CharacterMenuPanel(
+                viewModel = viewModel,
+                lazyGridState = lazyGridState,
+            )
+        }
     }
 }
 
@@ -611,14 +607,11 @@ private fun ProfessionPanel(
     currentProfession: String,
     onSelectProfession: (String) -> Unit,
     onCollapse: () -> Unit,
-    modifier: Modifier = Modifier,
 ) {
     FloatingToolbar(
         color = Color.Transparent,
-        cornerRadius = ToolbarCornerRadius,
         outSidePadding = ToolbarOutsidePadding,
         shadowElevation = 0.dp,
-        modifier = modifier,
     ) {
         Column(
             modifier = Modifier
@@ -723,15 +716,13 @@ private fun professionIconFilter(tint: Color?): ColorFilter {
 private fun CharacterMenuPanel(
     viewModel: CharacterViewModel,
     lazyGridState: LazyGridState,
-    modifier: Modifier = Modifier,
 ) {
     val coroutineScope = rememberCoroutineScope()
     FloatingToolbar(
-        color = FloatingToolbarDefaults.defaultColor(),
+        color = FloatingToolbarDefaults.defaultColor().copy(alpha = 0.9f),
         cornerRadius = ToolbarCornerRadius,
         outSidePadding = ToolbarOutsidePadding,
         shadowElevation = 0.dp,
-        modifier = modifier,
     ) {
         Column(
             modifier = Modifier.padding(vertical = 4.dp),
