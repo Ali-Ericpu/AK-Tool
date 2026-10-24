@@ -7,6 +7,8 @@
     <string name="cancel">取消</string>
     <string name="dark_mode">暗黑模式</string>
     <string name="dynamic_color">Monet 取色</string>
+    <string name="liquid_glass">液态玻璃</string>
+    <string name="liquid_glass_summary">悬浮底栏会模糊它背后的内容</string>
     <string name="dynamic_color_summary">由所选颜色生成整套色调板；关闭则直出该颜色</string>
     <string name="primary_color">主题色</string>
     <string name="primary_color_follow_system">跟随系统</string>

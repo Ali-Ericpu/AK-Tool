@@ -43,6 +43,8 @@ import com.rainccup.aktool.resources.custom_bg
 import com.rainccup.aktool.resources.dark_mode
 import com.rainccup.aktool.resources.dynamic_color
 import com.rainccup.aktool.resources.dynamic_color_summary
+import com.rainccup.aktool.resources.liquid_glass
+import com.rainccup.aktool.resources.liquid_glass_summary
 import com.rainccup.aktool.resources.primary_color
 import com.rainccup.aktool.resources.primary_color_direct
 import com.rainccup.aktool.resources.primary_color_follow_system
@@ -141,6 +143,12 @@ fun SettingPage() {
                         title = stringResource(Res.string.dark_mode),
                         checked = config.darkMode,
                         onCheckedChange = { onConfigChange(config.copy(darkMode = it)) },
+                    )
+                    SwitchPreference(
+                        title = stringResource(Res.string.liquid_glass),
+                        summary = stringResource(Res.string.liquid_glass_summary),
+                        checked = config.liquidGlass,
+                        onCheckedChange = { onConfigChange(config.copy(liquidGlass = it)) },
                     )
                     ChooseColorDialog(config, onConfigChange)
                     SwitchPreference(

@@ -7,6 +7,8 @@
     <string name="cancel">Cancel</string>
     <string name="dark_mode">Dark Mode</string>
     <string name="dynamic_color">Monet color</string>
+    <string name="liquid_glass">Liquid Glass</string>
+    <string name="liquid_glass_summary">The floating bar blurs whatever is behind it</string>
     <string name="dynamic_color_summary">Build a full palette from the picked color; off uses it as-is</string>
     <string name="primary_color">Theme Color</string>
     <string name="primary_color_follow_system">Follow System</string>

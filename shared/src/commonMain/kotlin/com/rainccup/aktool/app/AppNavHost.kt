@@ -15,8 +15,9 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Home
@@ -26,6 +27,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -39,10 +41,13 @@ import androidx.navigation3.scene.Scene
 import androidx.navigation3.ui.NavDisplay
 import androidx.savedstate.serialization.SavedStateConfiguration
 import co.touchlab.kermit.Logger
+import com.rainccup.aktool.core.common.LocalAppConfig
 import com.rainccup.aktool.core.designsystem.LargeScreenBreakpoint
 import com.rainccup.aktool.core.designsystem.LocalFloatingBarInset
 import com.rainccup.aktool.core.designsystem.LocalLargeScreen
 import com.rainccup.aktool.core.designsystem.floatingBarMetrics
+import com.rainccup.aktool.core.designsystem.liquid.FloatingGlassBar
+import com.rainccup.aktool.core.designsystem.liquid.GlassBarTab
 import com.rainccup.aktool.core.domain.CharacterStore
 import com.rainccup.aktool.core.message.MessageBus
 import com.rainccup.aktool.core.navigation.AppRoute
@@ -64,17 +69,13 @@ import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
-import top.yukonga.miuix.kmp.basic.FloatingNavigationBar
-import top.yukonga.miuix.kmp.basic.FloatingNavigationBarItem
 import top.yukonga.miuix.kmp.basic.NavigationRail
 import top.yukonga.miuix.kmp.basic.NavigationRailItem
 import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.SnackbarHost
 import top.yukonga.miuix.kmp.basic.SnackbarHostState
-import top.yukonga.miuix.kmp.blur.highlight.Highlight
 import top.yukonga.miuix.kmp.blur.layerBackdrop
 import top.yukonga.miuix.kmp.blur.rememberLayerBackdrop
-import top.yukonga.miuix.kmp.blur.textureBlur
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 private val navConfig = SavedStateConfiguration {
@@ -358,29 +359,29 @@ fun AppNavHost(background: @Composable () -> Unit = {}) {
             snackbarHost = { SnackbarHost(state = snackbarHostState) },
             containerColor = Color.Transparent,
             bottomBar = {
-                // 半透明 surface 让底下内容透出来，再用 textureBlur 采样 layerBackdrop 形成玻璃。
                 AnimatedVisibility(
                     visible = bottomBarVisible,
                     enter = slideInVertically { it } + fadeIn(),
                     exit = slideOutVertically { it } + fadeOut(),
                 ) {
-                    FloatingNavigationBar(
-                        modifier = Modifier.textureBlur(
-                            backdrop = backdrop,
-                            shape = RoundedCornerShape(28.dp),
-                            // 玻璃边缘高光：沿形状内侧描一圈渐变亮边。
-                            highlight = Highlight(width = 1.dp, alpha = 0.55f),
-                        ),
-                        color = MiuixTheme.colorScheme.surface.copy(alpha = 0.55f),
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            // 系统导航栏的留白由底栏自己让出来（以前是 miuix FloatingNavigationBar 内部做的）。
+                            .navigationBarsPadding()
+                            .padding(horizontal = 16.dp, vertical = 8.dp)
+                            .padding(bottom = 16.dp),
+                        contentAlignment = Alignment.Center,
                     ) {
-                        tabs.forEach { tab ->
-                            FloatingNavigationBarItem(
-                                selected = currentTop == tab.route,
-                                onClick = { onTabSelect(tab.route) },
-                                icon = tab.icon,
-                                label = tab.label,
-                            )
-                        }
+                        val barTabs = remember(tabs) { tabs.map { GlassBarTab(it.label, it.icon) } }
+                        val selectedIndex = tabs.indexOfFirst { it.route == currentTop }
+                        FloatingGlassBar(
+                            selectedIndex = if (selectedIndex < 0) 0 else selectedIndex,
+                            onSelected = { index -> tabs.getOrNull(index)?.let { onTabSelect(it.route) } },
+                            tabs = barTabs,
+                            backdrop = backdrop,
+                            isBlurEnabled = LocalAppConfig.current.config.liquidGlass
+                        )
                     }
                 }
             },
