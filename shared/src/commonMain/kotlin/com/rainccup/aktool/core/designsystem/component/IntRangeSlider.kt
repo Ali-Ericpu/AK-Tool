@@ -14,7 +14,6 @@ import androidx.compose.ui.unit.dp
 import top.yukonga.miuix.kmp.basic.SliderDefaults
 import top.yukonga.miuix.kmp.preference.SliderPreference
 import top.yukonga.miuix.kmp.theme.MiuixTheme
-import kotlin.math.max
 import kotlin.math.roundToInt
 
 @Composable
@@ -24,6 +23,7 @@ fun IntRangeSlider(
     maxValue: Int,
     modifier: Modifier = Modifier,
     start: Int = 0,
+    enable: Boolean = true,
     background: Color = MiuixTheme.colorScheme.background.copy(alpha = 0.95f),
     onValueChangeFinished: (Int) -> Unit = { },
 ) {
@@ -33,8 +33,9 @@ fun IntRangeSlider(
         onValueChange = { value = it },
         title = title,
         valueText = value.roundToInt().toString(),
-        valueRange = start.toFloat()..maxValue.toFloat(),
-        steps = max(maxValue - start - 1, 0),
+        valueRange = start.toFloat()..maxValue.toFloat().coerceAtLeast(0.1f),
+        steps = (maxValue - start - 1).coerceAtLeast(0),
+        enabled = maxValue != start && enable,
         onValueChangeFinished = { onValueChangeFinished(value.roundToInt()) },
         hapticEffect = SliderDefaults.SliderHapticEffect.Step,
         modifier = modifier
