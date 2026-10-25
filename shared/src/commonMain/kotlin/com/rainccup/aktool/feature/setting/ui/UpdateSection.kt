@@ -34,6 +34,7 @@ import com.rainccup.aktool.resources.update_retry
 import com.rainccup.aktool.resources.update_up_to_date
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
+import top.yukonga.miuix.kmp.basic.BasicComponentDefaults
 import top.yukonga.miuix.kmp.basic.CircularProgressIndicator
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.preference.ArrowPreference
@@ -63,19 +64,38 @@ fun UpdateSection(viewModel: SettingViewModel) {
     ArrowPreference(
         title = stringResource(Res.string.update_check),
         summary = when {
-            downloading != null ->
-                stringResource(Res.string.update_downloading, (downloading.progress * 100).toInt())
+            downloading != null -> stringResource(
+                Res.string.update_downloading,
+                (downloading.progress * 100).toInt()
+            )
 
             state is UpdateUiState.Checking -> stringResource(Res.string.update_check)
-            state is UpdateUiState.UpToDate ->
-                stringResource(
-                    Res.string.update_up_to_date,
-                    (state as UpdateUiState.UpToDate).version
-                )
+            state is UpdateUiState.Available -> stringResource(
+                Res.string.update_available_title,
+                (state as UpdateUiState.Available).version
+            )
+
+            state is UpdateUiState.UpToDate -> stringResource(
+                Res.string.update_up_to_date,
+                (state as UpdateUiState.UpToDate).version
+            )
 
             else -> stringResource(Res.string.update_current_version, appInfo.versionName)
         },
-        onClick = { if (state !is UpdateUiState.Available) viewModel.checkUpdate() },
+        summaryColor = BasicComponentDefaults.summaryColor(
+            if (state is UpdateUiState.Available) {
+                MiuixTheme.colorScheme.primary
+            } else {
+                MiuixTheme.colorScheme.onSurfaceVariantSummary
+            }
+        ),
+        onClick = {
+            if (state is UpdateUiState.Available) {
+                viewModel.changeUpdateDialogState()
+            } else {
+                viewModel.checkUpdate()
+            }
+        },
         enabled = state !is UpdateUiState.Checking && downloading == null,
         endActions = {
             if (state is UpdateUiState.Checking || downloading != null) {
@@ -90,7 +110,7 @@ fun UpdateSection(viewModel: SettingViewModel) {
     when (val current = state) {
         is UpdateUiState.Available -> BasicDialog(
             title = stringResource(Res.string.update_available_title, current.version),
-            show = true,
+            show = current.show,
             cancelText = stringResource(Res.string.update_later),
             confirmText = stringResource(Res.string.update_download_and_install),
             onCancel = { viewModel.dismissUpdate() },

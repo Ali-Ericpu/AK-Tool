@@ -12,6 +12,7 @@ sealed interface UpdateUiState {
 
     /** 有可用新版本。[assetUrl] 为空表示 release 里没找到当前平台能装的包。 */
     data class Available(
+        val show: Boolean,
         val version: String,
         val notes: String,
         val assetUrl: String,

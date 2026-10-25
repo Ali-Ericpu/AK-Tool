@@ -93,10 +93,12 @@ fallback) and `values-zh/` (Chinese).
 | Logging | Kermit | 2.2.0 |
 | Testing | kotlin-test, JUnit 4 | 4.13.2 |
 
-Android targets `compileSdk`/`targetSdk` **37**, `minSdk` **28**, `versionCode` **203**,
-`versionName` **2.0.3**. The version itself lives in the root `build.gradle.kts`
-(`allprojects { version = "2.0.3" }`); `versionName` and the desktop `packageVersion` read it
-from there.
+Android targets `compileSdk`/`targetSdk` **37**, `minSdk` **28**. The app version has a single
+source: the `[versions]` table of `gradle/libs.versions.toml` (`app-version` is the version
+name, `android-version-code` the version code). The root `build.gradle.kts` copies
+`app-version` into every project's `version`, and `versionName`, the desktop `packageVersion`
+and the `version.properties` resource all derive from it. A release bump therefore means
+editing two lines in that TOML file.
 
 ---
 
@@ -143,7 +145,8 @@ The Compose resource class for `:shared` is generated into `com.rainccup.aktool.
 On Windows use `gradlew.bat`. `:desktopApp` is a standard Compose Desktop application block,
 so the Compose Gradle plugin's packaging tasks apply as well (for example
 `packageDistributionForCurrentOS`); `nativeDistributions` is configured with
-`packageName = "AK Tool"` and `packageVersion = version` (= `2.0.3`).
+`packageName = "AK Tool"` and `packageVersion = version` (the `app-version` from
+`gradle/libs.versions.toml`).
 
 Release builds of `:androidApp` enable `isMinifyEnabled` and `isShrinkResources`. No
 `signingConfigs` are declared in this repository, so a release APK/AAB needs signing details

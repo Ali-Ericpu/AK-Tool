@@ -41,7 +41,7 @@ android {
         applicationId = "com.rainccup.aktool"
         minSdk = 28
         targetSdk = 37
-        versionCode = 205
+        versionCode = libs.versions.android.version.code.get().toInt()
         versionName = project.version.toString()
     }
     compileOptions {

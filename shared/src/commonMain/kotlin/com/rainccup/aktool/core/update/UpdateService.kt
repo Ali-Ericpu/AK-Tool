@@ -66,9 +66,18 @@ class UpdateService(
         }
     }
 
+    fun changeUpdateDialogState() {
+        val value = state.value
+        if (value is UpdateUiState.Available) {
+            state.value = value.copy(show = !value.show)
+        }
+    }
+
     fun dismiss() {
-        when (state.value) {
-            is UpdateUiState.Available,
+        when (val value = state.value) {
+            // 「稍后」只是收起对话框：可用更新留着，设置行还能再打开
+            is UpdateUiState.Available -> state.value = value.copy(show = false)
+
             is UpdateUiState.UpToDate,
             is UpdateUiState.Failed,
             is UpdateUiState.NeedPermission,
@@ -116,6 +125,7 @@ class UpdateService(
 
         val asset = repository.pickAsset(release)
         state.value = UpdateUiState.Available(
+            show = manual,
             version = latest.toString(),
             notes = release.body.trim(),
             assetUrl = asset?.downloadUrl.orEmpty(),

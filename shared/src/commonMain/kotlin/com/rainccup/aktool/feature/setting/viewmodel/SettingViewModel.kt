@@ -11,13 +11,10 @@ import com.rainccup.aktool.resources.Res
 import com.rainccup.aktool.resources.error_uri
 import com.rainccup.aktool.resources.update_fail
 import com.rainccup.aktool.resources.update_success
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.getString
-import kotlin.time.Duration.Companion.milliseconds
 
 class SettingViewModel(
     private val useCase: SettingUseCase,
@@ -48,6 +45,8 @@ class SettingViewModel(
     }
 
     fun checkUpdate() = updateService.checkInBackground()
+
+    fun changeUpdateDialogState() = updateService.changeUpdateDialogState()
 
     fun downloadUpdate() = updateService.downloadInBackground()
 

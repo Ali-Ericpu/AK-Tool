@@ -37,10 +37,9 @@ fun BasicDialog(
     error: Boolean = false,
     neutralText: String? = null,
     onNeutral: () -> Unit = { },
-    // 按钮文案默认走通用词，具体流程需要更明确的动作时（例如「下载并安装」）局部覆盖
-    confirmText: String? = null,
-    cancelText: String? = null,
+    cancelText: String = stringResource(Res.string.cancel),
     onCancel: () -> Unit = { },
+    confirmText: String = stringResource(Res.string.confirm),
     onConfirm: () -> Unit = { },
     content: @Composable (ColumnScope.() -> Unit) = {}
 ) {
@@ -111,9 +110,9 @@ fun ConfirmButtonRow(
     error: Boolean = false,
     neutralText: String? = null,
     onNeutral: () -> Unit = { },
-    confirmText: String? = null,
-    cancelText: String? = null,
+    confirmText: String = stringResource(Res.string.confirm),
     onCancel: () -> Unit = { },
+    cancelText: String = stringResource(Res.string.cancel),
     onConfirm: () -> Unit = { }
 ) {
     Row(
@@ -134,7 +133,7 @@ fun ConfirmButtonRow(
             )
         }
         TextButton(
-            text = cancelText ?: stringResource(Res.string.cancel),
+            text = cancelText,
             onClick = onCancel,
             colors = ButtonDefaults.textButtonColors(
                 color = Color.Transparent,
@@ -142,7 +141,7 @@ fun ConfirmButtonRow(
             ),
         )
         TextButton(
-            text = confirmText ?: stringResource(Res.string.confirm),
+            text = confirmText,
             onClick = onConfirm,
             colors = ButtonDefaults.textButtonColors(
                 color = Color.Transparent,
