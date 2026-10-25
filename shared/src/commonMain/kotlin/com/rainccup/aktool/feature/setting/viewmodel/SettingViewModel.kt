@@ -5,6 +5,8 @@ import androidx.lifecycle.viewModelScope
 import co.touchlab.kermit.Logger
 import com.rainccup.aktool.core.domain.usecase.config.SettingUseCase
 import com.rainccup.aktool.core.platform.Messenger
+import com.rainccup.aktool.core.update.UpdateService
+import com.rainccup.aktool.core.update.UpdateUiState
 import com.rainccup.aktool.resources.Res
 import com.rainccup.aktool.resources.error_uri
 import com.rainccup.aktool.resources.update_fail
@@ -20,9 +22,13 @@ import kotlin.time.Duration.Companion.milliseconds
 class SettingViewModel(
     private val useCase: SettingUseCase,
     private val messenger: Messenger,
+    private val updateService: UpdateService,
 ) : ViewModel() {
     val isUpdateExcel: StateFlow<Boolean>
         field = MutableStateFlow(false)
+
+    /** 更新状态挂在应用级单例上，这里只做转发，页面销毁不会打断下载。 */
+    val updateState: StateFlow<UpdateUiState> = updateService.state
 
     fun updateExcel(uri: String) {
         viewModelScope.launch {
@@ -40,4 +46,16 @@ class SettingViewModel(
             isUpdateExcel.emit(false)
         }
     }
+
+    fun checkUpdate() = updateService.checkInBackground()
+
+    fun downloadUpdate() = updateService.downloadInBackground()
+
+    fun installUpdate() = updateService.installInBackground()
+
+    fun dismissUpdate() = updateService.dismiss()
+
+    fun openInstallPermission() = updateService.requestInstallPermission()
+
+    fun resumeUpdateAfterPermission() = updateService.installIfPermitted()
 }

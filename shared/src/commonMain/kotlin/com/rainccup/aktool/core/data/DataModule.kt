@@ -1,5 +1,6 @@
 package com.rainccup.aktool.core.data
 
+import com.rainccup.aktool.core.common.AppInfo
 import com.rainccup.aktool.core.data.datasource.ConfigRepository
 import com.rainccup.aktool.core.data.datasource.GameTableRepository
 import com.rainccup.aktool.core.data.repository.AdminRepository
@@ -21,6 +22,7 @@ val dataModule = module {
             adminKey = saved.adminKey,
         )
     }
+    single { AppInfo(get()) }
     single { HttpClientProvider(get()) }
     single { ApiClient(get<NetworkConfig>()) { get<HttpClientProvider>().client() } }
 

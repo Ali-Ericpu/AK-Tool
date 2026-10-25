@@ -1,5 +1,6 @@
 package com.rainccup.aktool.core.network
 
+import com.rainccup.aktool.core.common.AppBuildConfig
 import com.rainccup.aktool.core.common.JsonUtil
 import io.ktor.client.HttpClient
 import io.ktor.client.HttpClientConfig
@@ -12,6 +13,7 @@ import io.ktor.client.plugins.logging.Logging
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
+import org.koin.mp.KoinPlatform
 
 fun createHttpClient(
     config: NetworkConfig,
@@ -19,6 +21,8 @@ fun createHttpClient(
     expectSuccess: Boolean = true,
 ): HttpClient {
     val builder: HttpClientConfig<*>.() -> Unit = {
+        // 单测里没有启动 Koin，这里取不到就退回 INFO，别让构建信息把工厂变成硬依赖
+        val buildConfig = runCatching { KoinPlatform.getKoin().get<AppBuildConfig>() }.getOrNull()
         this.expectSuccess = expectSuccess
         install(ContentNegotiation) {
             json(JsonUtil.json)
@@ -29,7 +33,7 @@ fun createHttpClient(
                     co.touchlab.kermit.Logger.i(tag = "KTOR") { message }
                 }
             }
-            level = LogLevel.INFO
+            level = if (buildConfig?.isDebug == true) LogLevel.ALL else LogLevel.INFO
         }
         defaultRequest {
             url(config.baseUrl.ifBlank { NetworkConfig.DEFAULT_BASE_URL })

@@ -111,6 +111,7 @@ fun AppNavHost(background: @Composable () -> Unit = {}) {
     LaunchedEffect(messageBus) {
         messageBus.messages.collectLatest {
             Logger.i(tag = "LOG_MESSAGE") { it }
+
             snackbarHostState.showSnackbar(it)
         }
     }

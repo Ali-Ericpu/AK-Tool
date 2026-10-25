@@ -5,6 +5,7 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -24,6 +25,7 @@ import com.rainccup.aktool.core.designsystem.theme.seedColorOrNull
 import com.rainccup.aktool.core.model.ImageConfig
 import com.rainccup.aktool.core.network.HttpClientProvider
 import com.rainccup.aktool.core.platform.SyncSystemBarAppearance
+import com.rainccup.aktool.core.update.UpdateService
 import com.rainccup.aktool.feature.splash.ui.SplashPage
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
@@ -37,8 +39,12 @@ import top.yukonga.miuix.kmp.theme.lightColorScheme
 fun App() {
     val configRepository: ConfigRepository = koinInject()
     val httpClientProvider: HttpClientProvider = koinInject()
+    val updateService: UpdateService = koinInject()
     var config by remember { mutableStateOf(configRepository.read()) }
     val coroutineScope = rememberCoroutineScope()
+
+    // 启动静默检查一次版本，发现新版只用 snackbar 提示，不打断用户
+    LaunchedEffect(Unit) { updateService.checkOnStartup() }
 
     val darkMode = config.darkMode || isSystemInDarkTheme()
     // 状态栏/导航栏图标跟随主题：Android 15 起强制 edge-to-edge，图标写死会在深色主题下看不见

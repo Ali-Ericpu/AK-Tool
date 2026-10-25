@@ -95,6 +95,7 @@ class ArchitectureRuleTest {
          * - core.data → network / model / common / platform
          * - core.designsystem → model / common
          * - core.navigation → model
+         * - core.update → network / platform / model / common（查 GitHub + 下载编排，安装动作交平台端口）
          * - core.network / core.message / core.platform → model / common（message 另需 platform 以适配 Messenger 端口）
          * - app → 全部（应用外壳聚合各层）
          * `resources`（Compose 资源）对任何层开放，见 isAllowed。
@@ -168,6 +169,15 @@ class ArchitectureRuleTest {
 
             "core.navigation" to "core.model",
 
+            // 自动更新：core.update 只负责「查 GitHub → 下载 → 交给平台安装」，
+            // 所以允许它依赖网络与平台端口；设置页通过它读写状态。
+            "core.update" to "core.common",
+            "core.update" to "core.model",
+            "core.update" to "core.network",
+            "core.update" to "core.platform",
+            "feature.setting" to "core.update",
+
+
             "core.network" to "core.common",
             "core.network" to "core.model",
             "core.message" to "core.common",
@@ -185,6 +195,7 @@ class ArchitectureRuleTest {
             "app" to "core.navigation",
             "app" to "core.network",
             "app" to "core.platform",
+            "app" to "core.update",
             "app" to "feature.character",
             "app" to "feature.characterdetail",
             "app" to "feature.extra",

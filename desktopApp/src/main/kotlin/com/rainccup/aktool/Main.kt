@@ -14,16 +14,24 @@ import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
 import com.rainccup.aktool.app.App
 import com.rainccup.aktool.app.appModule
+import com.rainccup.aktool.core.common.AppBuildConfig
 import com.rainccup.aktool.core.platform.platformUiScale
 import com.rainccup.aktool.feature.character.ui.CharacterGridMetrics
 import org.koin.core.context.GlobalContext
 import org.koin.core.context.startKoin
+import org.koin.dsl.module
 import java.awt.GraphicsEnvironment
 import javax.imageio.ImageIO
 
 fun main() {
     if (GlobalContext.getOrNull() == null) {
-        startKoin { modules(appModule) }
+        startKoin {
+            // 构建信息由宿主提供：Android 用 BuildConfig，桌面读 processResources 展开的 version.properties
+            val configModule = module {
+                single<AppBuildConfig> { DesktopAppBuildConfig() }
+            }
+            modules(appModule, configModule)
+        }
     }
     application {
         Window(

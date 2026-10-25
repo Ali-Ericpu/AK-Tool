@@ -1,5 +1,6 @@
 package com.rainccup.aktool.core.platform
 
+import com.rainccup.aktool.core.common.AppInfo
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -10,6 +11,7 @@ val platformModule = module {
     single<ClipboardPort> { createClipboard() }
     single<FilePicker> { createFilePicker() }
     single<PlatformTheme> { createPlatformTheme() }
+    single<UpdatePort> { createUpdatePort() }
 
     // 活到进程结束的作用域：页面销毁后仍需跑完的操作（例如保存并返回）用它。
     single { AppScope(CoroutineScope(SupervisorJob() + Dispatchers.Default)) }

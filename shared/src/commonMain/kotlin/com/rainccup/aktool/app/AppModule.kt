@@ -4,6 +4,7 @@ import com.rainccup.aktool.core.data.dataModule
 import com.rainccup.aktool.core.domain.domainModule
 import com.rainccup.aktool.core.message.messageModule
 import com.rainccup.aktool.core.platform.platformModule
+import com.rainccup.aktool.core.update.updateModule
 import com.rainccup.aktool.feature.character.viewmodel.characterModule
 import com.rainccup.aktool.feature.characterdetail.viewmodel.characterDetailModule
 import com.rainccup.aktool.feature.extra.viewmodel.extraModule
@@ -17,6 +18,7 @@ val appModule = module {
     includes(
         dataModule,
         platformModule,
+        updateModule,
         messageModule,
         domainModule,
         homeModule,

@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -87,7 +88,7 @@ fun SettingPage() {
             verticalArrangement = Arrangement.spacedBy(16.dp),
             // 内容直接在悬浮底栏底下滑过去，最后一项靠这段底部留白停在浮层之上。
             contentPadding = PaddingValues(bottom = LocalFloatingBarInset.current),
-            modifier = Modifier.overScrollVertical()
+            modifier = Modifier.fillMaxSize().overScrollVertical()
         ) {
             item {
                 Column(modifier = Modifier.roundedBackground()) {
@@ -174,6 +175,11 @@ fun SettingPage() {
                         }
                     )
 
+                }
+            }
+            item {
+                Column(modifier = Modifier.roundedBackground()) {
+                    UpdateSection(viewModel)
                 }
             }
         }

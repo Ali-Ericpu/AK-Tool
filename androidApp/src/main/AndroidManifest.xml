@@ -6,6 +6,8 @@
          所以这里放行它，保留 minSdk 28。 -->
     <uses-sdk tools:overrideLibrary="top.yukonga.miuix.kmp.blur" />
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- 自动更新：下载完 apk 后拉起系统安装器 -->
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
     <application
         android:icon="@mipmap/ic_launcher"
         android:roundIcon="@mipmap/ic_launcher_round"
@@ -14,6 +16,10 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.AKTool"
         android:usesCleartextTraffic="true">
+        <!-- 自动更新：PackageInstaller 的会话结果回调（pendingIntent 唤起，故 exported=false） -->
+        <receiver
+            android:name="com.rainccup.aktool.core.platform.UpdateInstallReceiver"
+            android:exported="false" />
         <activity
             android:name=".MainActivity"
             android:exported="true"
