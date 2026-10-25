@@ -90,6 +90,7 @@ import top.yukonga.miuix.kmp.basic.TextField
 import top.yukonga.miuix.kmp.overlay.OverlayDialog
 import top.yukonga.miuix.kmp.preference.ArrowPreference
 import top.yukonga.miuix.kmp.theme.MiuixTheme
+import top.yukonga.miuix.kmp.utils.overScrollVertical
 
 @Composable
 fun ExtraPage() {
@@ -101,66 +102,63 @@ fun ExtraPage() {
     val showActivityDialog by viewModel.showActivityDialog.collectAsState()
     val showAccountDialog by viewModel.showAccountDialog.collectAsState()
     val showValidCodeDialog by viewModel.showValidCodeDialog.collectAsState()
-    Box(modifier = Modifier.fillMaxSize()) {
-        LazyColumn(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-            // 内容直接在悬浮底栏底下滑过去，最后一项靠这段底部留白停在浮层之上。
-            contentPadding = PaddingValues(bottom = LocalFloatingBarInset.current),
-            modifier = Modifier.fillMaxSize()
-        ) {
-
-            item {
-                Column(modifier = Modifier.roundedBackground()) {
-                    ArrowPreference(
-                        title = stringResource(Res.string.register_acc),
-                        onClick = viewModel::changeAccountState
-                    )
-                    ArrowPreference(
-                        title = stringResource(Res.string.query_account),
-                        onClick = viewModel::queryAccountByUID
-                    )
-                    ArrowPreference(
-                        title = stringResource(Res.string.reset_account),
-                        onClick = viewModel::resetAccount
-                    )
-                    ArrowPreference(
-                        title = stringResource(Res.string.add_flush_message),
-                        onClick = viewModel::changeMessageState
-                    )
-                    ArrowPreference(
-                        title = stringResource(Res.string.query_valid_code),
-                        onClick = viewModel::changeValidCodeState
-                    )
-                }
+    LazyColumn(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+        // 内容直接在悬浮底栏底下滑过去，最后一项靠这段底部留白停在浮层之上。
+        contentPadding = PaddingValues(bottom = LocalFloatingBarInset.current),
+        modifier = Modifier.fillMaxSize().overScrollVertical()
+    ) {
+        item {
+            Column(modifier = Modifier.roundedBackground()) {
+                ArrowPreference(
+                    title = stringResource(Res.string.register_acc),
+                    onClick = viewModel::changeAccountState
+                )
+                ArrowPreference(
+                    title = stringResource(Res.string.query_account),
+                    onClick = viewModel::queryAccountByUID
+                )
+                ArrowPreference(
+                    title = stringResource(Res.string.reset_account),
+                    onClick = viewModel::resetAccount
+                )
+                ArrowPreference(
+                    title = stringResource(Res.string.add_flush_message),
+                    onClick = viewModel::changeMessageState
+                )
+                ArrowPreference(
+                    title = stringResource(Res.string.query_valid_code),
+                    onClick = viewModel::changeValidCodeState
+                )
             }
-            item {
-                Column(modifier = Modifier.roundedBackground()) {
-                    ArrowPreference(
-                        title = stringResource(Res.string.unlock_all_char),
-                        onClick = viewModel::changeUnlockCharState
-                    )
-                    ArrowPreference(
-                        title = stringResource(Res.string.unlock_all_stages),
-                        onClick = viewModel::unlockAllStages
-                    )
-                    ArrowPreference(
-                        title = stringResource(Res.string.unlock_all_flags),
-                        onClick = viewModel::unlockAllFlags
-                    )
-                    ArrowPreference(
-                        title = stringResource(Res.string.gain_item),
-                        onClick = viewModel::changeItemState
-                    )
-                    ArrowPreference(
-                        title = stringResource(Res.string.reset_act),
-                        onClick = viewModel::changeActivityState
-                    )
-                    ArrowPreference(
-                        title = stringResource(Res.string.reset_rlv2),
-                        onClick = viewModel::resetRlv2
-                    )
-                }
+        }
+        item {
+            Column(modifier = Modifier.roundedBackground()) {
+                ArrowPreference(
+                    title = stringResource(Res.string.unlock_all_char),
+                    onClick = viewModel::changeUnlockCharState
+                )
+                ArrowPreference(
+                    title = stringResource(Res.string.unlock_all_stages),
+                    onClick = viewModel::unlockAllStages
+                )
+                ArrowPreference(
+                    title = stringResource(Res.string.unlock_all_flags),
+                    onClick = viewModel::unlockAllFlags
+                )
+                ArrowPreference(
+                    title = stringResource(Res.string.gain_item),
+                    onClick = viewModel::changeItemState
+                )
+                ArrowPreference(
+                    title = stringResource(Res.string.reset_act),
+                    onClick = viewModel::changeActivityState
+                )
+                ArrowPreference(
+                    title = stringResource(Res.string.reset_rlv2),
+                    onClick = viewModel::resetRlv2
+                )
             }
         }
     }

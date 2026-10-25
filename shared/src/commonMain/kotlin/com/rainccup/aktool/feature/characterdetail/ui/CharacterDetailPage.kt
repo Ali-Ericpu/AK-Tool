@@ -25,9 +25,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -37,7 +34,6 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.rainccup.aktool.core.designsystem.component.BasicDialog
 import com.rainccup.aktool.core.designsystem.component.IntRangeSlider
 import com.rainccup.aktool.core.designsystem.component.PageActionRow
 import com.rainccup.aktool.core.designsystem.component.roundedBackground
@@ -48,7 +44,6 @@ import com.rainccup.aktool.core.navigation.characterCardSharedElement
 import com.rainccup.aktool.core.platform.platformUiScale
 import com.rainccup.aktool.feature.character.ui.CharacterCard
 import com.rainccup.aktool.feature.character.ui.equipPainter
-import com.rainccup.aktool.feature.character.ui.portraitPainter
 import com.rainccup.aktool.feature.character.ui.skillPainter
 import com.rainccup.aktool.feature.characterdetail.viewmodel.CharacterDetailViewModel
 import com.rainccup.aktool.resources.Res
@@ -65,7 +60,6 @@ import com.rainccup.aktool.resources.level
 import com.rainccup.aktool.resources.potential_rank
 import com.rainccup.aktool.resources.save
 import com.rainccup.aktool.resources.skill_level
-import com.rainccup.aktool.resources.skin
 import com.rainccup.aktool.resources.star_mark
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
@@ -74,9 +68,6 @@ import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
 import top.yukonga.miuix.kmp.basic.BasicComponent
 import top.yukonga.miuix.kmp.basic.IconButton
-import top.yukonga.miuix.kmp.preference.ArrowPreference
-import top.yukonga.miuix.kmp.preference.CheckboxLocation
-import top.yukonga.miuix.kmp.preference.CheckboxPreference
 import top.yukonga.miuix.kmp.preference.SwitchPreference
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
@@ -232,7 +223,9 @@ fun CharacterDetailPage(
                 confirmText = stringResource(Res.string.save),
                 onConfirm = saveChar,
                 onCancel = { onSaved(null) },
-                modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
+                modifier = Modifier
+                    .padding(horizontal = 12.dp, vertical = 8.dp)
+                    .padding(bottom = 16.dp)
             )
         }
     }

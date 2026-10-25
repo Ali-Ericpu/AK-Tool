@@ -61,6 +61,7 @@ import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.preference.ArrowPreference
 import top.yukonga.miuix.kmp.preference.SwitchPreference
 import top.yukonga.miuix.kmp.theme.MiuixTheme
+import top.yukonga.miuix.kmp.utils.overScrollVertical
 
 @Composable
 fun SettingPage() {
@@ -85,7 +86,8 @@ fun SettingPage() {
         LazyColumn(
             verticalArrangement = Arrangement.spacedBy(16.dp),
             // 内容直接在悬浮底栏底下滑过去，最后一项靠这段底部留白停在浮层之上。
-            contentPadding = PaddingValues(bottom = LocalFloatingBarInset.current)
+            contentPadding = PaddingValues(bottom = LocalFloatingBarInset.current),
+            modifier = Modifier.overScrollVertical()
         ) {
             item {
                 Column(modifier = Modifier.roundedBackground()) {
