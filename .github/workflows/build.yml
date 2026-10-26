@@ -159,11 +159,33 @@ jobs:
     steps:
       # gh needs a repository context. This job only consumes artifacts, so without a checkout
       # it has no .git to infer the repo from; the -R flags below are the second safeguard.
+      # fetch-depth 0 is required to walk the tag history for the release notes.
       - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
 
       - uses: actions/download-artifact@v7
         with:
           path: artifacts
+
+      # GitHub's generated notes are built from merged pull requests; this repo commits straight
+      # to master, so they come out empty. Compose them from the commit subjects instead.
+      - name: Compose release notes from commits
+        run: |
+          set -euo pipefail
+          prev=$(git describe --tags --abbrev=0 "${GITHUB_REF_NAME}^" 2>/dev/null || true)
+          if [ -n "$prev" ]; then range="$prev..$GITHUB_REF_NAME"; else range="$GITHUB_REF_NAME"; fi
+          {
+            echo "## What's Changed"
+            echo
+            git log --no-merges --pretty=format:'* %s (%h)' "$range"
+            echo
+            if [ -n "$prev" ]; then
+              echo
+              echo "**Full Changelog**: https://github.com/$GITHUB_REPOSITORY/compare/$prev...$GITHUB_REF_NAME"
+            fi
+          } > notes.md
+          cat notes.md
 
       - name: Upload to the GitHub release
         env:
@@ -171,6 +193,8 @@ jobs:
           GH_REPO: ${{ github.repository }}
         run: |
           gh release view "$GITHUB_REF_NAME" -R "$GITHUB_REPOSITORY" > /dev/null 2>&1 \
-            || gh release create "$GITHUB_REF_NAME" -R "$GITHUB_REPOSITORY" --title "$GITHUB_REF_NAME" --generate-notes
+            || gh release create "$GITHUB_REF_NAME" -R "$GITHUB_REPOSITORY" --title "$GITHUB_REF_NAME" --notes-file notes.md
+          # Re-runs and manual releases keep the notes in sync with the tag.
+          gh release edit "$GITHUB_REF_NAME" -R "$GITHUB_REPOSITORY" --notes-file notes.md
           find artifacts -type f \( -name '*.apk' -o -name '*.zip' -o -name '*.msi' -o -name '*.exe' \) -print0 \
             | xargs -0 gh release upload "$GITHUB_REF_NAME" -R "$GITHUB_REPOSITORY" --clobber

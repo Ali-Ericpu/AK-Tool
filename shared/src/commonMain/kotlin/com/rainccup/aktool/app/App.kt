@@ -22,6 +22,7 @@ import com.rainccup.aktool.core.designsystem.theme.AKToolTheme
 import com.rainccup.aktool.core.designsystem.theme.directPrimaryColors
 import com.rainccup.aktool.core.designsystem.theme.resolveColorSchemeMode
 import com.rainccup.aktool.core.designsystem.theme.seedColorOrNull
+import com.rainccup.aktool.core.designsystem.theme.withDistinctSurface
 import com.rainccup.aktool.core.model.ImageConfig
 import com.rainccup.aktool.core.network.HttpClientProvider
 import com.rainccup.aktool.core.platform.SyncSystemBarAppearance
@@ -65,7 +66,9 @@ fun App() {
             keyColor = seedColor.takeIf { config.dynamicColor },
         )
     }
-    MiuixTheme(controller = miuixController) {
+    // Monet 下 surface 与 background 同 tone，页面会和浮层/卡片糊成一片：把 surface 挪开一档
+    val miuixColors = miuixController.currentColors().withDistinctSurface(darkMode)
+    MiuixTheme(colors = miuixColors) {
         AKToolTheme(darkTheme = darkMode) {
             CompositionLocalProvider(
                 LocalAppConfig provides AppConfigContext(config) { new ->

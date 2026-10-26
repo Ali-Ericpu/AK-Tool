@@ -114,6 +114,23 @@ fun bridgeToMaterial3(colors: Colors, dark: Boolean): ColorScheme {
 }
 
 /**
+ * Monet 派生出的 surface 与 background 是同一个 tone：Material You 里两者本就同色，
+ * 于是页面底色、它上面的浮层和卡片会糊成一片（固定色板则分别是 F7F7F7 / White）。
+ *
+ * 这里把 surface 挪开一档、背景留给 background：浅色下沉、深色上浮，
+ * 正是固定色板里 surface 相对 background 的关系（F7F7F7 < White，#1A1A1A > Black）。
+ */
+fun Colors.withDistinctSurface(dark: Boolean): Colors {
+    if (surface != background) return this
+    val surface = if (dark) {
+        Color.White.copy(alpha = 0.10f).compositeOver(background)
+    } else {
+        Color.Black.copy(alpha = 0.08f).compositeOver(background)
+    }
+    return copy(surface = surface)
+}
+
+/**
  * AppConfig.primaryColor 的「未设置」哨兵值：0 表示用户没有自选主题色，
  * 此时配色模式回退到 darkMode / dynamicColor 的既有优先级。
  *
