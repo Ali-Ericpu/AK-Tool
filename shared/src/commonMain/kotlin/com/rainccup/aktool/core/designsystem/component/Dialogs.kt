@@ -6,6 +6,8 @@ import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -28,6 +30,11 @@ import top.yukonga.miuix.kmp.layout.DialogDefaults
 import top.yukonga.miuix.kmp.overlay.OverlayDialog
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
+/**
+ * @param contentScrollable 内容区是否由本组件负责滚动。 默认 `true`：内容被放进一个高度封顶的可滚动区域，
+ * 再长也不会顶掉按钮行。内容自己已经在滚动时（`LazyColumn` / `LazyVerticalGrid` / 自己的 `verticalScroll`）
+ * 必须传 `false`，否则内层会以无限高约束被测量，直接抛异常。
+ */
 @Composable
 fun BasicDialog(
     title: String,
@@ -41,6 +48,7 @@ fun BasicDialog(
     onCancel: () -> Unit = { },
     confirmText: String = stringResource(Res.string.confirm),
     onConfirm: () -> Unit = { },
+    contentScrollable: Boolean = true,
     content: @Composable (ColumnScope.() -> Unit) = {}
 ) {
     OverlayDialog(
@@ -51,10 +59,25 @@ fun BasicDialog(
         onDismissRequest = onCancel,
     ) {
         Column(
-            verticalArrangement = Arrangement.SpaceAround,
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            content()
+            // 弹窗内容一长就会把 ConfirmButtonRow 顶到屏幕外。
+            // 这里给内容区一个可滚动上限：短内容照旧按自身高度排布（fill = false 不撑高），
+            // 长内容在区域内滚动，按钮行永远贴底可见。
+            Column(
+                modifier = Modifier
+                    .weight(1f, fill = false)
+                    .then(
+                        if (contentScrollable) {
+                            Modifier.verticalScroll(rememberScrollState())
+                        } else {
+                            Modifier
+                        }
+                    ),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                content()
+            }
             ConfirmButtonRow(
                 error = error,
                 neutralText = neutralText,
@@ -145,7 +168,7 @@ fun ConfirmButtonRow(
             onClick = onConfirm,
             colors = ButtonDefaults.textButtonColors(
                 color = Color.Transparent,
-                textColor = if (error) Color.Red else MiuixTheme.colorScheme.primary,
+                textColor = if (error) MiuixTheme.colorScheme.error else MiuixTheme.colorScheme.primary,
             ),
         )
     }

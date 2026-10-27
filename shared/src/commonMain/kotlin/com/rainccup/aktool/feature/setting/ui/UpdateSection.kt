@@ -1,9 +1,6 @@
 package com.rainccup.aktool.feature.setting.ui
 
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
@@ -120,9 +117,6 @@ fun UpdateSection(viewModel: SettingViewModel) {
                 Text(
                     text = current.notes,
                     style = MiuixTheme.textStyles.body2,
-                    modifier = Modifier
-                        .heightIn(max = 200.dp)
-                        .verticalScroll(rememberScrollState()),
                 )
             }
         }

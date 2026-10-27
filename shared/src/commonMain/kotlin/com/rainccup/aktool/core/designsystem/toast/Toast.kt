@@ -9,6 +9,7 @@ import androidx.compose.animation.scaleOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -116,6 +117,7 @@ private fun ToastBubble(text: String) {
     val shape = RoundedCornerShape(28.dp)
     Box(
         modifier = Modifier
+            .imePadding()
             .widthIn(max = 300.dp)
             .shadow(elevation = 12.dp, shape = shape)
             .background(color = MiuixTheme.colorScheme.background, shape = shape)

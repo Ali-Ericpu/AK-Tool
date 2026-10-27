@@ -29,26 +29,6 @@ class ExtraViewModel(
     val showUnlockChar: StateFlow<Boolean>
         field = MutableStateFlow(false)
 
-    val showMessageDialog: StateFlow<Boolean>
-        field = MutableStateFlow(false)
-
-    val showItemDialog: StateFlow<Boolean>
-        field = MutableStateFlow(false)
-
-    val showActivityDialog: StateFlow<Boolean>
-        field = MutableStateFlow(false)
-
-    val showAccountDialog: StateFlow<Boolean>
-        field = MutableStateFlow(false)
-
-    val showValidCodeDialog: StateFlow<Boolean>
-        field = MutableStateFlow(false)
-
-    val isConnecting: StateFlow<Boolean>
-        field = MutableStateFlow(false)
-
-    private var validateCode = mapOf<String, String>()
-
     fun changeUnlockCharState() = viewModelScope.launch {
         if (showUnlockChar.value || useCase.init()) {
             showUnlockChar.emit(!showUnlockChar.value)
@@ -57,28 +37,7 @@ class ExtraViewModel(
         }
     }
 
-    fun changeMessageState() = viewModelScope.launch {
-        showMessageDialog.emit(!showMessageDialog.value)
-    }
-
-    fun changeItemState() = viewModelScope.launch {
-        showItemDialog.emit(!showItemDialog.value)
-    }
-
-    fun changeActivityState() = viewModelScope.launch {
-        showActivityDialog.emit(!showActivityDialog.value)
-    }
-
-    fun changeAccountState() = viewModelScope.launch {
-        showAccountDialog.emit(!showAccountDialog.value)
-    }
-
-    fun changeValidCodeState() = viewModelScope.launch {
-        showValidCodeDialog.emit(!showValidCodeDialog.value)
-    }
-
     private suspend fun doRequest(request: suspend () -> ApiResult<JsonElement?>) {
-        isConnecting.emit(true)
         try {
             val result = request()
             if (result.status != 0) {
@@ -88,7 +47,6 @@ class ExtraViewModel(
         } catch (e: Exception) {
             messenger.show(e.message ?: "error")
         }
-        isConnecting.emit(false)
     }
 
     fun unlockAllChar(body: UnlockAllCharRequest) = viewModelScope.launch {
@@ -127,17 +85,11 @@ class ExtraViewModel(
         doRequest { useCase.resetIntegratedStrategies() }
     }
 
-    fun syncValidCode() = viewModelScope.launch {
-        isConnecting.emit(true)
-        runCatching {
-            validateCode = useCase.syncValidCode()
-        }.onFailure {
+    suspend fun syncValidCode(): Map<String, String> {
+        return runCatching { useCase.syncValidCode() }.onFailure {
             messenger.show(it.message ?: "error")
-        }
-        isConnecting.emit(false)
+        }.getOrElse { emptyMap() }
     }
-
-    fun validateCodeList(): List<Pair<String, String>> = validateCode.toList()
 
     fun queryAccountByUID() = viewModelScope.launch {
         runCatching {

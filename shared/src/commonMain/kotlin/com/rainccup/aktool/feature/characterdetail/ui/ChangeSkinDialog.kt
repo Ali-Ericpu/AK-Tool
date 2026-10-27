@@ -72,6 +72,8 @@ fun ChangeSkinDialog(
     BasicDialog(
         title = stringResource(Res.string.skin),
         show = show,
+        // 网格自己就是滚动容器（懒加载），交给 BasicDialog 再包一层滚动会以内层无限高约束测量而崩
+        contentScrollable = false,
         onCancel = { show = false },
         onConfirm = {
             onConfirm(skin)

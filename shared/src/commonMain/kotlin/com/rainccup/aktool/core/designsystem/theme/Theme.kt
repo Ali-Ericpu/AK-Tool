@@ -6,9 +6,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.graphics.luminance
+import top.yukonga.miuix.kmp.basic.TextFieldColors
 import top.yukonga.miuix.kmp.theme.ColorSchemeMode
 import top.yukonga.miuix.kmp.theme.Colors
 import top.yukonga.miuix.kmp.theme.MiuixTheme
@@ -199,6 +201,21 @@ fun contrastingOn(background: Color): Color {
     val againstBlack = (luminance + 0.05f) / 0.05f
     val againstWhite = 1.05f / (luminance + 0.05f)
     return if (againstBlack >= againstWhite) Color.Black else Color.White
+}
+
+@Composable
+fun errorTextFieldColors(
+    error: Boolean = false,
+    backgroundColor: Color = MiuixTheme.colorScheme.secondaryContainer,
+    labelColor: Color = MiuixTheme.colorScheme.onSecondaryContainer,
+    borderColor: Color = MiuixTheme.colorScheme.primary,
+    errorColor: Color = MiuixTheme.colorScheme.error
+): TextFieldColors = remember(error, backgroundColor, labelColor, borderColor, errorColor) {
+    TextFieldColors(
+        backgroundColor = backgroundColor,
+        labelColor = labelColor,
+        borderColor = if (error) errorColor else borderColor,
+    )
 }
 
 @Composable

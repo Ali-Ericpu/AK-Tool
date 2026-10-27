@@ -8,9 +8,9 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -21,12 +21,13 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -38,6 +39,8 @@ import com.rainccup.aktool.core.designsystem.component.BasicDialog
 import com.rainccup.aktool.core.designsystem.component.ConfirmButtonRow
 import com.rainccup.aktool.core.designsystem.component.IntRangeSlider
 import com.rainccup.aktool.core.designsystem.component.roundedBackground
+import com.rainccup.aktool.core.designsystem.theme.errorTextFieldColors
+import com.rainccup.aktool.core.designsystem.toast.LocalToast
 import com.rainccup.aktool.core.domain.model.UnlockAllCharRules
 import com.rainccup.aktool.core.model.AddFlushMessageRequest
 import com.rainccup.aktool.core.model.Item
@@ -81,6 +84,7 @@ import com.rainccup.aktool.resources.unlock_all_char
 import com.rainccup.aktool.resources.unlock_all_flags
 import com.rainccup.aktool.resources.unlock_all_stages
 import com.rainccup.aktool.resources.valid_code
+import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
@@ -96,12 +100,6 @@ import top.yukonga.miuix.kmp.utils.overScrollVertical
 fun ExtraPage() {
     val viewModel: ExtraViewModel = koinViewModel()
     val showUnlockChar by viewModel.showUnlockChar.collectAsState()
-    val showMessageDialog by viewModel.showMessageDialog.collectAsState()
-    val showItemDialog by viewModel.showItemDialog.collectAsState()
-    val isConnecting by viewModel.isConnecting.collectAsState()
-    val showActivityDialog by viewModel.showActivityDialog.collectAsState()
-    val showAccountDialog by viewModel.showAccountDialog.collectAsState()
-    val showValidCodeDialog by viewModel.showValidCodeDialog.collectAsState()
     LazyColumn(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -111,10 +109,7 @@ fun ExtraPage() {
     ) {
         item {
             Column(modifier = Modifier.roundedBackground()) {
-                ArrowPreference(
-                    title = stringResource(Res.string.register_acc),
-                    onClick = viewModel::changeAccountState
-                )
+                RegisterAccountDialog(onValueSave = viewModel::registerAccount)
                 ArrowPreference(
                     title = stringResource(Res.string.query_account),
                     onClick = viewModel::queryAccountByUID
@@ -123,14 +118,8 @@ fun ExtraPage() {
                     title = stringResource(Res.string.reset_account),
                     onClick = viewModel::resetAccount
                 )
-                ArrowPreference(
-                    title = stringResource(Res.string.add_flush_message),
-                    onClick = viewModel::changeMessageState
-                )
-                ArrowPreference(
-                    title = stringResource(Res.string.query_valid_code),
-                    onClick = viewModel::changeValidCodeState
-                )
+                AddFlushMessageDialog(onValueSave = viewModel::addFlushMessage)
+                ValidateCodeDialog(syncCode = viewModel::syncValidCode)
             }
         }
         item {
@@ -147,14 +136,8 @@ fun ExtraPage() {
                     title = stringResource(Res.string.unlock_all_flags),
                     onClick = viewModel::unlockAllFlags
                 )
-                ArrowPreference(
-                    title = stringResource(Res.string.gain_item),
-                    onClick = viewModel::changeItemState
-                )
-                ArrowPreference(
-                    title = stringResource(Res.string.reset_act),
-                    onClick = viewModel::changeActivityState
-                )
+                GainItemDialog(onValueSave = viewModel::gainItem)
+                ResetActivityDialog(onValueSave = viewModel::resetActivity)
                 ArrowPreference(
                     title = stringResource(Res.string.reset_rlv2),
                     onClick = viewModel::resetRlv2
@@ -166,29 +149,6 @@ fun ExtraPage() {
         it?.let { viewModel.unlockAllChar(it) }
         viewModel.changeUnlockCharState()
     }
-    AddFlushMessageDialog(showMessageDialog) {
-        it?.let { viewModel.addFlushMessage(it) }
-        viewModel.changeMessageState()
-    }
-    GainItemDialog(showItemDialog) {
-        it?.let { viewModel.gainItem(it) }
-        viewModel.changeItemState()
-    }
-    ResetActivityDialog(showActivityDialog) {
-        it?.let { viewModel.resetActivity(it) }
-        viewModel.changeActivityState()
-    }
-    RegisterAccountDialog(showAccountDialog) {
-        it?.let { viewModel.registerAccount(it) }
-        viewModel.changeAccountState()
-    }
-    ValidateCodeDialog(
-        show = showValidCodeDialog,
-        isRefreshing = isConnecting,
-        validateCode = viewModel.validateCodeList(),
-        onRefresh = viewModel::syncValidCode,
-        onExit = viewModel::changeValidCodeState
-    )
 }
 
 @Composable
@@ -312,31 +272,37 @@ private fun UnlockAllCharDialog(
 
 
 @Composable
-private fun AddFlushMessageDialog(
-    show: Boolean,
-    onValueSave: (AddFlushMessageRequest?) -> Unit = {}
-) {
-    var uid by remember { mutableStateOf("ALL") }
-    var message by remember { mutableStateOf("") }
+private fun AddFlushMessageDialog(onValueSave: (AddFlushMessageRequest) -> Unit) {
+    var show by remember { mutableStateOf(false) }
+    var uid by remember(show) { mutableStateOf("ALL") }
+    var message by remember(show) { mutableStateOf("") }
+    val hostState = LocalToast.current
+    val errorMessage = stringResource(Res.string.content_invalid)
     val error = message.isEmpty() || uid.isEmpty()
+    ArrowPreference(
+        title = stringResource(Res.string.add_flush_message),
+        onClick = { show = true }
+    )
     BasicDialog(
         show = show,
         error = error,
-        summary = if (error) stringResource(Res.string.content_invalid) else null,
+        summary = errorMessage.takeIf { error },
         summaryColor = if (error) MiuixTheme.colorScheme.error else MiuixTheme.colorScheme.onBackground,
         title = stringResource(Res.string.push_message),
-        onCancel = { onValueSave(null) },
+        onCancel = { show = false },
         onConfirm = {
             if (error) {
-
+                hostState?.show(errorMessage)
             } else {
                 onValueSave(AddFlushMessageRequest(uid, message))
+                show = false
             }
         }
     ) {
         TextField(
             value = uid,
             onValueChange = { uid = it },
+            colors = errorTextFieldColors(error = uid.isBlank()),
             label = stringResource(Res.string.uid),
             singleLine = true,
             modifier = Modifier.padding(bottom = 16.dp)
@@ -344,6 +310,7 @@ private fun AddFlushMessageDialog(
         TextField(
             value = message,
             onValueChange = { message = it },
+            colors = errorTextFieldColors(error = message.isBlank()),
             label = stringResource(Res.string.message),
             maxLines = Int.MAX_VALUE,
         )
@@ -351,25 +318,30 @@ private fun AddFlushMessageDialog(
 }
 
 @Composable
-private fun ResetActivityDialog(
-    show: Boolean,
-    onValueSave: (ResetActivityRequest?) -> Unit = {}
-) {
-    var id by remember { mutableStateOf("") }
-    var type by remember { mutableStateOf("") }
+private fun ResetActivityDialog(onValueSave: (ResetActivityRequest) -> Unit) {
+    var show by remember { mutableStateOf(false) }
+    var id by remember(show) { mutableStateOf("") }
+    var type by remember(show) { mutableStateOf("") }
     val error = id.isEmpty() || type.isEmpty()
+    val hostState = LocalToast.current
+    val errorMessage = stringResource(Res.string.content_invalid)
+    ArrowPreference(
+        title = stringResource(Res.string.reset_act),
+        onClick = { show = true }
+    )
     BasicDialog(
         show = show,
         error = error,
-        summary = if (error) stringResource(Res.string.content_invalid) else null,
+        summary = errorMessage.takeIf { error },
         summaryColor = if (error) MiuixTheme.colorScheme.error else MiuixTheme.colorScheme.onBackground,
         title = stringResource(Res.string.reset_act),
-        onCancel = { onValueSave(null) },
+        onCancel = { show = false },
         onConfirm = {
             if (error) {
-
+                hostState?.show(errorMessage)
             } else {
                 onValueSave(ResetActivityRequest(type, id))
+                show = false
             }
         }
     ) {
@@ -377,6 +349,7 @@ private fun ResetActivityDialog(
             value = type,
             onValueChange = { type = it },
             label = stringResource(Res.string.act_type),
+            colors = errorTextFieldColors(error = type.isBlank()),
             singleLine = true,
             modifier = Modifier.padding(bottom = 16.dp)
         )
@@ -384,32 +357,38 @@ private fun ResetActivityDialog(
             value = id,
             onValueChange = { id = it },
             label = stringResource(Res.string.act_id),
+            colors = errorTextFieldColors(error = id.isBlank()),
             singleLine = true,
         )
     }
 }
 
 @Composable
-private fun GainItemDialog(
-    show: Boolean,
-    onValueSave: (Item?) -> Unit = {}
-) {
-    var itemId by remember { mutableStateOf("") }
-    var itemType by remember { mutableStateOf("") }
-    var count by remember { mutableIntStateOf(1) }
+private fun GainItemDialog(onValueSave: (Item) -> Unit) {
+    var show by remember { mutableStateOf(false) }
+    var itemId by remember(show) { mutableStateOf("") }
+    var itemType by remember(show) { mutableStateOf("") }
+    var count by remember(show) { mutableIntStateOf(1) }
     val error = itemId.isEmpty() || itemType.isEmpty()
+    val hostState = LocalToast.current
+    val errorMessage = stringResource(Res.string.content_invalid)
+    ArrowPreference(
+        title = stringResource(Res.string.gain_item),
+        onClick = { show = true }
+    )
     BasicDialog(
         title = stringResource(Res.string.item),
         show = show,
-        summary = if (error) stringResource(Res.string.content_invalid) else null,
+        summary = errorMessage.takeIf { error },
         summaryColor = if (error) MiuixTheme.colorScheme.error else MiuixTheme.colorScheme.onBackground,
         error = error,
-        onCancel = { onValueSave(null) },
+        onCancel = { show = false },
         onConfirm = {
             if (error) {
-
+                hostState?.show(errorMessage)
             } else {
                 onValueSave(Item(itemId, itemType, count))
+                show = false
             }
         }
     ) {
@@ -417,6 +396,7 @@ private fun GainItemDialog(
             value = itemId,
             onValueChange = { itemId = it },
             label = stringResource(Res.string.item_id),
+            colors = errorTextFieldColors(error = itemId.isBlank()),
             singleLine = true,
             modifier = Modifier.padding(bottom = 16.dp)
         )
@@ -424,6 +404,7 @@ private fun GainItemDialog(
             value = itemType,
             onValueChange = { itemType = it },
             label = stringResource(Res.string.item_type),
+            colors = errorTextFieldColors(error = itemType.isBlank()),
             maxLines = Int.MAX_VALUE,
         )
         IntRangeSlider(
@@ -437,25 +418,30 @@ private fun GainItemDialog(
 }
 
 @Composable
-private fun RegisterAccountDialog(
-    show: Boolean,
-    onValueSave: (RegisterAccountRequest?) -> Unit = {}
-) {
-    var account by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
+private fun RegisterAccountDialog(onValueSave: (RegisterAccountRequest) -> Unit) {
+    var show by remember { mutableStateOf(false) }
+    var account by remember(show) { mutableStateOf("") }
+    var password by remember(show) { mutableStateOf("") }
     val error = account.isBlank() || account.length > 15 || password.isBlank()
+    val hostState = LocalToast.current
+    val errorMessage = stringResource(Res.string.content_invalid)
+    ArrowPreference(
+        title = stringResource(Res.string.register_acc),
+        onClick = { show = true }
+    )
     BasicDialog(
         show = show,
         title = stringResource(Res.string.register_acc),
         error = error,
-        summary = if (error) stringResource(Res.string.content_invalid) else null,
+        summary = errorMessage.takeIf { error },
         summaryColor = if (error) MiuixTheme.colorScheme.error else MiuixTheme.colorScheme.onBackground,
-        onCancel = { onValueSave(null) },
+        onCancel = { show = false },
         onConfirm = {
             if (error) {
-
+                hostState?.show(errorMessage)
             } else {
                 onValueSave(RegisterAccountRequest(account, password))
+                show = false
             }
         }
     ) {
@@ -463,6 +449,7 @@ private fun RegisterAccountDialog(
             value = account,
             onValueChange = { account = it },
             label = stringResource(Res.string.account),
+            colors = errorTextFieldColors(error = account.isBlank() || account.length > 15),
             singleLine = true,
             modifier = Modifier.padding(bottom = 16.dp)
         )
@@ -470,6 +457,7 @@ private fun RegisterAccountDialog(
             value = password,
             onValueChange = { password = it },
             label = stringResource(Res.string.password),
+            colors = errorTextFieldColors(error = password.isBlank()),
             singleLine = true,
         )
     }
@@ -477,38 +465,51 @@ private fun RegisterAccountDialog(
 
 @Composable
 private fun ValidateCodeDialog(
-    show: Boolean,
-    isRefreshing: Boolean = false,
-    validateCode: List<Pair<String, String>> = listOf(),
-    onRefresh: () -> Unit = { },
-    onExit: () -> Unit = { }
+    syncCode: suspend () -> Map<String, String> = { emptyMap() }
 ) {
+    var show by remember { mutableStateOf(false) }
+    var isRefreshing by remember(show) { mutableStateOf(false) }
+    var code by remember(show) { mutableStateOf(emptyMap<String, String>()) }
     val clipboard = koinInject<ClipboardPort>()
-    SideEffect(show) {
+    val toastHostState = LocalToast.current
+    val coroutineScope = rememberCoroutineScope()
+    val onRefresh: suspend () -> Unit = {
+        isRefreshing = true
+        code = syncCode()
+        isRefreshing = false
+    }
+    LaunchedEffect(show) {
         if (show) {
             onRefresh()
         }
     }
+    ArrowPreference(
+        title = stringResource(Res.string.query_valid_code),
+        onClick = { show = true }
+    )
     OverlayDialog(
         show = show,
-        onDismissRequest = { onExit() },
+        onDismissRequest = { show = false },
     ) {
-        Column {
-            Text(
-                text = stringResource(Res.string.valid_code),
-                color = MiuixTheme.colorScheme.onBackground,
-                style = MiuixTheme.textStyles.title1,
-                modifier = Modifier
-                    .padding(bottom = 16.dp)
-                    .fillMaxWidth()
-            )
-            PullToRefreshBox(
-                isRefreshing = isRefreshing,
-                onRefresh = { onRefresh() },
-            ) {
-                LazyColumn(modifier = Modifier.height(240.dp)) {
+        PullToRefreshBox(
+            isRefreshing = isRefreshing,
+            onRefresh = { coroutineScope.launch { onRefresh() } },
+            modifier = Modifier
+                .fillMaxHeight(0.4f)
+                .fillMaxWidth()
+        ) {
+            Column(modifier = Modifier.matchParentSize()) {
+                Text(
+                    text = stringResource(Res.string.valid_code),
+                    color = MiuixTheme.colorScheme.onBackground,
+                    style = MiuixTheme.textStyles.title1,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 16.dp)
+                )
+                LazyColumn(modifier = Modifier.weight(1f).fillMaxWidth()) {
                     item {
-                        if (validateCode.isEmpty()) {
+                        if (code.isEmpty()) {
                             Box(modifier = Modifier.fillParentMaxSize()) {
                                 Text(
                                     text = stringResource(Res.string.is_nothing),
@@ -518,7 +519,7 @@ private fun ValidateCodeDialog(
                             }
                         }
                     }
-                    items(validateCode) { (account, code) ->
+                    items(code.toList()) { (account, code) ->
                         Row(
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically,
@@ -535,7 +536,10 @@ private fun ValidateCodeDialog(
                             val message = stringResource(Res.string.copy_success)
                             Text(account, fontSize = 24.sp)
                             IconButton(
-                                onClick = { clipboard.setText(code) },
+                                onClick = {
+                                    clipboard.setText(code)
+                                    toastHostState?.show(message.format(code))
+                                },
                                 modifier = Modifier.padding(4.dp)
                             ) {
                                 Icon(
