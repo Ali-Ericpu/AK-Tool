@@ -36,6 +36,7 @@ import com.rainccup.aktool.core.common.validation.checkIntRange
 import com.rainccup.aktool.core.common.validation.coerceToValid
 import com.rainccup.aktool.core.designsystem.LocalFloatingBarInset
 import com.rainccup.aktool.core.designsystem.LocalLargeScreen
+import com.rainccup.aktool.core.designsystem.anim.itemEnterAnimation
 import com.rainccup.aktool.core.designsystem.component.BirthdayPickerDialog
 import com.rainccup.aktool.core.designsystem.component.EditTextDialog
 import com.rainccup.aktool.core.model.Birthday
@@ -132,10 +133,12 @@ fun HomePage() {
                 ) {
                     item {
                         Column(
-                            modifier = Modifier.background(
-                                MiuixTheme.colorScheme.background.copy(alpha = 0.95f),
-                                RoundedCornerShape(16.dp)
-                            )
+                            modifier = Modifier
+                                .itemEnterAnimation(index = 0)
+                                .background(
+                                    MiuixTheme.colorScheme.background.copy(alpha = 0.95f),
+                                    RoundedCornerShape(16.dp)
+                                )
                         ) {
                             LabelTextField(
                                 value = status.nickName,
@@ -192,10 +195,13 @@ fun HomePage() {
                         FlowRow(
                             maxItemsInEachRow = if (twoPerRow) 2 else 1,
                             horizontalArrangement = Arrangement.SpaceBetween,
-                            modifier = Modifier.fillMaxSize().background(
-                                color = MiuixTheme.colorScheme.background.copy(alpha = 0.95f),
-                                shape = RoundedCornerShape(16.dp)
-                            )
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .itemEnterAnimation(index = 1)
+                                .background(
+                                    color = MiuixTheme.colorScheme.background.copy(alpha = 0.95f),
+                                    shape = RoundedCornerShape(16.dp)
+                                )
                         ) {
                             LabelTextField(
                                 value = status.androidDiamond.toString(),

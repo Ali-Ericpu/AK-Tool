@@ -28,7 +28,7 @@ import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -79,6 +79,7 @@ import coil3.compose.rememberAsyncImagePainter
 import com.rainccup.aktool.core.common.LocalImageConfig
 import com.rainccup.aktool.core.common.replace
 import com.rainccup.aktool.core.designsystem.LocalFloatingBarInset
+import com.rainccup.aktool.core.designsystem.anim.itemEnterAnimation
 import com.rainccup.aktool.core.designsystem.component.BasicDialog
 import com.rainccup.aktool.core.designsystem.component.CharPainter
 import com.rainccup.aktool.core.designsystem.component.CircleIconButton
@@ -167,9 +168,11 @@ fun CharacterPage(
                     contentPadding = PaddingValues(bottom = LocalFloatingBarInset.current),
                     modifier = Modifier.fillMaxSize()
                 ) {
-                    items(characters, key = { it.instId }) { char ->
+                    itemsIndexed(characters, key = { _, char -> char.instId }) { index, char ->
                         CharacterCard(
-                            modifier = Modifier.characterCardSharedElement(char.instId),
+                            modifier = Modifier
+                                .characterCardSharedElement(char.instId)
+                                .itemEnterAnimation(index),
                             char = char,
                         ) {
                             onOpenDetail(char)
