@@ -8,6 +8,37 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
 }
 
+// 构建信息：在编译前由 Gradle 生成一份 Kotlin 源码，Android 与桌面共用。
+val buildInfoDir = layout.buildDirectory.dir("generated/buildInfo/commonMain/kotlin")
+
+val generateBuildInfo = tasks.register("generateBuildInfo") {
+    description = "在编译前由 Gradle 生成一份 Kotlin 源码，Android 与桌面共用"
+    // 配置阶段取值：doLast 里不能再用 libs（配置缓存不允许）
+    val versionName = project.version.toString()
+    val versionCode = libs.versions.android.version.code.get()
+    val outputDir = buildInfoDir
+    inputs.property("versionName", versionName)
+    inputs.property("versionCode", versionCode)
+    outputs.dir(outputDir)
+    doLast {
+        val file = outputDir.get()
+            .file("com/rainccup/aktool/core/platform/BuildInfo.kt")
+            .asFile
+        file.parentFile.mkdirs()
+        file.writeText(
+            """
+            |// 由 Gradle 生成（:shared:generateBuildInfo），请勿手改。
+            |package com.rainccup.aktool.core.platform
+            |
+            |object BuildInfo {
+            |    const val VERSION_NAME: String = "$versionName"
+            |    const val VERSION_CODE: Int = $versionCode
+            |}
+            |""".trimMargin()
+        )
+    }
+}
+
 kotlin {
     android {
         namespace = "com.rainccup.aktool.shared"
@@ -27,6 +58,10 @@ kotlin {
     }
 
     sourceSets {
+        commonMain {
+            // 生成的 BuildInfo.kt 进 commonMain 编译；provider 派生自任务，Gradle 自动建立依赖
+            kotlin.srcDir(generateBuildInfo.map { buildInfoDir.get() })
+        }
         commonMain.dependencies {
             implementation(libs.compose.runtime)
             implementation(libs.compose.foundation)

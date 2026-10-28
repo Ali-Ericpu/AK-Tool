@@ -340,9 +340,9 @@ fun CharacterCard(
             Text(
                 text = stringResource(Res.string.lv),
                 color = Color.White,
-                style = TextStyle(fontWeight = FontWeight.Normal, fontSize = 6.sp),
+                style = TextStyle(fontWeight = FontWeight.Normal, fontSize = 5.sp),
                 modifier = Modifier.align(Alignment.Center)
-                    .offset(y = (-10).dp)
+                    .offset(y = (-11).dp)
             )
             Text(
                 text = char.level.toString(),

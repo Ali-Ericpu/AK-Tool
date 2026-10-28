@@ -1,6 +1,5 @@
 package com.rainccup.aktool.core.network
 
-import com.rainccup.aktool.core.common.AppBuildConfig
 import com.rainccup.aktool.core.common.JsonUtil
 import io.ktor.client.HttpClient
 import io.ktor.client.HttpClientConfig
@@ -13,16 +12,14 @@ import io.ktor.client.plugins.logging.Logging
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
-import org.koin.mp.KoinPlatform
 
 fun createHttpClient(
     config: NetworkConfig,
     engine: HttpClientEngine? = null,
     expectSuccess: Boolean = true,
+    isDebug: Boolean = false,
 ): HttpClient {
     val builder: HttpClientConfig<*>.() -> Unit = {
-        // 单测里没有启动 Koin，这里取不到就退回 INFO，别让构建信息把工厂变成硬依赖
-        val buildConfig = runCatching { KoinPlatform.getKoin().get<AppBuildConfig>() }.getOrNull()
         this.expectSuccess = expectSuccess
         install(ContentNegotiation) {
             json(JsonUtil.json)
@@ -33,7 +30,7 @@ fun createHttpClient(
                     co.touchlab.kermit.Logger.i(tag = "KTOR") { message }
                 }
             }
-            level = if (buildConfig?.isDebug == true) LogLevel.ALL else LogLevel.INFO
+            level = if (isDebug) LogLevel.ALL else LogLevel.INFO
         }
         defaultRequest {
             url(config.baseUrl.ifBlank { NetworkConfig.DEFAULT_BASE_URL })
@@ -43,11 +40,14 @@ fun createHttpClient(
     return if (engine != null) HttpClient(engine, builder) else HttpClient(builder)
 }
 
-class HttpClientProvider(private val config: NetworkConfig) {
+class HttpClientProvider(
+    private val config: NetworkConfig,
+    private val isDebug: Boolean = false,
+) {
     @Volatile
     private var cached: HttpClient? = null
 
-    fun client(): HttpClient = cached ?: createHttpClient(config).also { cached = it }
+    fun client(): HttpClient = cached ?: createHttpClient(config, isDebug = isDebug).also { cached = it }
 
     fun recreate(baseUrl: String) {
         config.baseUrl = baseUrl.ifBlank { NetworkConfig.DEFAULT_BASE_URL }

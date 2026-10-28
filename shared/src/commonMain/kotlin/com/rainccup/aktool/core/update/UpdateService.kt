@@ -1,7 +1,7 @@
 package com.rainccup.aktool.core.update
 
 import co.touchlab.kermit.Logger
-import com.rainccup.aktool.core.common.AppInfo
+import com.rainccup.aktool.core.platform.AppInfo
 import com.rainccup.aktool.core.platform.AppScope
 import com.rainccup.aktool.core.platform.Messenger
 import com.rainccup.aktool.core.platform.UpdatePort

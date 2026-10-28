@@ -1,7 +1,7 @@
 
 [versions]
-app-version = "2.0.6"
-android-version-code = "206"
+app-version = "2.0.7"
+android-version-code = "207"
 agp = "9.4.1"
 kotlin = "2.4.20"
 compose-multiplatform = "1.12.2"

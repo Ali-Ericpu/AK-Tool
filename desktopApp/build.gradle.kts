@@ -26,16 +26,6 @@ dependencies {
     implementation(libs.koin.core)
 }
 
-// 桌面端没有 BuildConfig：把 Gradle 的 version 展开进 version.properties，
-// 运行时由 DesktopAppBuildConfig 读回来，保证版本号只有一个来源。
-// 版本号在配置阶段取成 lambda 内的局部量，避免闭包捕获脚本对象（会破坏 configuration cache）。
-tasks.processResources {
-    val v = project.version.toString()
-    filesMatching("version.properties") {
-        expand("version" to v)
-    }
-}
-
 compose.desktop {
     application {
         mainClass = "com.rainccup.aktool.MainKt"

@@ -96,9 +96,17 @@ fallback) and `values-zh/` (Chinese).
 Android targets `compileSdk`/`targetSdk` **37**, `minSdk` **28**. The app version has a single
 source: the `[versions]` table of `gradle/libs.versions.toml` (`app-version` is the version
 name, `android-version-code` the version code). The root `build.gradle.kts` copies
-`app-version` into every project's `version`, and `versionName`, the desktop `packageVersion`
-and the `version.properties` resource all derive from it. A release bump therefore means
-editing two lines in that TOML file.
+`app-version` into every project's `version`, and `versionName` plus the desktop
+`packageVersion` derive from it. A release bump therefore means editing two lines in that
+TOML file.
+
+Build info reaches the code through `:shared:generateBuildInfo`, which writes
+`BuildInfo.kt` into `shared/build/generated/buildInfo` before compilation and adds it to
+`commonMain`. Both apps read the version from that one generated object
+(`core.platform.AppInfo`), so neither AGP's `BuildConfig` nor a packaged
+`version.properties` is needed; "is this a debug build" stays a platform question
+(`core.platform.isDebugBuild`, `ApplicationInfo.FLAG_DEBUGGABLE` on Android, `-Dak.tool.debug`
+on the desktop).
 
 ---
 

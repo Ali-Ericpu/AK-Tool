@@ -6,13 +6,11 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import com.rainccup.aktool.app.App
-import com.rainccup.aktool.core.common.AppBuildConfig
 import com.rainccup.aktool.app.appModule
 import com.rainccup.aktool.core.platform.AndroidContextHolder
 import com.rainccup.aktool.core.platform.AndroidFilePickerBridge
 import org.koin.core.context.GlobalContext
 import org.koin.core.context.startKoin
-import org.koin.dsl.module
 import java.io.File
 import kotlin.uuid.Uuid
 
@@ -21,12 +19,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         AndroidContextHolder.appContext = applicationContext
         if (GlobalContext.getOrNull() == null) {
-            startKoin {
-                val configModule = module {
-                    single<AppBuildConfig> { AndroidAppBuildConfig() }
-                }
-                modules(appModule, configModule)
-            }
+            startKoin { modules(appModule) }
         }
         setContent {
             val pickImage = rememberLauncherForActivityResult(

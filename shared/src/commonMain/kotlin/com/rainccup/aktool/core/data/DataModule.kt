@@ -1,6 +1,5 @@
 package com.rainccup.aktool.core.data
 
-import com.rainccup.aktool.core.common.AppInfo
 import com.rainccup.aktool.core.data.datasource.ConfigRepository
 import com.rainccup.aktool.core.data.datasource.GameTableRepository
 import com.rainccup.aktool.core.data.repository.AdminRepository
@@ -9,6 +8,8 @@ import com.rainccup.aktool.core.data.repository.ConfigStore
 import com.rainccup.aktool.core.network.ApiClient
 import com.rainccup.aktool.core.network.HttpClientProvider
 import com.rainccup.aktool.core.network.NetworkConfig
+import com.rainccup.aktool.core.platform.AppInfo
+import com.rainccup.aktool.core.platform.isDebugBuild
 import org.koin.dsl.module
 
 val dataModule = module {
@@ -22,8 +23,8 @@ val dataModule = module {
             adminKey = saved.adminKey,
         )
     }
-    single { AppInfo(get()) }
-    single { HttpClientProvider(get()) }
+    single { AppInfo() }
+    single { HttpClientProvider(get(), isDebug = isDebugBuild) }
     single { ApiClient(get<NetworkConfig>()) { get<HttpClientProvider>().client() } }
 
     single { ConfigRepository(get()) }

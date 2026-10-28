@@ -13,10 +13,7 @@ import com.rainccup.aktool.core.platform.ClipboardPort
 import com.rainccup.aktool.core.platform.Messenger
 import com.rainccup.aktool.resources.Res
 import com.rainccup.aktool.resources.copy_success
-import com.rainccup.aktool.resources.game_table_init_fail
 import com.rainccup.aktool.resources.save_success
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.JsonElement
 import org.jetbrains.compose.resources.getString
@@ -26,16 +23,6 @@ class ExtraViewModel(
     private val messenger: Messenger,
     private val clipboard: ClipboardPort,
 ) : ViewModel() {
-    val showUnlockChar: StateFlow<Boolean>
-        field = MutableStateFlow(false)
-
-    fun changeUnlockCharState() = viewModelScope.launch {
-        if (showUnlockChar.value || useCase.init()) {
-            showUnlockChar.emit(!showUnlockChar.value)
-        } else {
-            messenger.show(getString(Res.string.game_table_init_fail))
-        }
-    }
 
     private suspend fun doRequest(request: suspend () -> ApiResult<JsonElement?>) {
         try {

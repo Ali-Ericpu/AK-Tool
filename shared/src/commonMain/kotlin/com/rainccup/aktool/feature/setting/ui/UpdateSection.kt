@@ -10,7 +10,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.rainccup.aktool.core.common.AppInfo
+import com.rainccup.aktool.core.platform.AppInfo
 import com.rainccup.aktool.core.designsystem.component.BasicDialog
 import com.rainccup.aktool.core.update.UpdateUiState
 import com.rainccup.aktool.feature.setting.viewmodel.SettingViewModel

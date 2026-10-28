@@ -22,7 +22,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -36,7 +35,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.rainccup.aktool.core.designsystem.LocalFloatingBarInset
 import com.rainccup.aktool.core.designsystem.component.BasicDialog
-import com.rainccup.aktool.core.designsystem.component.ConfirmButtonRow
 import com.rainccup.aktool.core.designsystem.component.IntRangeSlider
 import com.rainccup.aktool.core.designsystem.component.roundedBackground
 import com.rainccup.aktool.core.designsystem.theme.errorTextFieldColors
@@ -99,7 +97,6 @@ import top.yukonga.miuix.kmp.utils.overScrollVertical
 @Composable
 fun ExtraPage() {
     val viewModel: ExtraViewModel = koinViewModel()
-    val showUnlockChar by viewModel.showUnlockChar.collectAsState()
     LazyColumn(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -124,10 +121,7 @@ fun ExtraPage() {
         }
         item {
             Column(modifier = Modifier.roundedBackground()) {
-                ArrowPreference(
-                    title = stringResource(Res.string.unlock_all_char),
-                    onClick = viewModel::changeUnlockCharState
-                )
+                UnlockAllCharDialog(onValueSave = viewModel::unlockAllChar)
                 ArrowPreference(
                     title = stringResource(Res.string.unlock_all_stages),
                     onClick = viewModel::unlockAllStages
@@ -145,128 +139,120 @@ fun ExtraPage() {
             }
         }
     }
-    UnlockAllCharDialog(showUnlockChar) {
-        it?.let { viewModel.unlockAllChar(it) }
-        viewModel.changeUnlockCharState()
-    }
 }
 
 @Composable
-private fun UnlockAllCharDialog(
-    show: Boolean,
-    onValueSave: (UnlockAllCharRequest?) -> Unit = {}
-) {
-    var evolvePhase by remember { mutableIntStateOf(2) }
-    var level by remember { mutableIntStateOf(90) }
-    var maxLevel by remember { mutableIntStateOf(90) }
-    var favorPoint by remember { mutableIntStateOf(200) }
-    var mainSkillLvl by remember { mutableIntStateOf(7) }
-    var equipLevel by remember { mutableIntStateOf(3) }
-    var potentialRank by remember { mutableIntStateOf(5) }
-    var specializeLevel by remember { mutableIntStateOf(3) }
-    OverlayDialog(
+private fun UnlockAllCharDialog(onValueSave: (UnlockAllCharRequest) -> Unit) {
+    var show by remember { mutableStateOf(false) }
+    var evolvePhase by remember(show) { mutableIntStateOf(2) }
+    var level by remember(show) { mutableIntStateOf(90) }
+    var maxLevel by remember(show) { mutableIntStateOf(90) }
+    var favorPoint by remember(show) { mutableIntStateOf(200) }
+    var mainSkillLvl by remember(show) { mutableIntStateOf(7) }
+    var equipLevel by remember(show) { mutableIntStateOf(3) }
+    var potentialRank by remember(show) { mutableIntStateOf(5) }
+    var specializeLevel by remember(show) { mutableIntStateOf(3) }
+    ArrowPreference(
+        title = stringResource(Res.string.unlock_all_char),
+        onClick = { show = true }
+    )
+    BasicDialog(
         title = stringResource(Res.string.unlock_all_char),
         show = show,
-        onDismissRequest = { onValueSave(null) },
+        onCancel = { show = false },
+        onConfirm = {
+            onValueSave(
+                UnlockAllCharRequest(
+                    favorPoint = favorPoint,
+                    potentialRank = potentialRank,
+                    specializeLevel = specializeLevel,
+                    mainSkillLvl = mainSkillLvl,
+                    evolvePhase = evolvePhase,
+                    level = level,
+                    equipLevel = equipLevel,
+                    enableRogueChar = false
+                )
+            )
+            show = false
+        }
     ) {
-        Column {
-            Row(horizontalArrangement = Arrangement.SpaceBetween) {
-                IntRangeSlider(
-                    value = evolvePhase,
-                    maxValue = 2,
-                    title = stringResource(Res.string.evp_phase),
-//                    onValueChange = { evolvePhase = it },
-                    onValueChangeFinished = {
-                        val effects = UnlockAllCharRules.onEvolvePhaseChanged(
-                            phase = it,
-                            mainSkillLvl = mainSkillLvl,
-                            specializeLevel = specializeLevel,
-                            equipLevel = equipLevel,
-                        )
-                        mainSkillLvl = effects.mainSkillLvl
-                        specializeLevel = effects.specializeLevel
-                        equipLevel = effects.equipLevel
-                        maxLevel = effects.maxLevel
-                        if (level > maxLevel) {
-                            level = maxLevel
-                        }
-                    },
-                    modifier = Modifier.weight(1f)
-                )
-                IntRangeSlider(
-                    value = level,
-                    maxValue = 90,
-                    start = 1,
-                    title = stringResource(Res.string.level),
-//                    onValueChange = { level = it },
-                    onValueChangeFinished = {
-                        level = it
-                        if (it > maxLevel) level = maxLevel
-                    },
-                    modifier = Modifier.weight(1f)
-                )
-            }
-            Row(horizontalArrangement = Arrangement.SpaceBetween) {
-                IntRangeSlider(
-                    value = mainSkillLvl,
-                    maxValue = 7,
-                    start = 1,
-                    title = stringResource(Res.string.skill_level),
-                    onValueChangeFinished = {
-                        mainSkillLvl = UnlockAllCharRules.clampSkillLevel(evolvePhase, it)
-                    },
-                    modifier = Modifier.weight(1f)
-                )
-                IntRangeSlider(
-                    value = potentialRank,
-                    maxValue = 5,
-                    title = stringResource(Res.string.potential_rank),
-                    onValueChangeFinished = { potentialRank = it },
-                    modifier = Modifier.weight(1f)
-                )
-            }
+        Row(horizontalArrangement = Arrangement.SpaceBetween) {
             IntRangeSlider(
-                value = specializeLevel,
-                maxValue = 3,
-                title = stringResource(Res.string.sp_skill_lv),
+                value = evolvePhase,
+                maxValue = 2,
+                title = stringResource(Res.string.evp_phase),
                 onValueChangeFinished = {
-                    specializeLevel =
-                        UnlockAllCharRules.normalizeSpecializeLevel(evolvePhase, mainSkillLvl, it)
-                },
-            )
-            IntRangeSlider(
-                value = favorPoint,
-                maxValue = 200,
-                title = stringResource(Res.string.fav_pt),
-                onValueChangeFinished = { favorPoint = it }
-            )
-            IntRangeSlider(
-                value = equipLevel,
-                maxValue = 3,
-                start = 1,
-                title = stringResource(Res.string.equip_lv),
-                onValueChangeFinished = {
-                    equipLevel = UnlockAllCharRules.normalizeEquipLevel(evolvePhase, it)
-                },
-            )
-            ConfirmButtonRow(
-                onCancel = { onValueSave(null) },
-                onConfirm = {
-                    onValueSave(
-                        UnlockAllCharRequest(
-                            favorPoint = favorPoint,
-                            potentialRank = potentialRank,
-                            specializeLevel = specializeLevel,
-                            mainSkillLvl = mainSkillLvl,
-                            evolvePhase = evolvePhase,
-                            level = level,
-                            equipLevel = equipLevel,
-                            enableRogueChar = false
-                        )
+                    val effects = UnlockAllCharRules.onEvolvePhaseChanged(
+                        phase = it,
+                        mainSkillLvl = mainSkillLvl,
+                        specializeLevel = specializeLevel,
+                        equipLevel = equipLevel,
                     )
-                }
+                    mainSkillLvl = effects.mainSkillLvl
+                    specializeLevel = effects.specializeLevel
+                    equipLevel = effects.equipLevel
+                    maxLevel = effects.maxLevel
+                    if (level > maxLevel) {
+                        level = maxLevel
+                    }
+                },
+                modifier = Modifier.weight(1f)
+            )
+            IntRangeSlider(
+                value = level,
+                maxValue = 90,
+                start = 1,
+                title = stringResource(Res.string.level),
+                onValueChangeFinished = {
+                    level = it
+                    if (it > maxLevel) level = maxLevel
+                },
+                modifier = Modifier.weight(1f)
             )
         }
+        Row(horizontalArrangement = Arrangement.SpaceBetween) {
+            IntRangeSlider(
+                value = mainSkillLvl,
+                maxValue = 7,
+                start = 1,
+                title = stringResource(Res.string.skill_level),
+                onValueChangeFinished = {
+                    mainSkillLvl = UnlockAllCharRules.clampSkillLevel(evolvePhase, it)
+                },
+                modifier = Modifier.weight(1f)
+            )
+            IntRangeSlider(
+                value = potentialRank,
+                maxValue = 5,
+                title = stringResource(Res.string.potential_rank),
+                onValueChangeFinished = { potentialRank = it },
+                modifier = Modifier.weight(1f)
+            )
+        }
+        IntRangeSlider(
+            value = specializeLevel,
+            maxValue = 3,
+            title = stringResource(Res.string.sp_skill_lv),
+            onValueChangeFinished = {
+                specializeLevel =
+                    UnlockAllCharRules.normalizeSpecializeLevel(evolvePhase, mainSkillLvl, it)
+            },
+        )
+        IntRangeSlider(
+            value = favorPoint,
+            maxValue = 200,
+            title = stringResource(Res.string.fav_pt),
+            onValueChangeFinished = { favorPoint = it }
+        )
+        IntRangeSlider(
+            value = equipLevel,
+            maxValue = 3,
+            start = 1,
+            title = stringResource(Res.string.equip_lv),
+            onValueChangeFinished = {
+                equipLevel = UnlockAllCharRules.normalizeEquipLevel(evolvePhase, it)
+            },
+        )
     }
 }
 
